@@ -33,7 +33,7 @@ The `## Core access` rule above is this same rule applied to the core, kept sepa
 
 ## Procedure
 
-**Resolve the project first.** The session's project, and the related projects that widen the recall, come from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md).
+**Resolve the project first**: the repository this session is in, by [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md), together with the related repositories that widen the recall.
 
 1. **Run core awakening** — invoke the memory core `/awaken-agent [domain]` (Phase 1 identity + Phase 2 **central** memory + report). This loads identity, **universal** reasoning, emotional, knowledge, and the **whole central episodic index**, every entry carrying its own `project`. The core is **project-blind**, so the project's newest episode is selected here: take the newest index entry whose `project` is in the project set (**§ select-project-episode**) and report it as the carry-forward. (This overlay owns coding-scoped reasoning and project-context loading, in steps 2-3.)
 

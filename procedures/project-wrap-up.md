@@ -28,7 +28,13 @@ Tool calls visible (git commands); capture per-repo commit hashes + user-files-l
 
 ### Step 2: Project Context Gate + Memory Update (silent)
 
-**Resolve the project first.** The session's project comes from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). Both writes in this step are keyed by it, the context files and the episode, and the core derives a project of its own from the working directory. So **state the resolved project as this session's project** when the memory update runs, and the episode is filed under the repository the session actually worked in rather than under a folder name.
+**Resolve the project from the work, then state it.** The candidates are the repositories this session changed: the ones the pushes covered, plus any working tree that moved, with the repository at the working directory as the fallback when nothing changed. Then:
+
+- **One candidate, or several with one clear subject** → that repository is the session's project.
+- **Several with a subject** → the subject is the project, and the other repositories go into the record's `tags`, which `search` reads.
+- **Several with no subject** → no project at all, and every repository goes into the `tags`.
+
+**Ask before filing** when the candidate set is not exactly the working-directory repository, which covers both a different project and more than one. The identity itself comes from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
 
 **First — the Project Context Gate** (the memory core is project-blind; the coding overlay owns project-context). Evaluate whether this session produced project-specific context worth persisting:
 - Project-specific conventions, setup, deployment, env details?
