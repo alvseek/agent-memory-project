@@ -45,3 +45,4 @@ derived index, directory and size steps.
 - `§ load-coding-reasoning` — the coding-only reasoning layer (never part of Munnin's shared import)
 - `§ load-context-indexes` — the project's context index projection
 - `§ check-fleet-roster` — whether the project has a roster
+- `§ select-project-episode` — the newest episode whose project is in the resolved set, body by uuid

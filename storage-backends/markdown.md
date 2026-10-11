@@ -132,3 +132,7 @@ Read the shared context index (`CONTEXT_DIR/context-index.md`) and the private c
 ### § check-fleet-roster
 
 Test for `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md`. Present → the project has a fleet; absent → skip the fleet pointer.
+
+### § select-project-episode
+
+From the episodic index the core returned, take the newest entry whose `project` is in the project set, then read that episode's body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. No entry in the set → the project has none yet, so skip silently.
