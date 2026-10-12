@@ -10,7 +10,7 @@ Concrete storage mechanics for the **Hermod project store** — a small store He
 
 ## all-procedures
 
-Every operation below is a **tool call on this server**. The store is a local file, so nothing here needs a credential or reaches past the machine, and the project a row belongs to is the `project` argument — never a path.
+Every operation below is a **tool call on this server**. Which engine holds the store is the server's own configuration — SQLite for a local run, a PostgreSQL database in a deployment — and no op here names either, so the project a row belongs to is the `project` argument and never a path.
 
 ---
 
@@ -114,4 +114,4 @@ The roster is store memory rather than project context, so the project store doe
 
 ### § persist-store
 
-Execute **`/push-project <mode>`** on the project repository. This store is the server's own file, written by every op above as it runs, so there is nothing left for a memory push to persist at wrap-up and that half of the op dissolves. The project push is the half that still has work — the commits Steps 2-3 produced. In the default `agent` mode it stages only this agent's own work; `all` pushes the full tree.
+Execute **`/push-project <mode>`** on the project repository. The store persists as each op above runs, on whichever engine holds it, so there is nothing left for a memory push to persist at wrap-up and that half of the op dissolves. The project push is the half that still has work — the commits Steps 2-3 produced. In the default `agent` mode it stages only this agent's own work; `all` pushes the full tree.
