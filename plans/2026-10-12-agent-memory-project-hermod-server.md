@@ -69,16 +69,16 @@ Two deliverables, in this order:
 - ADR-016 (wrap-up persistence and `§ persist-store`), ADR-023 (the overlay storage seam), ADR-020/021/022 (the three family splits this extraction follows), ADR-004 (docs placement, which the extracted family owns)
 
 ### **SUCCESS CRITERIA**
-- [ ] `agent-memory-project` holds 9 procedures; `agent-memory-doc` holds the 6 extracted procedures with `compute-doc-placement`, `present-doc-for-review` and 6 templates; `dockerize` lives in `agent-memory-wizards`
-- [ ] Every installer, manifest, README, MIGRATION and test across the three repos is consistent, and the overlay's installed command set is rebuilt and verified
-- [ ] `map-orientation`'s 4 producer clauses and `orientation-map-template`'s 3 are gone, and the map still discovers and classifies the same artifacts
-- [ ] `hermod-server` runs locally: a client connects over `/mcp`, `read_procedure("awaken-coder")` returns the composed procedure, both remaining templates read as resources, and `/health` answers
-- [ ] `push-all`, `pull-all`, `dockerize` and the 6 doc procedures are absent from the served prompt list
-- [ ] `project-wrap-up` Step 4 resolves to `/push-all` on markdown and `/push-project` on the db
-- [ ] A project context entry round-trips through `hermod-server`'s tools against the project store
-- [ ] Fidelity: for a sample of served prompts, hermod's composition matches the overlay compiler by mechanic accounting (ops referenced and backend section substituted), not by byte-identity
-- [ ] The registry is source-list-shaped, so adding a Munnin proxy later is one provider plus config
-- [ ] Records updated: the three repos' README/MIGRATION/NOTICE; the core's README and ARCHITECTURE prose; the store's orientation map and a new context entry; one ADR for the extraction and the server boundary
+- [x] `agent-memory-project` holds 9 procedures; `agent-memory-doc` holds the 6 extracted procedures with `compute-doc-placement`, `present-doc-for-review` and 6 templates; `dockerize` lives in `agent-memory-wizards`
+- [x] Every installer, manifest, README, MIGRATION and test across the three repos is consistent, and the overlay's installed command set is rebuilt and verified
+- [x] `map-orientation`'s 4 producer clauses and `orientation-map-template`'s 3 are gone, and the map still discovers and classifies the same artifacts
+- [x] `hermod-server` runs locally: a client connects over `/mcp`, `read_procedure("awaken-coder")` returns the composed procedure, both remaining templates read as resources, and `/health` answers
+- [x] `push-all`, `pull-all`, `dockerize` and the 6 doc procedures are absent from the served prompt list
+- [x] `project-wrap-up` Step 4 resolves to `/push-all` on markdown and `/push-project` on the db
+- [x] A project context entry round-trips through `hermod-server`'s tools against the project store
+- [x] Fidelity: for a sample of served prompts, hermod's composition matches the overlay compiler by mechanic accounting (ops referenced and backend section substituted), not by byte-identity
+- [x] The registry is source-list-shaped, so adding a Munnin proxy later is one provider plus config
+- [x] Records updated: the three repos' README/MIGRATION/NOTICE; the core's README and ARCHITECTURE prose; the store's orientation map and a new context entry; one ADR for the extraction and the server boundary
 
 ---
 
@@ -506,34 +506,42 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Tech Debts**: none.
   - **Result**: PASS.
 
-- [ ] **Step 5.2**: The cross-repo prose and the store's entries
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 5.2**: The cross-repo prose and the store's entries
+  - **Implementation Log**: Updated the core's `README.md` (the opening sibling sentence and the coding-agents note, neither of which may place doc generation in the overlay, and both now naming all four sibling repos) and `ARCHITECTURE.md` (the 2026-08-06 split note's closing clause, the overlay directory tree — now 9 procedures plus `components/` and `storage-backends/` — a new doc-family directory block, the two command sections, and a stale note that placed the wizards in the overlay). Refreshed the store's orientation map: the `agent-memory-project/` entry now reads as the shell + project memory at 9 procedures with the `db` seam implemented, and two entries were **added**, `agent-memory-doc/` and `hermod-server/`. Updated the `agent-memory-project` project context entry (`hermod-server-build.md`) and its index line for the completed Phases 4-5 and the store, and corrected `mcp-boundary-strategy.md`'s "What is Hermod's" list, which still placed the wizards, doc-gen, QA and localization in the overlay. Committed: core `a978e1f`, store `6c3777d`, `hermod-server` `de0f4dc`, overlay `a2de8b1`.
+  - **Testing Log**: The core's invariant guard prints *"Core invariant holds"* and its suite is **41 passed** after the README/ARCHITECTURE edits; the overlay suite is **52 passed**. Both criteria were verified directly: a grep for an overlay-owns-doc-generation claim across the core returns **nothing**, and the store's map carries the `agent-memory-doc/` and `hermod-server/` entries. The remaining `doc-gen` / `generate-*` hits are history or genuine cross-references (dated session records, ADRs, `MIGRATION.md`, an example of a derived skill description), which the criterion allows.
+  - **Success Criteria**: PASS. No document still describes the overlay as owning the doc family, and the store's map lists the new sibling repo.
+  - **Tech Debts**: the `hermod-server` submodule pin stays at `6d5db11` — the commit carrying the served content — because the commits after it are records only (ADR, plan), so re-pinning would move nothing the server reads. The store's `docs/architecture/memory-mcp-server.md` still describes §6 Hermod as "unbuilt"; that design doc predates this server and reconciling it is its own pass. The docstring residue Phase 1 named (six `generate-readme` examples across the five installers) is unchanged.
+  - **Result**: PASS. **Phase 5 complete.**
 
 ---
 
 ## **QUALITY REVIEW**
 *Filled by procedure Step 16 (delegated to `/analyze-code-quality` in embedded mode) after all execution phases are complete. **Static** review — answers "is the code clean?".*
 
-- **Scope**: [Files reviewed — from Execution Log, reconciled against `git diff --name-only`]
-- **Quality Standard**: [quality-standard.md found / not found — dimensions applied]
-- **Findings**: [Issues found, or "No findings — implementation meets quality dimensions"]
-- **Fixed**: [What was fixed from approved findings, or "N/A"]
+- **Scope**: narrowed, out loud, from the full Execution Log (~60 files across 5 repos) to the artifacts a dimension walk can judge: `hermod-server`'s new Python (`src/hermod/data_entities/`, `src/hermod/data_repositories/`, `src/hermod/business_services/`, the store registration in `api_mcp/server.py`, `app.py`, `configuration/config.py`) and its tests, plus the overlay's seam mechanics (`storage-backends/db.md`, `storage-backends/markdown.md`, `storage-backends/README.md`, `procedures/project-wrap-up.md`). **Why narrowed**: Phase 1's files are cross-repo *moves* of procedures whose text is unchanged, already held by their own `--strict` compiles and suites; the remaining records (the ADR, this plan, the core's README/ARCHITECTURE, the store's map and context entries) are prose decisions, where a code-quality dimension walk finds nothing a review of the decisions has not already covered. **Reconciliation**: `git diff --name-only` is empty in every repo because every phase was committed; ground truth was taken from the plan's own commits instead — overlay `ed07920 · 67a622e · 6d5db11 · a2de8b1`, `hermod-server` `f15d44e → de0f4dc` (9 commits), core `a978e1f`, store `6c3777d` — and no file in the reconciled scope is missing from those diffs.
+- **Quality Standard**: **not found** for `hermod-server` or `agent-memory-project` (the three `quality-standard.md` files on this machine belong to BRYES and Invintiry) — freeform analysis, Dimension 8 skipped.
+- **Dimensions walked**: Error Handling, Efficiency, Security, Cleanup, Consistency (State Completeness / UX Completeness / Project Quality Standard skipped as not applicable to a headless local store).
+- **Findings**:
+
+| # | Severity | File:Line | Issue | Fix Options |
+|---|----------|-----------|-------|-------------|
+| 1 | Medium | `src/hermod/business_services/context_service.py` (`update_context_entry`) + the `update_context_entry` tool in `api_mcp/server.py` | An update is a **wholesale replace**: `description` and `tags` default to `None` / `[]`, so a caller that sends only `content` silently clears the entry's description and tags. The behaviour matches the markdown backend (the procedure writes the whole file back), but nothing in the tool's docstring says so and the loss leaves no trace. | A) Say it in the tool docstring — "this replaces the entry; pass `description` and `tags` again or they are cleared" (consistent with markdown) B) Make an omitted field preserve the stored value (a partial update; diverges from write-the-whole-file) |
+| 2 | Low | `src/hermod/data_repositories/sqlite_project_repository.py` (`move_context_entry`) | The `IntegrityError` catch is **not narrowed**: any integrity failure on the move's UPDATE is reported as a scope collision, where `create_context_entry` and `create_map` both re-raise unless the message names the UNIQUE index. A future constraint on the table would be misreported as a collision. | A) Narrow it exactly as the other two writes do (`if "UNIQUE constraint failed" not in str(exc): raise`) B) Skip — the partial unique index is the only constraint that statement can violate today |
+| 3 | Low | `api_mcp/server.py` (the store tools) | `project` and `theme` reach the store as unvalidated free strings, so an empty `project` or a `theme` containing `/` writes a row the markdown backend could never address. The store is loopback-only and single-user, and the caller is an agent following a served procedure. | A) Skip — the caller is the procedure, not an untrusted client B) Validate lightly (non-empty, no `/`) at the tool boundary |
+
+- **Fixed**: both approved findings applied in one batch. **(1)** The `update_context_entry` tool's docstring and `ContextService.update_context_entry`'s docstring now state that the update is a wholesale replace, so an omitted `description` or `tags` is cleared rather than preserved. **(2)** `move_context_entry`'s `IntegrityError` catch is narrowed to the UNIQUE-index message, exactly as `create_context_entry` and `create_map` do. **(3)** skipped by decision (the store is loopback-only and the caller is the procedure). `ruff check` clean and `pytest` **69 passed** after the fixes; committed as `hermod-server` `6215a0b`.
 
 ---
 
 ## **QA HANDOFF**
 *Filled by procedure Step 17 after Quality Review is resolved. This plan is **not** runtime-verified — this section records the plan for that verification, which happens in a QA session with the stack up.*
 
-- **Scope**: [Modules touched — mapped from Execution Log scope]
-- **QA instrument**: [Set up (map + bench) / NOT SET UP — auto-skipped]
+- **Scope**: the plan's Phase 4 and 5 modules — `hermod-server`'s project store, service layer and MCP face — plus the overlay's `db.md` mechanics. Phase 1's moves and the Phase 5 records have no runtime surface to verify.
+- **QA instrument**: **NOT SET UP** — auto-skipped by the gate (Step 17).
 - **Integration coverage**: **NONE** — the bench check failed: `agent-memory-project` has no `qa/qa-map.md`, so no bench exists to probe and the stack state is unknown (probe: none available). Phases 2, 3 and 4 cross real boundaries (a served composition over a submodule, an HTTP face, a store) and would carry integration tests if the instrument existed. Fix: `/map-qa-instrument create` then `/build-qa-bench`. Confirmed with [USER-NAME] before implementation: confirmed 2026-10-12 ("proceed").
-- **Checklist**: [`qa/checklists/{feature}.md`, or "none — skipped, reason"]
-- **Coverage split**: [N automated (named tests) / N manual — of which N are UI-bound]
-- **Runtime verification**: **NOT DONE.** Next action: [`/run-qa-test --checklist qa/checklists/{feature}.md` once the stack is up | set up the instrument first: `/map-qa-instrument create` → `/build-qa-bench`]
+- **Checklist**: **none — skipped**. Step 17 re-checked the gate and found the same state (`agent-memory-project` still has no `qa/` folder in either repo), so the delegated procedure auto-skipped rather than inventing a `qa/` folder this project never opted into.
+- **Coverage split**: 0 automated integration / 0 manual — there is no checklist, so nothing is split. The **unit** coverage that does exist: `hermod-server` **69** (the store's round-trips and refusals, the tool surface over an in-memory client, the HTTP round-trip, the fidelity check), overlay **52**, core **41**, plus the core invariant guard.
+- **Runtime verification**: **NOT DONE.** Next action: set up the instrument first — `/map-qa-instrument create` → `/build-qa-bench` — then `/run-qa-test --checklist qa/checklists/{feature}.md` with the stack up.
 
 > Do not read a filled checklist as a passed one. This section says a verification *plan* exists, nothing more.
 
