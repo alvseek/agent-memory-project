@@ -484,27 +484,27 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Tech Debts**: `db.md`'s `§ check-entry-size` line currently reads "no length cap expected", which this step supersedes — the plan's own testing line requires the refusal. Step 4.3 rewrites the checklist into mechanics and must record the cap.
   - **Result**: PASS.
 
-- [ ] **Step 4.3**: Write `db.md`'s mechanics and compose onto it
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 4.3**: Write `db.md`'s mechanics and compose onto it
+  - **Implementation Log**: Rewrote `storage-backends/db.md` from a declared checklist into concrete mechanics: every op a served procedure references now names the tool it calls (`create_context_entry(project, scope, theme, content, description?, tags?)`, and so on), with an `## all-procedures` preamble stating that every op is a tool call on this server and that the project is an argument rather than a path. `§ ensure-context-dir` and `§ update-context-index` are declared **no-ops with their reason**, mirroring the memory core's db backend. Added the `## project-wrap-up` section to `markdown.md` (`§ persist-store` → `/push-all`) and to `db.md` (→ `/push-project`: the store is the server's own file, written as every op runs, so only the project's commits are left to push); gave `project-wrap-up.md` a `## Storage Mechanics` marker section, changed Step 4 from executing `/push-all` to executing `§ persist-store`, and reworded the body's one other `/push-all` mention so the body no longer hardcodes a backend's command (`/push-all` is unserved, so the served text must not name it). `§ select-project-episode` resolves to a **delegation to the memory layer** — episodes are Munnin's records and the store holds none — and `§ load-coding-reasoning` and `§ check-fleet-roster` delegate the same way, which is where the no-join decision becomes visible. Updated `storage-backends/README.md` (the backend is implemented; `project-wrap-up` carries exactly one op). Flipped `hermod`'s `DEFAULT_BACKEND_DOC` to `storage-backends/db.md` and pinned the overlay at `6d5db11` in the `agent-memory-project` submodule.
+  - **Testing Log**: Overlay: `pytest` → **52 passed**; `compile-procedures.py --strict` → 9 procedures, exit 0; the compiled `output/project-wrap-up.md` carries the substituted `### § persist-store` → `/push-all` with no `## Storage Mechanics` marker left. hermod: `ruff check` clean, `pytest -q` → **68 passed** (65 before this step; 3 new in `test_loader.py` — the served ops are the store's tool calls, the served `project-wrap-up` names `/push-project` and not `/push-all`, and the served `awaken-coder` delegates the episode step). One **real defect the fidelity test caught**: the `## all-procedures` preamble's literal `` `§ op` `` registered as a phantom op named `op` in the served text, so the carried-op accounting parted company with the compiler's (`+op`); the preamble was reworded, and all seven served prompts were then validated against the overlay working tree via `HERMOD_CONTENT_ROOT` (unresolved `[]`, ops and components matching the compiler, marker gone) **before** re-pinning.
+  - **Success Criteria**: PASS. No served prompt carries an unresolved op; `project-wrap-up` resolves to `/push-all` on markdown and `/push-project` on the db, and the served form names the latter; `awaken-coder` delegates the episode step.
+  - **Tech Debts**: the submodule pin (`6d5db11`) is a local-only overlay commit until the overlay is pushed, so a remote clone still cannot fetch it (the Step 2.1 debt, carried). The two delegations are the recorded costs of decision 4 (no join).
+  - **Result**: PASS.
 
-- [ ] **Step 4.4**: Round-trip and fidelity re-run
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 4.4**: Round-trip and fidelity re-run
+  - **Implementation Log**: Added a real-HTTP round-trip to `tests/test_end_to_end.py` — an entry created through `create_context_entry` (the op `update-project-context` resolves to) is listed and read back through `list_context_entries` / `read_context_entry` (the ops `load-project-context` resolves to), over a live uvicorn. The `live_server` fixture now points the store at a temp file rather than the repo's runtime `data/hermod.db`, so a test that writes project context leaves no rows in the store an agent is using. **No fidelity change was needed**: `test_fidelity.py` composes through the loader's configuration, and Step 4.3 flipped that configuration to `db.md`, so the carried inliner is re-proved against the store backend by the same run.
+  - **Testing Log**: `ruff check` clean; `pytest -q` → **69 passed** (68 before this step; 1 new). The round trip asserts the written scope is the scope read, the content arrives whole, and the same theme in the **other** scope stays absent — the entry is addressed rather than searched for. The fidelity suite (5 tests) stays green with `db.md` composed.
+  - **Success Criteria**: PASS. A project context entry round-trips through the server's tools, and the fidelity check is green under the store backend.
+  - **Tech Debts**: none.
+  - **Result**: PASS. **Phase 4 complete** — the store exists, is served, and its ops are what a served procedure resolves to.
 
 ### Phase 5:
-- [ ] **Step 5.1**: Write the ADR
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 5.1**: Write the ADR
+  - **Implementation Log**: Read `docs/adr/2026-10-12-hermod-doc-extraction-and-hermod-server.md` against what shipped and reconciled the two facts implementation settled that the plan's requirements did not yet carry. **The store's concrete shape**: two tables (`project_context` addressed by `(project, scope, theme)`, `orientation_map` keyed by `project`), a migration runner, a `ProjectRepository` Protocol, one MCP tool per op, `§ ensure-context-dir` and `§ update-context-index` as **declared no-ops**, and an entry over 1000 lines **refused** rather than split. **The no-join cost**, now visible in three ops: `§ select-project-episode`, `§ load-coding-reasoning` and `§ check-fleet-roster` all resolve to a delegation to the memory layer, recorded against the rejected-join alternative rather than hidden. No decision changed, so the ADR is finalized in place rather than superseded.
+  - **Testing Log**: The overlay suite is green (**52 passed**) after the edits; the ADR's link `../../plans/2026-10-12-agent-memory-project-hermod-server.md` resolves; every rejected alternative still matches the plan's section F, which the ADR's six-alternative list is a curated subset of with no contradiction.
+  - **Success Criteria**: PASS. The ADR describes the system as built rather than as planned, and matches the decisions recorded here.
+  - **Tech Debts**: none.
+  - **Result**: PASS.
 
 - [ ] **Step 5.2**: The cross-repo prose and the store's entries
   - **Implementation Log**: [What was done]
