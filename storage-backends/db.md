@@ -30,15 +30,15 @@ Call `read_context_entry(project, scope, theme)`. `found: false` means no live e
 
 ### § create-context-entry
 
-Call `create_context_entry(project, scope, theme, content, description?, tags?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included. Pass `description` and `tags` from that frontmatter so the listing can show them. Refused when a live entry already holds the identity.
+Call `create_context_entry(project, scope, theme, content, template_version, description?, tags?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `description` and `tags` from that frontmatter so the listing can show them. **The stamp is declared, never stored**: it is a gate token, and the entry itself never carries the line. Refused when a live entry already holds the identity, and when `template_version` is missing or does not match the served template.
 
 ### § update-context-entry
 
-Call `update_context_entry(project, scope, theme, content, description?, tags?)` with the entry's full new content. Refused when no live entry holds the identity, so an update can never become a create.
+Call `update_context_entry(project, scope, theme, content, template_version, description?, tags?)` with the entry's full new content and the template's current stamp. An update restates the whole document, so it carries the same gate the create does. Refused when no live entry holds the identity, so an update can never become a create, and when `template_version` is missing or stale.
 
 ### § move-context-entry
 
-Call `move_context_entry(project, theme, from_scope, to_scope)`. One call where the markdown backend copies then deletes: the scope changes and the body is untouched, so there is no partial state and nothing to clean up (the markdown backend's partial-failure note does not apply here). Refused when the target scope already holds that theme — the collision M.2 stops on.
+Call `move_context_entry(project, theme, from_scope, to_scope)`. One call where the markdown backend copies then deletes: the scope changes and the body is untouched, so there is no partial state and nothing to clean up (the markdown backend's partial-failure note does not apply here). **The direction is a choice, not a built-in**: a *promote* is `from_scope="private", to_scope="shared"` and a *demote* is the reverse, both one call. Refused when the source holds no live entry of that theme, and when the target scope already holds one — the collision M.2 stops on.
 
 ### § delete-context-entry
 
@@ -82,11 +82,11 @@ Call `read_map(project)`; `found: false` means the project has no map. `content`
 
 ### § write-map
 
-Call `write_map(project, content, description?)` with the full map text. Refused when the project has no map — writing never creates one.
+Call `write_map(project, content, template_version, description?)` with the full map text and the template's current stamp. Refused when the project has no map — writing never creates one — and when `template_version` is missing or stale.
 
 ### § create-map
 
-Call `create_map(project, content, description?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md). Refused when the project already has a map.
+Call `create_map(project, content, template_version, description?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the map itself never carries the line. Refused when the project already has a map, and when `template_version` is missing or stale.
 
 ---
 

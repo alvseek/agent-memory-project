@@ -57,7 +57,7 @@ Based on the confirmed scope, the subsequent steps will use the matching path:
 
 > **Storage location**: use the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md)'s `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (private). Use those dirs for every scope-aware step below (folder check, create, index).
 
-> **Move operation**: If the user has asked to **move** an existing private entry to shared (e.g., "move X to shared", "promote X to shared"), skip the rest of this procedure and follow the [Move-to-Shared Sub-Flow](#move-to-shared-sub-flow) section below.
+> **Move operation**: If the user has asked to **move** an existing entry between scopes — a **promote** (private → shared, e.g. "move X to shared") or a **demote** (shared → private) — skip the rest of this procedure and follow the [Move Between Scopes Sub-Flow](#move-between-scopes-sub-flow) section below.
 
 ### Step 3: Ensure the Project Folder
 
@@ -101,34 +101,36 @@ Update the scope-aware context index (**§ update-context-index**) with this ent
 
 ---
 
-## Move-to-Shared Sub-Flow
+## Move Between Scopes Sub-Flow
 
-When the user explicitly asks to move an existing private entry to shared (e.g., "move X to shared", "promote X to shared"), follow this sub-flow instead of the normal procedure.
+When the user explicitly asks to move an existing entry between scopes, follow this sub-flow instead of the normal procedure. A **promote** is private → shared; a **demote** is shared → private.
+
+> **Direction**: `[from]` is the source scope and `[to]` the target scope. Everything below is direction-neutral, and the collision check is always in the **target** scope.
 
 ### M.1: Identify Source Entry
 
-Locate the private entry to move (**§ list-context-entries**).
+Locate the source entry to move (**§ list-context-entries**).
 
-If unclear which theme the user means, ask: "Which file should I move? Available private entries: [list]"
+If unclear which theme the user means, ask: "Which entry should I move? Available entries in [from]: [list]"
 
-### M.2: Check Collision in Shared
+### M.2: Check Collision in the Target Scope
 
-List the shared entries (**§ list-context-entries**) to check whether one with the same theme already exists.
+List the target scope's entries (**§ list-context-entries**) to check whether one with the same theme already exists.
 
 - **If no collision**: Proceed to M.3
-- **If collision**: **STOP**. Present the conflict to user: "A shared file with this name already exists. Options: A) merge the content manually first, B) rename the private file before moving, C) cancel." Wait for user direction.
+- **If collision**: **STOP**. Present the conflict to user: "A [to] entry with this name already exists. Options: A) merge the content manually first, B) rename the source entry before moving, C) cancel." Wait for user direction.
 
-### M.3: Move to the Shared Location
+### M.3: Move to the Target Location
 
-Ensure the shared folder exists (**§ ensure-context-dir**), then copy the private entry's content verbatim to the shared location (**§ move-context-entry**).
+Ensure the target scope exists (**§ ensure-context-dir**), then move the entry's content verbatim to the target scope (**§ move-context-entry**).
 
-### M.4: Delete the Private Entry
+### M.4: Remove the Source Entry
 
-Remove the private entry (**§ delete-context-entry**).
+Remove the entry from the source scope (**§ delete-context-entry**).
 
 ### M.5: Update Both Indexes
 
-Remove the entry from the private index and add it to the shared index (**§ update-context-index**).
+Remove the entry from the source index and add it to the target index (**§ update-context-index**).
 
 ---
 

@@ -30,31 +30,31 @@ Copy the template to the scope path:
 - Shared: `cp [path-to-agent-memory-project]/templates/project-context-template.md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
 - Private: `cp [path-to-agent-memory-project]/templates/project-context-template.md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
+> **Drop the `template_version` line.** The template carries it just below its title, and it is a gate token rather than content: read the template as a whole, then remove that line from the copy. No stored entry ever carries it.
+
 ### § update-context-entry
 
 Write the updated content back to `[scope-dir]/[theme].md`.
 
 ### § move-context-entry
 
-Copy the private file **verbatim** (same template) to the shared location:
+Copy the entry **verbatim** (same template) from the source scope to the target one. A **promote** goes private → shared; a **demote** goes shared → private:
 
-```
-cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md
-```
+- **Promote**: `cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
+- **Demote**: `cp [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
-> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the private delete (**§ delete-context-entry**), then both index updates (**§ update-context-index**). If a step fails partway:
-> - **After the copy, before the delete**: both files exist. Delete the duplicate (usually the private one).
+> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the source delete (**§ delete-context-entry**), then both index updates (**§ update-context-index**). If a step fails partway:
+> - **After the copy, before the delete**: both files exist. Delete the duplicate (the source one).
 > - **After the delete, before the index updates**: the file is moved but the indexes are inconsistent. Finish the index updates.
 >
 > If any step fails, report the partial state to the user and ask before retrying.
 
 ### § delete-context-entry
 
-Remove the file:
+Remove the entry from its scope:
 
-```
-rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md
-```
+- Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
+- Private: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
 ### § check-entry-size
 
@@ -116,6 +116,8 @@ Write the map back to `MAP_PATH`.
 ### § create-map
 
 Copy `[path-to-agent-memory-project]/templates/orientation-map-template.md` to `MAP_PATH`, then populate its frontmatter (`project`, `description`, `created`, `last_full_scan`).
+
+> **Drop the `template_version` line.** It sits just below the template's title and is a gate token rather than content, so the stored map never carries it.
 
 ---
 

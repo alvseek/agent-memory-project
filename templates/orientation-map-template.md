@@ -7,6 +7,8 @@ last_full_scan: "YYYY-MM-DD"
 
 # Orientation Map — [project-name]
 
+template_version: 2026-10-12-16-48
+
 Index of orientation artifacts in this project. Used by agents at awakening (load into session context) and wrap-up (refresh entries the session touched) via the `/map-orientation` skill.
 
 ## Status Legend

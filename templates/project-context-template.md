@@ -8,6 +8,8 @@ updated: "YYYY-MM-DD"
 
 # [Theme Title]
 
+template_version: 2026-10-12-16-48
+
 ## **PURPOSE**
 [Brief description of what this context file covers and when to use it]
 
