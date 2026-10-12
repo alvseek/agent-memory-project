@@ -57,6 +57,6 @@ Separately, the overlay has no served form at all. The memory core has been serv
 
 ---
 
-**Full context**: [High Wizard plan](../../plans/2026-10-12-agent-memory-project-hermod-server.md)
+**Full context**: [High Wizard plan](../../plans/completed/2026-10-12-agent-memory-project-hermod-server.md)
 
 ---
