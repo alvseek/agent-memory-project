@@ -136,3 +136,11 @@ Test for `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md`. Present 
 ### § select-project-episode
 
 From the episodic index the core returned, take the newest entry whose `project` is in the project set, then read that episode's body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. No entry in the set → the project has none yet, so skip silently.
+
+---
+
+## project-wrap-up
+
+### § persist-store
+
+Execute `/push-all <mode>` — one call covering the agent-memory store and the working project together. Its memory half captures the writes the Step 1 project push ran too early to include; its project half captures what Steps 2–3 wrote.

@@ -55,15 +55,15 @@ If this session touched orientation docs (READMEs, architecture, flow diagrams, 
 
 Silent no-op if no map exists or no orientation docs touched. Capture refresh count / no-op reason for Step 5.
 
-### Step 4: Push Everything Steps 2–3 Wrote (silent) — MANDATORY
+### Step 4: Persist Everything Steps 2–3 Wrote (silent) — MANDATORY
 
-Execute **`/push-all <mode>`** — one call covering the agent-memory store and the working project together. Invoking `/project-wrap-up` IS the authorization to commit + push. Its memory half captures the episodic / emotional / reasoning / knowledge writes that the Step 1 project push ran too early to include; its project half captures the project memory, orientation, and context files Steps 2–3 just wrote. In the default `agent` mode both leaves stage only this agent's own work (never a blanket `git add -A`), leaving other agents' in-flight memory and the user's project changes untouched; `all` mode pushes both full trees.
+Execute **§ persist-store** — the active storage backend's persistence op, covering the agent-memory store and the working project together. Invoking `/project-wrap-up` IS the authorization to commit + push. Its memory half captures the episodic / emotional / reasoning / knowledge writes that the Step 1 project push ran too early to include; its project half captures the project memory, orientation, and context files Steps 2–3 just wrote. In the default `agent` mode both leaves stage only this agent's own work (never a blanket `git add -A`), leaving other agents' in-flight memory and the user's project changes untouched; `all` mode pushes both full trees.
 
 > **Why the project is pushed twice, and why that is not redundant.** Step 1 exists so a merge request can open without waiting for the memory update. Step 4 exists because Steps 2–3 write more files after that. Collapsing them into a single push at either end breaks the completion gate: push only at the start and the memory written afterwards is never saved, so the gate reports INCOMPLETE every run; push only at the end and the early merge request Step 1 exists for never happens.
 
 Tool calls visible (git commands); capture per-repo commit hashes + agent-work-pushed status for Step 5.
 
-**Then verify (drives the Step 5 completion gate)**: from the leaf pushers' `git status -sb [ahead N]` verification (Step 4 of `/push-project` + `/push-memory`, reached directly in Step 1 and through `/push-all` in Step 4) across both pushes, record per repo whether **every agent-work path is committed AND pushed** (branch not ahead of remote) + a count of user files left. **Excluded repos are exempt** (report as `skipped (excluded)`). Do NOT attempt elaborate recovery — if an *agent-work* push fails or any agent-work path remains, that is carried to Step 5, where the wrap-up fails loudly.
+**Then verify (drives the Step 5 completion gate)**: from the leaf pushers' `git status -sb [ahead N]` verification (Step 4 of `/push-project` + `/push-memory`, reached directly in Step 1 and through the persistence op in Step 4) across both pushes, record per repo whether **every agent-work path is committed AND pushed** (branch not ahead of remote) + a count of user files left. **Excluded repos are exempt** (report as `skipped (excluded)`). Do NOT attempt elaborate recovery — if an *agent-work* push fails or any agent-work path remains, that is carried to Step 5, where the wrap-up fails loudly.
 
 ### Step 5: Final Summary (only visible output)
 
@@ -121,3 +121,14 @@ Push — FAILED / INCOMPLETE (agent work not fully saved):
 
 Retry the push (or resolve the blocker) before leaving — the wrap-up is only complete when every agent-work path is committed AND pushed.
 ```
+
+---
+
+## Storage Mechanics
+
+The operation referenced above — **§ persist-store** — is defined by the **active storage backend**:
+
+- **Markdown (native)** — follow `storage-backends/markdown.md` → its `project-wrap-up` section.
+- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `project-wrap-up` section.
+
+See the seam contract at `storage-backends/README.md` for how this swap works.

@@ -2,19 +2,19 @@
 
 Overlay procedures that touch **project memory** are **storage-agnostic**: each carries its *judgment* (heuristics, WAIT confirms, formats) in its body and delegates its *storage mechanics* (where and how project memory is physically read/written) to a swappable **backend**. This mirrors the memory core's seam (`control-files/procedures/memory/storage-backends/`) — one procedure "core", two concrete backends.
 
-**Procedures are not the same as data.** Only project-**memory** access is seamed. A procedure that reads the *working project repo* (its docs, for a scan) or commits it with git is doing repo work, not memory storage, and is not seamed. That is why the push/pull family and `/project-wrap-up` are out of scope: they persist the user's code, and delegating memory persistence to the core's `/push-memory`.
+**Procedures are not the same as data.** Only project-**memory** access is seamed. A procedure that reads the *working project repo* (its docs, for a scan) or commits it with git is doing repo work, not memory storage, and is not seamed. That is why the push/pull family is out of scope: it persists the user's code, and delegating memory persistence to the core's `/push-memory`. `/project-wrap-up` carries exactly **one** op (`§ persist-store`), because its served form may not name an unserved `/push-all`.
 
 ## The two backends
 
 - **[markdown.md](markdown.md)** — project memory lives as a markdown tree over git: the resolved `HOME` dirs (`CONTEXT_DIR`, `KNOWLEDGE_DIR`, `MAP_PATH`), a hand-maintained `context-index.md`, `cp` from templates.
-- **[db.md](db.md)** — project memory lives in a **Hermod** store. **Declared, not implemented** — the seam's second side is a stub until that store exists.
+- **[db.md](db.md)** — project memory lives in a **Hermod** store, reached through tool calls on the Hermod server. Implemented; it is the backend a served client composes onto.
 
 ## The seam (how a procedure connects to a backend)
 
 1. **Marker**: every seamed procedure has exactly **one** `## Storage Mechanics` section — the swap point. It sits after the procedure body.
 2. **Reference by name**: the procedure body calls storage operations abstractly as **`§ op-name`** (e.g. *"create the folder (§ ensure-context-dir)"*). It never spells out files or commands inline.
 3. **Markdown resolution (now)**: the overlay compiler swaps the `## Storage Mechanics` body for `markdown.md → ## [procedure]`, so the installed command carries the concrete file mechanics. The `§` sigils are kept in the output as provenance.
-4. **DB resolution (later)**: when a Hermod store exists, a server composes the same procedure body with `db.md → ## [procedure]` instead.
+4. **DB resolution (now)**: the Hermod server composes the same procedure body with `db.md → ## [procedure]` instead, so a served client gets tool calls where an installed command gets file mechanics.
 
 ## Substitution rule (for tooling)
 
