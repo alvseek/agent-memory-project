@@ -37,7 +37,7 @@ _QUOTED_SCALAR = re.compile(r'^description: "(?:[^"\\]|\\.)*"$')
 
 # Overlay procedures every healthy tree carries — asserted by presence, not exact count, so a
 # newly-added or renamed procedure doesn't break the suite.
-_KNOWN = {"awaken-coder", "map-orientation", "generate-readme", "push-project"}
+_KNOWN = {"awaken-coder", "map-orientation", "load-project-context", "push-project"}
 
 
 def _install(tmp_path: Path):

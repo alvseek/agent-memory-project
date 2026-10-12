@@ -61,3 +61,8 @@ manifest `.agent-memory-coding-skill-*` → `.agent-memory-project-*`, placehold
 `setup-scripts/migrate-old-name.py` once to clear the pre-rename installs, then re-run the
 platform installers. See `agent-memory-local`'s `MIGRATION.md` and
 `docs/adr/2026-10-09-hermod-local-project-split.md`.
+
+## 2026-10-12 — the doc cluster and `dockerize` left
+
+Two more concerns left this repo, so the contents list above is superseded on those points:
+the five doc generators and `discovery-contract` moved to `agent-memory-doc` (`hermod-doc`), and `dockerize` moved to `agent-memory-wizards`. This overlay now holds the shell, project memory, the orientation map and push/pull. The decision is recorded in ADR-024.

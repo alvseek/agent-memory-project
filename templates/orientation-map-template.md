@@ -28,9 +28,9 @@ Index of orientation artifacts in this project. Used by agents at awakening (loa
 - **architecture-map** — project-wide architecture navigation doc (ARCH-map.md style)
 - **architecture-overview** — single-section architecture deep-dive (ARCH-overview, ARCH-domain-*, etc.)
 - **flow-diagram** — Mermaid or similar diagram showing data/control flow (`.mmd`, `.mermaid`); the flow *deep-dive* altitude (`doc_type: flow`)
-- **flow-journey-map** — the flow *map* altitude: how flows chain into journeys (`doc_type: flow-journey-map`, `docs/flows/journey-map.md`) from `/generate-flow-docs` bare
-- **domain-model** — data-model / ERD doc: entities + relationships + cardinality (Mermaid `erDiagram` / `classDiagram`) from `/generate-domain-docs` (`doc_type: domain`, under `docs/domain/`)
-- **domain-context-map** — the domain *map* altitude: how bounded contexts relate (DDD context map; `doc_type: domain-context-map`, `docs/domain/context-map.md`) from `/generate-domain-docs` bare
+- **flow-journey-map** — the flow *map* altitude: how flows chain into journeys (`doc_type: flow-journey-map`, `docs/flows/journey-map.md`)
+- **domain-model** — data-model / ERD doc: entities + relationships + cardinality (Mermaid `erDiagram` / `classDiagram`) (`doc_type: domain`, under `docs/domain/`)
+- **domain-context-map** — the domain *map* altitude: how bounded contexts relate (DDD context map; `doc_type: domain-context-map`, `docs/domain/context-map.md`)
 - **adr** — Architecture Decision Record (single decision document)
 - **orientation-map-link** — pointer to a child orientation map for a sub-project (fractal scaling). The `child_map` field names the sub-map file.
 - **other** — orientation artifact that doesn't fit above categories (CONTRIBUTING.md, GLOSSARY.md, etc.)

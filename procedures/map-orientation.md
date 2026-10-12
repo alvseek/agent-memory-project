@@ -92,9 +92,9 @@ Orientation map loaded: [MAP_PATH]
 - `ARCH*.md`
 - `ADR-*.md` or `*-adr.md`
 - `*.mmd`, `*.mermaid`
-- `*.md` under any `docs/flows/` folder (flow docs from `/generate-flow-docs` — carry `doc_type: flow` frontmatter)
-- `*.md` under any `docs/domain/` folder (domain docs from `/generate-domain-docs` — carry `doc_type: domain` frontmatter)
-- `*.md` under any `docs/architecture/` folder (architecture docs from `/generate-architecture-docs` — carry `doc_type: architecture-map` / `architecture-overview` frontmatter)
+- `*.md` under any `docs/flows/` folder (carry `doc_type: flow` frontmatter)
+- `*.md` under any `docs/domain/` folder (carry `doc_type: domain` frontmatter)
+- `*.md` under any `docs/architecture/` folder (carry `doc_type: architecture-map` / `architecture-overview` frontmatter)
 - `CONTRIBUTING.md`, `GLOSSARY.md`, `CHANGELOG.md` (optional, `type: other`)
 
 **Skip**: `.git/`, `node_modules/`, `vendor/`, `build/`, `dist/`, `.next/`, `target/`, `bin/`, `obj/`, hidden folders (except `.github/`).
@@ -282,7 +282,6 @@ Used by **Load Mode L2** when reading entries:
 - **/awaken-agent** — calls `/map-orientation` (bare, load-only) after project detection.
 - **/wrap-up** — calls `/map-orientation --session-touched [paths]` for orientation docs the session touched. Silent no-op if map missing.
 - **/update-project-context** — preferred path when a session DISCOVERED an entry's status is wrong. Direct edit; mtime check picks it up on next awakening.
-- **/discovery-contract** — the four doc generators' bare **discovery mode** reads this map (per-entry `status`, via the resolved `MAP_PATH`) to mark units documented-vs-not. A doc on disk that is absent from the map surfaces there as a staleness flag (→ `--rescan`).
 
 ---
 

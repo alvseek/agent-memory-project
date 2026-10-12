@@ -34,6 +34,7 @@ _TARGETS = [
             ".agent-memory-opencode-manifest",
             ".agent-memory-fleet-opencode-manifest",
             ".agent-memory-wizards-opencode-manifest",
+    ".agent-memory-doc-opencode-manifest",
         ],
     ),
     (

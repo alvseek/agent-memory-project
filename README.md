@@ -2,7 +2,7 @@
 
 The **coding/repo add-on overlay** for the [agent-memory](https://github.com/alvseek/agent-memory-system) framework.
 
-This repo holds the coding- and repository-oriented procedures that sit **on top of** the memory core: the coding shell (awaken/wrap-up), doc generation, project context, and push/pull. The wizards + QA moved to [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards) (2026-10-09), the fleet to [`agent-memory-fleet`](https://github.com/alvseek/agent-memory-fleet) (2026-10-08), and the localization lane to [`agent-memory-local`](https://github.com/alvseek/agent-memory-local) (2026-10-09) — on that last day this repo was renamed **agent-memory-project** and made central-only. A coding agent installs the memory core **plus** this overlay; a plain chat agent installs the core alone.
+This repo holds the coding- and repository-oriented procedures that sit **on top of** the memory core: the coding shell (awaken/wrap-up), project memory, and push/pull. The wizards + QA moved to [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards) (2026-10-09), the fleet to [`agent-memory-fleet`](https://github.com/alvseek/agent-memory-fleet) (2026-10-08), and the localization lane to [`agent-memory-local`](https://github.com/alvseek/agent-memory-local) (2026-10-09) — on that last day this repo was renamed **agent-memory-project** and made central-only. A coding agent installs the memory core **plus** this overlay; a plain chat agent installs the core alone.
 
 ## Relationship to the memory core
 
@@ -15,7 +15,7 @@ This repo holds the coding- and repository-oriented procedures that sit **on top
 - **Awakening overlay**: `awaken-coder.md` (composes the core awaken, then hands off to `agent-memory-local` when a project is localized)
 - **Lifecycle**: `project-wrap-up.md` (composes the core `/wrap-up`, then push + map-orientation)
 - **Wizards** (moved out 2026-10-09): the wizard protocols + `implement-plan` now live in the sibling repo [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards) (`hermod-wizards`).
-- **Doc-gen**: `generate-readme`, `generate-docs`, `generate-architecture-docs`, `generate-domain-docs`, `generate-flow-docs`, `discovery-contract`
+- **Doc-gen** (moved out 2026-10-12): the doc generators and `discovery-contract` now live in [`agent-memory-doc`](https://github.com/alvseek/agent-memory-doc) (`hermod-doc`); `dockerize` moved to [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards)
 - **QA** (moved out 2026-10-09): the QA pipeline (`analyze-code-quality`, `generate-standard`, `pixel-wizard`, `setup-qa-visual-instrument`, `map-qa-instrument`, `build-qa-bench`, `integration-test`, `run-qa-test`, `qa-status`, `generate-qa-checklist`) now lives in [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards) (`hermod-wizards`).
 - **Repo / integration**: `map-orientation`, `update-project-context`, `load-project-context`, `pull-all`/`pull-project`, `push-all`/`push-project`
 - **Storage backends** (`storage-backends/`): the seam the project-memory procedures delegate their mechanics to — `markdown` live, `db` declared and deferred (ADR-023).
