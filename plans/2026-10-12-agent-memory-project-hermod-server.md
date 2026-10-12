@@ -419,55 +419,55 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Result**: PASS. **Phase 1 complete**: the overlay holds 9 procedures, `hermod-doc` exists and installs, `dockerize` lives in the wizards, and every suite and the invariant guard are green.
 
 ### Phase 2:
-- [ ] **Step 2.1**: Scaffold the repo
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 2.1**: Scaffold the repo
+  - **Implementation Log**: Committed the overlay's Phase-1 work first (`ed07920`), because a submodule pin can only cite a commit that exists. Created `hermod-server`: `pyproject.toml` (fastmcp, starlette, uvicorn; dev pytest, ruff, httpx; `uv_build`), `src/hermod/__init__.py`, `src/hermod/configuration/{__init__.py,config.py}`, `tests/test_config.py`, `README.md`, `NOTICE`, `.env.example`, `.gitignore`, `.github/workflows/ci.yml` (checkout with `submodules: recursive`), with `LICENSE` and `.gitattributes` copied from the overlay. Pinned `agent-memory-project` as a submodule with a **relative** URL (`../agent-memory-project`), which git resolves against this repo's own remote: it points at the overlay on GitHub for any clone and at the sibling checkout during development, with no absolute path to rewrite. Two my-call details recorded: port **8210** rather than Munnin's 8200, since a coding client connects both and they run side by side; and the console-script entry left out of `pyproject.toml` because its module (`__main__.py`) arrives in Step 3.2, so nothing here references a module that does not exist.
+  - **Testing Log**: `uv sync` succeeds and builds the package; `ruff check` clean; `pytest -q` → **4 passed**, including `test_no_issuer_or_auth_surface`, which asserts the config carries none of Munnin's seven auth fields (decision 5). `git clone --recurse-submodules` into a scratch directory: **9 procedures** materialized, submodule at `ed07920`, and the config imports from the clone. **Caveat, recorded rather than glossed**: that commit is not on GitHub yet, so a clone from the remote cannot fetch the submodule until the overlay is pushed.
+  - **Success Criteria**: PASS. The repo installs and its modules import.
+  - **Tech Debts**: (1) the submodule pin cites a local-only commit until the overlay is pushed, so a remote clone fails until then; (2) the README's run steps name `python -m hermod`, which Step 3.2 lands — the README's Status section says scaffold.
+  - **Result**: PASS.
 
-- [ ] **Step 2.2**: The seam bridge and the inliner
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 2.2**: The seam bridge and the inliner
+  - **Implementation Log**: `content/seam_bridge.py` imports the overlay's `storage-backends/seam.py` by file path (`spec_from_file_location`), cached per content root, and raises `FileNotFoundError` naming the expected path when the checkout or the file is absent. `content/inline.py` carries `_COMPONENT_LINK`, `_lines`, `_emit`, `component_body` and `inline_components` byte-for-byte from the overlay's compiler, with a header recording that it is a copy and naming the fidelity test as what holds it honest. `content/__init__.py` stays a docstring until Step 2.3 adds the loader, so no module here imports one that does not exist.
+  - **Testing Log**: `tests/test_inline.py` (6 tests) covers the first-`---` body rule, the label substitution, a surviving non-component link on the same line, a component with no rule contributing nothing, a missing component reported rather than dropped, and a bare `components/…` mention not counting as a reference. `tests/test_seam_bridge.py` (3 tests) asserts the missing-checkout `FileNotFoundError` names the path, that the loaded module really is the overlay's own (its `__file__` sits under `storage-backends`), and that it is cached per root. `pytest -q` → **13 passed**; `ruff check` clean.
+  - **Success Criteria**: PASS. Both modules import and the two load-bearing inliner rules are covered.
+  - **Tech Debts**: None. One process slip worth recording: the first commit for this step went in before the ruff check had passed; the outstanding line-length error was fixed and the commit amended, so the committed state is green.
+  - **Result**: PASS.
 
-- [ ] **Step 2.3**: The loader
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 2.3**: The loader
+  - **Implementation Log**: `content/loader.py` with discovery by `sorted(procedures/*.md)` per source minus `EXCLUDED_PROCEDURES` (a constant holding `push-all` and `pull-all`), a registry expressed as a **source list** (`ContentSource`, one entry today) so a Munnin proxy joins beside it rather than replacing it, the backend document taken from configuration (`HERMOD_BACKEND_DOC`, defaulting to `markdown.md`), `get_prompt` inlining then substituting the `## Storage Mechanics` section, `list_resources`/`get_resource` over each source's `templates/`, and titles from each document's own `#` heading with descriptions from its lead sentence (the derivation carried from Munnin's loader, including the parenthesis-aware first-sentence rule). Added `unresolved_ops()`, which the seam module cannot answer — it extracts and substitutes sections and says nothing about which ops a body asked for — so the two `§ op` patterns and the mechanics-stripping helper are carried from the overlay's compiler with a comment saying so.
+  - **Testing Log**: probed the real output before writing assertions, then pinned them: `list_prompts()` is exactly the 7 (the 9 minus the 2 exclusions, named literally), `list_resources()` is exactly the 2, `available()` is True, the composed `awaken-coder` grew from 7,126 to 9,029 characters with **no** `/components/` link left, `map-orientation` keeps its template path (templates are copied, never inlined), `$ARGUMENTS` survives a no-argument call and is substituted when one is given, titles and descriptions are derived and all-distinct, `unresolved_ops` is empty for every served prompt, a resource is byte-identical to its file, and an absent checkout serves nothing rather than failing. `pytest -q` → **24 passed**; `ruff check` clean.
+  - **Success Criteria**: PASS. The loader serves the trimmed overlay, and an unknown prompt name raises rather than returning nothing.
+  - **Tech Debts**: None.
+  - **Result**: PASS.
 
-- [ ] **Step 2.4**: The fidelity test
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 2.4**: The fidelity test
+  - **Implementation Log**: Added `components_used(name)` to the loader — the one accessor the check needs, because the inlined-component list is the half of composition this server carries rather than imports. Wrote `tests/test_fidelity.py`, which loads the overlay's own `compile-procedures.py` by file path (the same way the server loads the seam), runs `compile_one()` over every served procedure, and compares three **backend-independent** mechanics: the components inlined; the ops each body references, read out of each side's composed text with the mechanics section stripped so the backend's own additions cannot mask a changed body; and that a marker-bearing procedure had its section swapped at all. Composed text is deliberately *not* compared, because the two sides compose different backend documents once the project store exists.
+  - **Testing Log**: 5 fidelity tests, full suite **29 passed**, `ruff check` clean. The comparison is guarded against passing vacuously: one assertion requires that at least one procedure actually inlined a component (four of the seven do), and `test_the_check_can_fail` silences the inliner through `monkeypatch` and requires the accounting to diverge from the compiler's, so a green run cannot mean merely that both sides executed.
+  - **Success Criteria**: PASS. A change to the overlay's inlining that the carried copy does not follow turns the test red.
+  - **Tech Debts**: None.
+  - **Result**: PASS. **Phase 2 complete** — the content pipeline serves the trimmed overlay and is held honest against the compiler.
 
 ### Phase 3:
-- [ ] **Step 3.1**: Register the served surface
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.1**: Register the served surface
+  - **Implementation Log**: `api_mcp/server.py` registers each served procedure as a FastMCP Prompt with its derived title, derived description and its optional argument slot, each template as a static Resource (`resource://templates/<name>`, `text/markdown`, assistant audience, priority 0.1), and the four read tools plus `ping` and `help`. The prompt's parameter is built dynamically because each procedure names its argument differently, and **both** `__signature__` and `__annotations__` are set — pydantic reads the second and raises on the first alone. Added `PROMPT_ARGUMENTS` and `argument_prompt()` to the loader: the map is **authored rather than parsed**, because the overlay's `## Arguments` sections are prose bullets in varying shapes (a bare `[domain]` line, a `$ARGUMENTS` token plus mode bullets, two positional tokens, and one with no argument at all), and every declared slot is optional since each procedure has an ask-if-missing branch. `INSTRUCTIONS` carries what a client injects at `initialize`; `help` returns the same text for clients that show none.
+  - **Testing Log**: 9 tests drive the surface through an **in-memory MCP client**, not a description of one, because the registration path has edges that constants would not touch (a prompt's arguments come from a function signature; a resource must register static rather than as a URI template). Verified: the handshake lists exactly the 7 with all-distinct titles and descriptions; the exclusions never reach it; 2 resources; `read_procedure("awaken-coder")` round-trips with no `/components/` left; `read_resource` is byte-identical to the file; an unserved name returns `served=false` with the listing to call; `ping` is `pong` and `help` carries `INSTRUCTIONS` plus 7 rows; and a prompt argument actually fills the `$ARGUMENTS` slot. Full suite **38 passed**, `ruff check` clean.
+  - **Success Criteria**: PASS. Nothing unserved appears in the handshake, and the exclusion list is the only filter. Note the plan's testing line says "9 prompts"; the served set is **7** by decision 8 and Step 2.3, and that is what is asserted.
+  - **Tech Debts**: None.
+  - **Result**: PASS.
 
-- [ ] **Step 3.2**: Compose the app
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.2**: Compose the app
+  - **Implementation Log**: `app.py` builds the loader from configuration (source name `overlay`), builds the MCP face over it, calls `http_app(path="/")`, and mounts it at `/mcp` on a Starlette app that takes the sub-app's **lifespan** — without it the MCP session manager never starts and the face answers nothing, which is the one wiring detail this file exists for. `/health` returns the service name and version and reads nothing. `__main__.py` runs it under uvicorn on the configured host and port, and the `[project.scripts]` entry is back in `pyproject.toml` now that its module exists. **Measured, not assumed**: I probed both `/mcp` and `/mcp/` before deciding whether to carry Munnin's path normaliser, and with this Starlette and this MCP app neither form redirects, so no normaliser is carried.
+  - **Testing Log**: `tests/test_app.py` (4 tests) asserts `/health` returns exactly the service identity, that a real `initialize` POST to `/mcp` comes back 200 with the protocol version and the server name in it — which is what proves the session manager started — that **both** slash forms reach the face with no redirect, and that the app builds with no issuer configured. Full suite **42 passed**, `ruff check` clean. Verified separately that the console script resolves: `uv run hermod` booted uvicorn and completed application startup, and the process was then stopped and the port confirmed free.
+  - **Success Criteria**: PASS. One process serves both surfaces and the MCP session manager starts.
+  - **Tech Debts**: `main()` ignores argv, so `hermod --help` starts the server instead of printing help. Harmless (the README documents the run command) and not worth a parser until a second flag exists.
+  - **Result**: PASS.
 
-- [ ] **Step 3.3**: Boot and connect
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.3**: Boot and connect
+  - **Implementation Log**: Wrote `tests/test_end_to_end.py`, which starts a **real uvicorn** on a free loopback port in a thread and connects FastMCP's HTTP client to it. That is the automated form of this step's "start the process and connect a client": running `claude mcp add` would edit the client's config, which is not something a test should do. Four checks: a real client answers `pong` and lists 7 prompts over HTTP; `read_procedure("awaken-coder")` comes back composed with no dangling component reference; **transport parity** — every served prompt arrives byte-identical to what the loader composes; and `/health` answers on the same live process.
+  - **Testing Log**: 4 end-to-end tests; full suite **46 passed**, `ruff check` clean. One interpretation recorded: the plan's twin-parity line reads as "served prompt against the compiled command", which Step 2.4 already covers by mechanic accounting. The parity this step adds is the one nobody looks at — the transport against the source — since a session manager that never started, an SSE frame that mangles a line, or a mount answering the wrong path are all invisible to an in-memory client.
+  - **Success Criteria**: PASS. A real client answers `pong`, lists the 7 served procedures, and reads a composed prompt.
+  - **Tech Debts**: None.
+  - **Result**: PASS. **Phase 3 complete** — the server boots, serves both faces, and a real client drives it.
 
 ### Phase 4:
 - [ ] **Step 4.1**: Schema, migrations and repository
