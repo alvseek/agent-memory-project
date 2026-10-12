@@ -30,7 +30,7 @@ Call `read_context_entry(project, scope, theme)`. `found: false` means no live e
 
 ### § create-context-entry
 
-Call `create_context_entry(project, scope, theme, content, template_version, description?, tags?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `description` and `tags` from that frontmatter so the listing can show them. **The stamp is declared, never stored**: it is a gate token, and the entry itself never carries the line. Refused when a live entry already holds the identity, and when `template_version` is missing or does not match the served template.
+Call `create_context_entry(project, scope, theme, content, template_version, description?, tags?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `description` and `tags` from that frontmatter so the listing can show them. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it. Refused when a live entry already holds the identity, and when `template_version` is missing or does not match the served template.
 
 ### § update-context-entry
 
@@ -86,7 +86,7 @@ Call `write_map(project, content, template_version, description?)` with the full
 
 ### § create-map
 
-Call `create_map(project, content, template_version, description?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the map itself never carries the line. Refused when the project already has a map, and when `template_version` is missing or stale.
+Call `create_map(project, content, template_version, description?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the stamp sits outside the template's fenced block, so the map cannot carry it. Refused when the project already has a map, and when `template_version` is missing or stale.
 
 ---
 

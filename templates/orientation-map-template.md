@@ -1,3 +1,10 @@
+# Orientation Map Template
+
+template_version: 2026-10-12-18-18
+
+The structure of a project's orientation map. Storage-agnostic: the markdown backend writes it to `MAP_PATH`; the DB backend passes it as the `content` of a `create_map` or `write_map` call. Copy the fenced block below and fill its placeholders, replace the example entries with the project's real artifacts, and delete the Customization Notes section.
+
+```markdown
 ---
 project: "[project-name]"
 description: "Orientation map for [project] — index of READMEs, architecture docs, flow diagrams, ADRs, and sub-project maps with staleness + role tracking."
@@ -6,8 +13,6 @@ last_full_scan: "YYYY-MM-DD"
 ---
 
 # Orientation Map — [project-name]
-
-template_version: 2026-10-12-16-48
 
 Index of orientation artifacts in this project. Used by agents at awakening (load into session context) and wrap-up (refresh entries the session touched) via the `/map-orientation` skill.
 
@@ -165,3 +170,4 @@ For `type: orientation-map-link` entries: if the entry passes the role filter, A
 - Remove example entries that don't apply to this project.
 - For monorepos with sub-projects: parent map references sub-maps via `type: orientation-map-link` entries. Sub-maps live in the same `context/` folder with suffix naming (`orientation-map-[subproject].md`).
 - For projects with no role split (single-role projects like undanganaku, agent-memory framework): all entries get `scope: shared`, `roles: []`. Role filtering becomes a no-op.
+```

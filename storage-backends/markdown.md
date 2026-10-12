@@ -25,12 +25,12 @@ Read `[scope-dir]/[theme].md` with the Read tool.
 
 ### § create-context-entry
 
-Copy the template to the scope path:
+Create the entry at the scope path **with the structure the template shows** — the fenced block below the template's `template_version` line — filling the frontmatter and every placeholder:
 
-- Shared: `cp [path-to-agent-memory-project]/templates/project-context-template.md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Private: `cp [path-to-agent-memory-project]/templates/project-context-template.md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
+- Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
+- Private: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
-> **Drop the `template_version` line.** The template carries it just below its title, and it is a gate token rather than content: read the template as a whole, then remove that line from the copy. No stored entry ever carries it.
+> **The template's `template_version` line sits outside that block.** That makes the stamp template metadata rather than entry content, so a file built from the block never carries it and there is nothing to strip afterwards.
 
 ### § update-context-entry
 
@@ -115,9 +115,9 @@ Write the map back to `MAP_PATH`.
 
 ### § create-map
 
-Copy `[path-to-agent-memory-project]/templates/orientation-map-template.md` to `MAP_PATH`, then populate its frontmatter (`project`, `description`, `created`, `last_full_scan`).
+Write `MAP_PATH` **with the structure the template shows** — the fenced block below the template's `template_version` line — then populate its frontmatter (`project`, `description`, `created`, `last_full_scan`), replace the example entries with the project's real artifacts, and delete the Customization Notes section.
 
-> **Drop the `template_version` line.** It sits just below the template's title and is a gate token rather than content, so the stored map never carries it.
+> **The template's `template_version` line sits outside that block,** so a map written from the block never carries it.
 
 ---
 
