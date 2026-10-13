@@ -49,9 +49,9 @@ Give Hermod's project-keyed memory one home instead of two: the records Valaskja
 - [x] Hermod's served ops read and write `shared_record` and `memory_record`, filtered by `project`, and by `agent` for the private scope; `title` carries the theme and `content_summary` the summary
 - [x] The tenant comes from the verified token's `(iss, sub)` read against `user_identity`, with no manually configured user id
 - [x] All 167 markdown entries and 7 maps import with nothing lost, the former collisions now distinct rows because `memory_record` carries the agent
-- [ ] Munnin's knowledge reads exclude `project`-keyed rows; its episode, identity, reasoning and emotional reads are unchanged
+- [x] Munnin's knowledge reads exclude `project`-keyed rows; its episode, identity, reasoning and emotional reads are unchanged
 - [ ] Hermod's own tables, database, volume and migration folders are gone, and `hermod-deploy` points at the memory database
-- [ ] ADR-025 and ADR-026 corrected, `db.md` restated, and the reversal named in ADR-027
+- [x] ADR-025 and ADR-026 corrected, `db.md` restated, and the reversal named in ADR-027
 - [x] Green against PostgreSQL, which CI supplies as a service: the store has no second engine, so nothing shadows what is deployed
 
 ---
@@ -222,19 +222,19 @@ The tenant is injected at the seam, never passed by a caller. The agent is a cal
   - **Success Criteria**: A dry run reports nothing lost; a second run is a no-op.
 
 ### Phase 4: Munnin's knowledge filter
-- [ ] **Step 4.1**: `project IS NULL` on the knowledge reads only
+- [x] **Step 4.1**: `project IS NULL` on the knowledge reads only
   - **Action**: Close the leak without touching episode reads.
   - **Implementation**: Add the condition in `_filtered_sql` and `_search_rows` for `record_type=knowledge` on both repositories, with the reason inline. Leave episode, identity, reasoning, emotional and RAS reads alone.
   - **Testing**: Munnin's full suite (it was 9 failures when the filter was fleet-wide); a test that an episode with a project is still returned, and one that a `knowledge` row with a project is not.
   - **Success Criteria**: Both suites green, and the two new tests fail if the filter is widened or removed.
 
 ### Phase 5: The records (docs, no code)
-- [ ] **Step 5.1**: `db.md` restated
+- [x] **Step 5.1**: `db.md` restated
   - **Action**: Give the ops their `agent` argument and their record mechanics.
   - **Implementation**: Each op names its table and its filters; `§ ensure-context-dir` and `§ update-context-index` stay no-ops; the "local file" wording goes.
   - **Testing**: The seam's op-coverage test, which fails when a referenced op has no section.
   - **Success Criteria**: Every op resolves, and the served prompt compiles.
-- [ ] **Step 5.2**: The ADRs
+- [x] **Step 5.2**: The ADRs
   - **Action**: Record the reversal.
   - **Implementation**: ADR-027 written; ADR-026 marked superseded; ADR-025's "no tenancy" line corrected; ADR-024's store-ownership clause corrected.
   - **Testing**: Links resolve; the plan link from ADR-027 works.
@@ -300,18 +300,20 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Result**: Done. The count is the same 167 the markdown holds, which is the point: the store can now represent all of it.
 
 ### Phase 4:
-- [ ] **Step 4.1**: [link to step above]
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
+- [x] **Step 4.1**: [link to step above]
+  - **Implementation Log**: The predicate is one clause, `(record_type <> 'knowledge' OR project IS NULL)`, added to the shared filter builder (`_filtered_sql`) and to the full-text reader (`_search_rows`) in **both** Munnin repositories. It is written as a read invariant beside tenancy and lifecycle, so it holds for every caller and every requested `record_type` rather than being a branch each read has to remember: a bare `query()` or `search()` is the path `awaken` and the served tools actually use, and those pass no `record_type` at all. The predicate is stated as *not* `(knowledge with a project)`, not as `project IS NULL`, because the column is load-bearing for episodes — `awaken` selects a project's latest episode by it.
+  - **Testing Log**: Two tests in `tests/data_repositories/test_repository_contract.py`, parametrized over both engines. The first asserts a project-keyed **episode** is still returned by `query()`, by `query(record_type=episode)` and by `search()`. The second asserts a project-keyed **knowledge** row is returned by nothing: not `query_shared`, not `query(record_type=knowledge)`, not `query(project=...)`, not `search_shared`, not `search` — with the unfiltered sibling asserted in the same test, so a filter that excluded everything would fail there too rather than pass quietly. **Mutation-proved in both directions**: deleting the predicate reddens the knowledge test (`test_a_project_keyed_knowledge_row_is_not_munnin_memory`, the `query(record_type=knowledge)` assertion), and widening it to a bare `project IS NULL` reddens the episode test — each mutation applied by a self-verifying script that asserts a single match and exits non-zero on a miss, and the file restored from a byte copy afterwards with `git diff` read to confirm no residue. **Full suite: 549 passed with PostgreSQL 17 (no skips), 525 passed + 24 skipped on SQLite alone, ruff clean.**
+  - **Success Criteria**: PASS — both engine suites green, and both new tests fail under the mutation that should break them.
+  - **Result**: Done. Nothing above the seam changed: the filter lives in the repository, the service and the served tool signatures are untouched, and `awaken`'s episode reads are unaffected by construction. After the retarget the two corpora are distinguished by data alone (the agent axis arrives via `memory_record`, the project axis via `project`), and this predicate is the one place Munnin keeps its half of that boundary.
 
 ### Phase 5:
-- [ ] **Step 5.1** / **Step 5.2**: [links above]
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
+- [x] **Step 5.1** / **Step 5.2**: [links above]
+  - **Implementation Log**: `storage-backends/db.md` restated as one flow. Its header now says the store *is* the memory database's records and links ADR-027, and a new note states the mapping a reader needs to act: a context entry is a `knowledge` row with a `project` (in `shared_record` for the shared scope, `memory_record` for the private one), the orientation map is a `shared_record` row titled `orientation-map`, `title` carries the theme and `content_summary` the description, the two derived identities, that `project` is the whole boundary between the corpora and the memory store's own reads exclude the rows that carry it, and that **Hermod issues no DDL**. `all-procedures` lost *"SQLite for a local run, a PostgreSQL database in a deployment"* (stale twice: decision 9 removed SQLite, and there is no store of Hermod's to configure) and gained the split the ops work on — whose rows are the token's, the project is an argument, the agent is an argument where a private row is involved. Every op now names its table and its filters, and the **six** ops that touch the private scope carry `agent`: `list_context_entries(project, scope?, agent?)`, `read_context_entry`, `create_context_entry`, `update_context_entry`, `move_context_entry` and `delete_context_entry`. Three op bodies say something the old text got wrong: the update is a stated wholesale replace that clears `content_summary` and `tags` when they are not passed; the move is two row operations across two tables, with the markdown path's own copy-then-delete exposure rather than "no partial state"; and the delete's tombstone revives on the same derived identity. Corrections, all naming ADR-027 as their authority: **ADR-026** marked *Superseded* (it described two tables and a sibling database that were never built); **ADR-024**'s store-ownership clause corrected in both the Decision and the Requirements bullet; **ADR-025**'s *"minus its tenancy"* corrected where it is decided; and **ADR-027**'s own two-engine Success Criterion corrected to PostgreSQL-only, because decision 9 removed SQLite after the ADR was written. The two ADRs keep their original sentences with an inline *Corrected by* marker rather than being rewritten, so the record still shows what was decided then.
+  - **Two false statements in `hermod-server`'s served text, fixed rather than filed.** `INSTRUCTIONS` told every connecting client that project context and the map *"live in this server's own store"*, and `_register_store`'s docstring justified its registration independence by *"the store is a local file"* — the same claim this step removes from the documentation, in the one place a client reads first. Both corrected in place. The `openWorldHint: False` annotations were **left alone** and are raised as a question instead: whether a tool that reaches a database counts as an open world is a design call with a real consequence for client confirmation prompts, not a wording fix.
+  - **Testing Log**: The overlay suite, **52 passed**. The op-coverage check was proven to be reading the restated file rather than passing by omission: renaming one op heading in `db.md` reddens `tests/test_fidelity.py::test_no_served_prompt_leaves_an_op_unresolved`, and the file was restored from a byte copy afterwards (**0 CR, 119 LF, 10,089 bytes**) with the loader and fidelity modules green again at 23 passed. `hermod-server`'s suite re-run against the modified content with PostgreSQL active: **111 passed, ruff clean** — that is the suite that composes `db.md` into the served prompts and asserts no op is left unresolved.
+  - **Success Criteria**: PASS — every op resolves, the served prompt compiles, and a reader arriving at any of the four ADRs lands on the current shape.
+  - **Result**: Done. "Docs, no code" held except for the two served-text corrections, which state what the system is rather than changing what it does. Residue worth carrying: the ADRs' inline markers mean four documents must be read for the store's full history, and ADR-024's Rejected section still argues the family split against a store shape that no longer exists — deliberate, since an ADR records a decision made at a time.
+  - **Tech Debts**: **New** — the MCP annotations assert `openWorldHint: False` on the store tools while those tools now reach a database over the network; the question is whether that flag should change, and it is left for [USER-NAME] rather than decided here. **New** — `hermod-server`'s pinned overlay pointer moved only when this plan's commits did, so the checkout was already ahead of the pin at the start of the step.
 
 ### Phase 6:
 - [ ] **Step 6.1** / **Step 6.2**: [links above]

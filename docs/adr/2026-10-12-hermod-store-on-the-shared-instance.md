@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-12
 
-**Status**: Accepted
+**Status**: Superseded by [ADR-027: Hermod's Project Store Is Valaskjalf's Records](2026-10-13-hermod-store-is-valaskjalf-records.md) — the location was wrong twice over: project-keyed memory belongs in the memory store's own record tables, and the store this ADR built could not hold two agents' private entries for one theme at all (167 markdown entries became 164 rows).
 
 **Extends**: ADR-023 (*The Overlay Storage-Backend Seam*), and resolves a question the `munnin-deploy` Postgres plan left as "later".
 

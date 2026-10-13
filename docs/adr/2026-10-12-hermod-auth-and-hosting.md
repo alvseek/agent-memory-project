@@ -16,7 +16,7 @@ That leaves a client that cannot install markdown unable to reach the overlay fr
 
 ## Decision
 
-**We decided to**: give `hermod-server` the token verification ADR-024 declined, as a port of Munnin's Logto resource-server shape minus its tenancy, and to deploy it on the same box as Munnin through a new private umbrella, `hermod-deploy`, in the shape `munnin-deploy` already established.
+**We decided to**: give `hermod-server` the token verification ADR-024 declined, as a port of Munnin's Logto resource-server shape including the tenant that token resolves to (**corrected by [ADR-027](2026-10-13-hermod-store-is-valaskjalf-records.md)**: this ADR ports the shape *minus* its tenancy, and Hermod now resolves a tenant from the verified token exactly as Munnin does, because the rows it reads are the memory store's), and to deploy it on the same box as Munnin through a new private umbrella, `hermod-deploy`, in the shape `munnin-deploy` already established.
 
 The MCP face is verified exactly when an issuer is configured, and `/health` is never verified. One release pipeline builds the image in the public product repo and a second deploys an immutable tag from the private one. The two repos' boundary is unchanged: the dependency still runs one way, from `hermod-deploy` to `hermod-server`, and nothing in the product names the deployment.
 

@@ -44,7 +44,7 @@ The **tenant** is resolved from the verified token, not configured: the token's 
 
 **Success Criteria:**
 - All 167 markdown entries and 7 maps import with nothing lost, the former collisions now distinct rows.
-- Both engine suites green, Hermod's against SQLite and against a real PostgreSQL.
+- Both suites green: Hermod's against a real PostgreSQL — it is PostgreSQL-only, with SQLite removed from the repository, the fixture and the tests, and CI supplying a PostgreSQL service so the contract runs on every push rather than skipping green — and Munnin's against both of its engines.
 - An episode carrying a `project` is still returned by Munnin's reads, and a `knowledge` row carrying one is not.
 - No file under `hermod-server` creates a table.
 
