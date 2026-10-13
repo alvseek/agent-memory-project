@@ -62,4 +62,4 @@ The **tenant** is resolved from the verified token, not configured: the token's 
 
 ---
 
-**Full context**: [2026-10-13 Hermod store retarget plan](../../plans/2026-10-13-agent-memory-project-hermod-store-retarget.md)
+**Full context**: [2026-10-13 Hermod store retarget plan](../../plans/completed/2026-10-13-agent-memory-project-hermod-store-retarget.md)
