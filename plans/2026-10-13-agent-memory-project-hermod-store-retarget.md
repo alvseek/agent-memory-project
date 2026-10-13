@@ -367,11 +367,12 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 *Filled by procedure Step 17 after Quality Review is resolved. This plan is **not** runtime-verified.*
 
 - **Scope**: `hermod-server`'s store layer and importer; `agent-memory-server`'s knowledge reads; `hermod-deploy`'s config
-- **QA instrument**: NOT SET UP — `hermod-server` has no `qa/` directory, so there is no map and no bench
-- **Integration coverage**: NONE — `hermod-server` has no `qa/` directory, so there is no map and no bench, and Phases 1, 2, 3 and 6 cross a real database boundary. Confirmed with [USER-NAME] on 2026-10-13 (*"yes, no qa"*), before implementation, and recorded here rather than left silent.
-- **Checklist**: none — will be recorded at Step 17
-- **Coverage split**: TBD
-- **Runtime verification**: **NOT DONE.** Next action: set up the instrument first: `/map-qa-instrument create` → `/build-qa-bench`
+- **QA instrument**: NOT SET UP **for this change** — `hermod-server`, the repo the feature lives in, has no `qa/` directory, so it has no map and no bench. Checked rather than assumed at Step 17: `agent-memory-server` **does** have one (`qa/qa-map.md`, runbooks, fixtures and eleven checklists, promoted by `/build-qa-bench` on 2026-08-21), so the instrument exists on the memory side and not on the coding side.
+- **Integration coverage**: NONE as a repeatable test — `hermod-server` has no `qa/` directory, so there is no map and no bench, and Phases 1, 2, 3 and 6 cross a real database boundary. Confirmed with [USER-NAME] on 2026-10-13 (*"yes, no qa"*), before implementation, and recorded here rather than left silent. Worth stating alongside it: Phase 6's boundary **was** exercised by hand against the live store — the deploy, the dry run, the import and a second dry run proving idempotence — which is stronger than nothing and weaker than a test, because nothing repeats it.
+- **Checklist**: **SKIPPED at Step 17**, by the gate's own rule. Its condition is a `qa/qa-map.md` **and** a built bench in the project the checklist would live in; `hermod-server` has neither, and inventing a `qa/` folder for a repo that never opted into the ontology is the one thing the procedure forbids. The skip is recorded here rather than left blank, because a silent skip reads as "nothing needed".
+  - **The option that remains**: `agent-memory-server`'s instrument is real, and the Munnin half of this change — the knowledge filter, which is the half that could silently change what a chat agent sees — could carry a checklist of its own under `qa/checklists/`. That is a separate invocation against that repo's change set, offered rather than taken.
+- **Coverage split**: N/A — no checklist was built.
+- **Runtime verification**: **NOT DONE.** Next action, in order: `/map-qa-instrument create` → `/build-qa-bench` in `hermod-server`, then `/run-qa-test`. And the one thing no instrument covers yet: **no client has used a real token against Hermod**, so the store tools have never been exercised from a client's seat — everything verified is anonymous or direct store access.
 
 > Do not read a filled checklist as a passed one. This section says a verification *plan* exists, nothing more.
 
