@@ -96,7 +96,7 @@ Call `create_map(project, content, template_version, description?)` with the map
 
 ### § load-coding-reasoning
 
-The coding-reasoning layer is memory, not project context, so the project store does not hold it: read it from the memory layer, the same way the core's shared content is read. This is a visible cost of the no-join decision (the store carries no episodes and no fleet memory). A client with no memory layer attached skips the layer, exactly as the markdown backend does when the file is missing.
+Call the memory layer's `coding_reasoning()` tool and load the patterns it returns. The lane is memory, not project context, so this store does not hold it: it is delegated to the memory layer, the same way the core's shared content is read. This is a visible cost of the no-join decision (the store carries no episodes and no fleet memory). A client with no memory layer attached skips the layer, exactly as the markdown backend does when the file is missing.
 
 ### § load-context-indexes
 
@@ -111,6 +111,24 @@ The roster is store memory rather than project context, so the project store doe
 **Delegated to the memory layer.** Episodes are Munnin's records and the project store holds none, so the two-part step resolves there: ask the memory layer for the newest episode whose `project` is in the resolved project set, and read its body there. This is the second and sharper cost of the no-join decision, and the strongest single argument for revisiting it.
 
 ---
+
+## add-coding-reasoning
+
+### § read-coding-lane
+
+Call the memory layer's `coding_reasoning()` tool and load the patterns it returns. An empty list is the silent skip: a store that has not adopted the lane yet is a valid store.
+
+### § template
+
+Read the `reasoning-pattern-template` resource off the memory layer (`read_resource`), and note the `template_version` stamp it carries: the write in Step 4 must declare it.
+
+### § generate-uuid
+
+The pattern's cited UUID is content, so any 8-4-4-4-12 will do; the write also returns the record's own `uuid` if you prefer to cite that.
+
+### § persist-coding-reasoning
+
+Call the memory layer's `insert(scope="shared", record_type="coding_reasoning", title=..., content=..., template_version=<the template's stamp>)`. The record is fleet memory owned by nobody, and its `record_type` is the whole reason a chat agent's `awaken` never carries it.
 
 ## project-wrap-up
 

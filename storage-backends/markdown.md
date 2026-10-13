@@ -141,6 +141,25 @@ From the episodic index the core returned, take the newest entry whose `project`
 
 ---
 
+## add-coding-reasoning
+
+### § read-coding-lane
+
+Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context (silently skip if missing).
+
+### § template
+
+The reasoning-pattern block format → read `[AGENT-MEMORY-PATH]/control-files/procedures/memory/resources/reasoning-pattern-template.md`.
+
+### § generate-uuid
+
+- **Windows**: `powershell -c "[guid]::NewGuid().ToString()"`
+- **Linux/macOS**: `uuidgen` or `cat /proc/sys/kernel/random/uuid`
+
+### § persist-coding-reasoning
+
+Append the completed pattern as a level-3 (`###`) block to `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md`, under an existing `## ` grouping. Transfer it with `copy-lines.sh` rather than retyping it, so the bytes arrive exactly.
+
 ## project-wrap-up
 
 ### § persist-store
