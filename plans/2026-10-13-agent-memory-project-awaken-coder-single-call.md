@@ -332,26 +332,34 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 - **Correction to this plan's own text**: the plan twice says `storage-backends/markdown.md` is "deliberately untouched". That is wrong, and Step 3.1 found it: the body now references two ops that backend did not define (`§ awaken-coder-payload`, `§ load-maps`), so a markdown-path awakening would have hit undefined ops. All three places were corrected: both ops were added in markdown terms, and `§ select-project-episode` was reworded to one body per project. What the line was protecting — a payload call changing nothing about how the markdown path reads files — still holds.
 
 ### Phase 4:
-- [ ] **Step 4.1**: The chain and the release
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
-- [ ] **Step 4.2**: The live awakening
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
+- [x] **Step 4.1**: The chain and the release
+  - **Implementation Log**: Pushed in order — the overlay `e8a24d4`, then the `hermod-server` gitlink, then `hermod-deploy`'s pin `ca90c6c` — and one Hermod release dispatched against `8c25fff` (run `38440405460`). Two commits ride ahead of the feature, both disclosed: `ade3827` fixes the served-set constant the coding-reasoning lane left stale in `tests/test_loader.py`, and the commit that follows replaces a third copy of that count in `tests/test_end_to_end.py` with a comparison against the loader, because a bare literal had drifted in three files at once.
+  - **Testing Log**: **CI on `8c25fff`: success, 119 passed, 0 failed.** That run is the first execution of the seven new tests: this machine has no PostgreSQL, so they skipped locally and ran in CI's service container. The first push's CI was red on `tests/test_end_to_end.py:84` (`assert 8 == 7`), which is what exposed the third stale count. The release then ran green.
+  - **Success Criteria**: Pass — the served text and the shipped code agree, verified by reading `read_procedure("awaken-coder")` back: six ops defined, the call named, the one-step instruction present, the per-repo carry-forward present, and the old project-selection phrasing gone.
+  - **Result**: Done.
+- [x] **Step 4.2**: The live awakening
+  - **Implementation Log**: Ran the two calls as a client would: `munnin.awaken(domain="meta")` and `hermod.awaken_coder(domain="meta", projects=["hermod-deploy", "hermod-server", "agent-memory-project"])`. The harness also reports `hermod` at 18 tools now, one more than before, which is independent confirmation that the tool is on the face.
+  - **Testing Log**: Two calls, one step, no `get` and no per-op call. The core returned its eight keys; the coder returned `coding_lane` (12 patterns), `episode_index` (6 entries, all `agent-memory-project`), `episodes` (one body, `agent-memory-coding-reasoning-lane`, 4,483 characters), `context_index` (2 rows, that project's two entries) and `maps` (empty — none of the three projects has one). The set's own behaviour showed up plainly: the core's `latest_episode` belonged to `agent-memory-server`, a repository **not in the set**, while the coder's `episodes` carried only the set's own. That is the defect this design removes, observed rather than argued.
+  - **Success Criteria**: Pass.
+  - **Result**: Done.
 
 ---
 
 ## **QUALITY REVIEW**
-*Filled by procedure Step 16 (delegated to `/analyze-code-quality` in embedded mode) after all execution phases are complete. **Static** review — answers "is the code clean?".*
+*Step 16, `/analyze-code-quality` in embedded mode. **Static** review: "is the code clean?".*
 
-- **Scope**: [Files reviewed — from Execution Log, reconciled against `git diff --name-only`]
-- **Quality Standard**: [quality-standard.md found / not found — dimensions applied]
-- **Findings**: [Issues found, or "No findings — implementation meets quality dimensions"]
-- **Fixed**: [What was fixed from approved findings, or "N/A"]
+- **Scope**: ten `hermod-server` files (six source, four test) and four overlay text files, reconciled against `be59e6e..HEAD` in the product and `6fb676d..HEAD` in the overlay. The only entries beyond the logged files are the two submodule gitlinks, and both are logged; nothing logged shows an empty diff.
+- **Quality Standard**: not found — no `quality-standard.md` anywhere in `hermod-server` (globbed 2026-10-14), so the review is freeform and Dimension 8 is skipped.
+- **Checks that ran**: `ruff check` clean across `src` and `tests`; no new TODO, FIXME or HACK in the diff; the new entities carry no hidden state and the payload is one plain dict; `ruff format` flags 9 of 37 files repo-wide, which is the house state, and after a one-line fix neither new file is among them.
+- **Findings**: one Low, plus one defect of the author's own fixed before this was presented.
+
+| # | Severity | File:Line | Issue | Fix Options |
+|---|----------|-----------|-------|-------------|
+| — | Fixed before review | `business_services/awakening_service.py` | The assembly filtered falsy project names out of the set, so a blank in front of the list would have silently answered about a different repository — and `projects[0]` *is* the session's repository. | Fixed: an empty element is refused now, and the surface test pins both refusals (`projects=[]` and `projects=[""]`). |
+| 1 | Low | `business_services/awakening_service.py` (`awaken`) | The payload is **one call** but about `2N + 3` queries for a set of N, because the context index and the maps are read per project through the existing ops. Bounded by the set size, and the call count is what the plan measured. | A) Record the bound and leave those reads. B) Add a set-wide context/map read now. |
+
+- **Fixed**: the empty-element refusal, above, with its test. **Resolution of finding 1 (accepted default A)**: the `2N + 3` query bound is recorded rather than changed. The context and map reads stay the existing ops, so there is one implementation of each, and a set of three costs nine or ten queries inside a single call against one database. The lever, if a set ever grows, is a set-wide read; nothing needs it today.
+- **Recorded, not findings**: `domain` is deliberately unvalidated (Munnin answered for it one call earlier, so a bad one has already failed); the lane now has two readers (this payload and Munnin's `coding_reasoning()`, which the overlay's `add-coding-reasoning` op still uses outside an awakening); and the two submodule gitlinks are the only non-file entries in the diff.
 
 ---
 
@@ -360,7 +368,7 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 
 - **Scope**: the `awaken_coder` tool and its two repository reads on `hermod-server`, plus the overlay's procedure body and DB backend
 - **QA instrument**: **NOT SET UP** — `hermod-server` carries no `qa/` directory at all, so there is no `qa/qa-map.md` and no bench. Step 17 will auto-skip for that reason.
-- **Integration coverage**: **NONE** — the bench check failed (no instrument in this repository). Phases 1 to 3 cross real boundaries (two servers over MCP and HTTP, one shared database) and will carry unit tests only; Phase 4.2's live awakening is done by hand during implementation. Confirmed with Alvi, 2026-10-14, before implementation.
+- **Integration coverage**: **NONE** — the bench check failed (no instrument in this repository). Phases 1 to 3 cross real boundaries (two servers over MCP and HTTP, one shared database) and carried unit tests only; Phase 4.2's live awakening was done by hand during implementation. Confirmed with Alvi, 2026-10-14, before implementation. **Outcome**: CI ran the seven new tests against PostgreSQL and passed (119 passed, 0 failed), and the live two-call awakening ran in Step 4.2 — so the runtime evidence exists, it is just not bench-recorded.
 - **Checklist**: none — Step 17 auto-skips, no `qa/` folder is invented for a repository that never opted into the ontology.
 - **Coverage split**: not applicable while the instrument is absent. The unit layer covers the two reads, the filter parity, the payload's shape and the surface registration.
 - **Runtime verification**: **NOT DONE.** Next action: either set the instrument up for this repository first (`/map-qa-instrument create` then `/build-qa-bench`), or accept Phase 4.2's by-hand check as the only runtime evidence.
