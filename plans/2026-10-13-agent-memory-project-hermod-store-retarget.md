@@ -335,10 +335,31 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 ## **QUALITY REVIEW**
 *Filled by procedure Step 16 (delegated to `/analyze-code-quality` in embedded mode) after all execution phases are complete. **Static** review.*
 
-- **Scope**:
-- **Quality Standard**:
-- **Findings**:
-- **Fixed**:
+- **Scope**: the 36 files the plan's implementation left on disk, across four repos — `hermod-server` (19: the record repository, the tenant resolver, the importer, `app.py`, `config.py`, `api_mcp/server.py`, the Protocol, `ci.yml`, and eight test modules plus `valaskjalf_schema.py`), `agent-memory-server` (8: the two repositories, `memory_record.py`, two migrations, three test modules), `agent-memory-project` (6: `db.md`, four ADRs, this plan) and `hermod-deploy` (3: `config/deploy.yml` and its two READMEs). The nine files the change **deletes** are not reviewable. **Scope reconciliation**: the caller-passed scope came from the Execution Log, and because everything was already committed the working tree showed no diff, so each repo's commit range for the implementation was used as ground truth instead. Six files changed in those ranges and were **not** named in the log — `project_repository.py`, `data_migrations/__init__.py`, `tests/test_config.py`, `memory_record.py`, `tests/data_entities/test_migrations.py`, `tests/test_postgres_migrations.py` — and were added to scope on [USER-NAME]'s instruction. No file was logged as touched without a change.
+- **Quality Standard**: **None — freeform analysis.** No `quality-standard.md` exists in any of the four repos (the three on this machine belong to Invintiry and BRYES), so Dimension 8 is skipped. Dimensions 2 (State Completeness) and 3 (UX Completeness) are skipped as UI-only.
+- **Findings**: 11 — 0 critical, 7 medium, 4 low.
+  | # | Severity | File:line | Issue |
+  |---|---|---|---|
+  | 1 | Medium | `hermod-server/src/hermod/data_repositories/project_repository.py:27-71` | The Protocol never gained `agent`, so the boundary the service is typed against cannot express the private scope; `move_context_entry`'s docstring also described one step where the implementation takes two. |
+  | 2 | Medium | `hermod-server/src/hermod/app.py:209-239`, `configuration/config.py:3-13`, `data_repositories/record_project_repository.py:23-25` | Local mode still exists in code and three docstrings deny it: a loopback no-issuer config starts unverified, `/health` passes, and every store op then raises `MissingTokenError`. |
+  | 3 | Medium | `hermod-server/src/hermod/data_migrations/markdown_importer.py:272-274` | The dry run's docstring claimed the first connection applies pending migrations; nothing in this server issues DDL. |
+  | 4 | Medium | `hermod-server/src/hermod/data_migrations/markdown_importer.py:316-319` | A missing agent was counted as "already present", so a run that wrote nothing could report success. |
+  | 5 | Medium | `hermod-server/tests/valaskjalf_schema.py:9-11` | The minimal DDL copy was claimed to be "pinned rather than trusted" and the plan promised a drift test; no such test existed. |
+  | 6 | Medium | `agent-memory-server/src/munnin/data_entities/memory_record.py:107` | The comment ADR-027 names as the anomaly — "reserved for Hermod's project scope; unused by Munnin" — was still there, and now also misdescribes the reads this plan added. |
+  | 7 | Medium | `hermod-server/src/hermod/configuration/config.py:59-65,74-81` | `logto_audience` declared twice, its six-line comment block duplicated verbatim. |
+  | 8 | Low | `hermod-server/src/hermod/data_repositories/record_project_repository.py:430-447` | `_select_one` did not require `agent` for the private scope; `agent_id = NULL` matches nothing, so the read answered `None` instead of refusing. |
+  | 9 | Low | `hermod-server/src/hermod/data_repositories/record_project_repository.py:412-419` | The two servers disagree about what "live" means: Hermod's reads ignore `archived_date`, Munnin's filter it. |
+  | 10 | Low | `hermod-server/src/hermod/data_repositories/record_project_repository.py:270-321` | The move's docstring claimed a partial move is "reported rather than hidden"; the create and the tombstone are two transactions and nothing reports between them. |
+  | 11 | Low | `hermod-server/src/hermod/business_services/tenant_resolver.py:122-135` | A concurrent first login can leave an orphan `account` row, unmentioned by the docstring that promises the re-read settles the race. |
+- **Fixed**: All of them, in `hermod-server@18588c3` and `agent-memory-server@9db65b6`, with one taken as a variant and one documented rather than decided.
+  - **1** — `agent` added to the six Protocol signatures, with the scope rule stated on the class, and the move docstring corrected to two steps.
+  - **2** — taken as **B** on [USER-NAME]'s call: local mode is kept and the three docstrings now say what it actually serves, which is the content surface only, since the store needs a token to name a tenant. The disagreement between decision 8's words and ADR-025's loopback guard is therefore resolved in ADR-025's favour, in prose.
+  - **3**, **6**, **7**, **10**, **11** — the statement corrected in each case; `logto_audience` now has one declaration.
+  - **4** — `MissingAgentError` added to the repository as a `ValueError` subclass, so the served tools behave identically while the importer can tell a refusal-to-write from a refusal-to-duplicate and report it as a failure.
+  - **5** — the drift test added, parametrized per table, asserting every column the code inserts into, filters on or maps out of exists. **Mutation-proved**: dropping `content_summary` from the copy reddens `shared_record` and leaves `memory_record` passing, which is the isolation the test is for. The other direction — the copy carrying a column Munnin's schema lacks — is not checkable from this repo and is stated as such in the test.
+  - **8** — `_select_one` now calls `_require_agent` as its sibling reads do.
+  - **9** — **documented, not decided.** Aligning the two servers on what "live" means is a behaviour change to a row class nothing archives today, so the asymmetry is written down at the reads and left as [USER-NAME]'s call rather than resolved silently.
+  - **Verification**: `hermod-server` **113 passed** against PostgreSQL (up two, the new test) and ruff clean; `agent-memory-server` **549 passed** and ruff clean. Nothing here is runtime-verified from a client; that is the QA handoff's line, below.
 
 ---
 
