@@ -286,11 +286,11 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Wiring, testing**: **111 passed with a service, 70 passed + 41 skipped without one, ruff clean.** The service-level coverage that had to outlive the deletion was moved into `test_record_repository.py` in the same pass, three tests: the stamp gate's three refusals, the line cap refusing rather than splitting, and reads answering with no overlay checkout while a write names why it cannot. `test_end_to_end.py` converted to the guarded, record-backed shape with a seeded mapping, so the resolver lands on the tenant whose agent rows exist rather than minting one with no agents. `test_mcp_surface.py` builds its service over a repository that is never connected, which is honest for a file that drives registration and reaches no store.
 
 ### Phase 2:
-- [x] **Step 2.1**: **Absorbed into Step 1.2.** The resolver had to come first, because the repository is constructed with a resolved tenant and `app.py` cannot be pointed at it before one exists. Its implementation is what Step 1.2's first half above records; what this phase keeps is the part of Phase 2 that is not the resolver.
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
+- [x] **Step 2.1**: The tenant resolver — **done, and logged at Step 1.2 above**
+  - **Implementation Log**: `src/hermod/business_services/tenant_resolver.py`. `(iss, sub)` read against Valaskjalf's `user_identity`; a new tenant minted as `uuid4().hex` and never taken from the issuer's subject; the account created with the claims' labels; the write re-read afterwards because two simultaneous first logins settle on one row; a WARNING when a tenant appears; `current_user_id()` reading the verified token and refusing with `MissingTokenError` when there is none or when it names no subject; and `resolve_existing`, which refuses an unmapped pair for a caller with no token.
+  - **Testing Log**: `tests/test_tenant_resolver.py`, 8 tests against a real PostgreSQL — a new pair is stable on the second resolve, another issuer is another tenant, the id is minted not taken, labels are stored once and never looked up, a second resolve leaves them alone, no token means no tenant, and `resolve_existing` finds a mapped pair while refusing an unmapped one.
+  - **Success Criteria**: PASS — a verified token alone determines whose rows are read and written, with no configured user id anywhere.
+  - **Result**: Done. It was built before Step 1.2 rather than with it, because 1.2 could not land without a tenant to construct its repository with; the log at 1.2 records it as that step's first half, so a reader of either phase finds it.
 
 ### Phase 3:
 - [x] **Step 3.1**: Write records instead of rows — **done and verified against the real tree**
@@ -298,10 +298,6 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Testing Log**: `tests/test_markdown_importer.py` converted to the record repository with a real store and a seeded login: 13 tests, including one that asserts what the move was for, that the same theme under two agents is two rows rather than a reported collision, and one that asserts the importer refuses a pair nobody has signed in with. **Real-tree dry run against a real store: 167 entries, 7 maps, 0 colliding, 2 frontmatter mismatches reported and imported under their directories.**
   - **Success Criteria**: PASS — nothing is lost, and the three collisions the old identity produced are gone because the owner is part of the identity.
   - **Result**: Done. The count is the same 167 the markdown holds, which is the point: the store can now represent all of it.
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
 
 ### Phase 4:
 - [ ] **Step 4.1**: [link to step above]
