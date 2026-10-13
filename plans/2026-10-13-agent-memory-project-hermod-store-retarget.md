@@ -316,11 +316,19 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Tech Debts**: **New** — the MCP annotations assert `openWorldHint: False` on the store tools while those tools now reach a database over the network; the question is whether that flag should change, and it is left for [USER-NAME] rather than decided here. **New** — `hermod-server`'s pinned overlay pointer moved only when this plan's commits did, so the checkout was already ahead of the pin at the start of the step.
 
 ### Phase 6:
-- [ ] **Step 6.1** / **Step 6.2**: [links above]
-  - **Implementation Log**:
-  - **Testing Log**:
-  - **Success Criteria**:
-  - **Result**:
+- [ ] **Step 6.1**: Deploy and import — **prepared, not executed**
+  - **Implementation Log**: The repository side of the move is done. `config/deploy.yml` lost `HERMOD_DB_PATH`, `HERMOD_DB_BACKEND` and the `hermod-data` volume; its DSN comment now says the secret points at the **memory** database rather than one of Hermod's own, with the token-resolved tenant written in beside it. `hermod-server` is pinned at `3792b0b`. `deploy/README.md`'s store section, its backup section and its import command were restated: the command gained `--iss`/`--sub` (the importer has no token, and an unmapped pair is refused), lost the backend env var, and lost the "the dry run applies pending migrations" note, because Hermod no longer owns a schema. `README.md`'s deployment record was rewritten to what the box actually answers. One commit in `hermod-deploy`, `94d3e73`.
+  - **Testing Log**: Read-only, from outside the box. `/health` answers 200 on both hosts (`{"status":"ok","service":"hermod",...}` and `...service":"munnin"...`); `POST https://hermod.lok.quest/mcp` answers **401** with `Www-Authenticate: Bearer resource_metadata="https://hermod.lok.quest/.well-known/oauth-protected-resource/mcp"`; that document answers 200 reporting `resource=https://hermod.lok.quest/mcp` and `authorization_servers=["https://auth.lok.quest/oidc"]`. The **root** form of that document 404s, which is expected rather than a defect: the challenge advertises the path-bearing form, and Munnin's behaves identically. Repository check: `gh secret list --repo alvseek/hermod-deploy` returns exactly one secret, `SSH_PRIVATE_KEY`.
+  - **Success Criteria**: NOT MET — no import has run against the live store, so the 167-and-7 count it must report is unverified there.
+  - **Result**: **Blocked on one missing value and one decision.** The value: this repo holds no `HERMOD_DB_URL` secret, so the deployed release predates the retarget and the next deploy cannot start — the retargeted app refuses a config with no DSN. It cannot be filled from here, because the DSN carries the memory database's password and nothing on this machine holds a readable copy. The decision: Step 6.2 drops the `hermod` database and its volume, which is irreversible, so it is surfaced rather than executed.
+  - **Tech Debts**: the deployed server has never written a row; the annotations question recorded at Phase 5 stands; and the deploy ordering (Munnin, then Hermod, then the import) is written in three documents that nothing enforces.
+
+- [ ] **Step 6.2**: Remove the old store — **not started, gated on 6.1**
+  - **Implementation Log**: The file half is done — no `volumes:` entry and no SQLite env remains in `config/deploy.yml`, and `hermod-server` carries no migration folder, runner or schema file anywhere, so the Phase 1 deletions hold. What remains is on the box: `DROP DATABASE hermod` and the volume.
+  - **Testing Log**: —
+  - **Success Criteria**: NOT MET — the drop has not been run, and "the deployed server still answers and reads its rows after the drop" needs a deployed store that has rows.
+  - **Result**: **Not started**, deliberately. Dropping a database is irreversible, and decision 2 already conditions it on the retarget being verified, which needs 6.1 first.
+  - **Tech Debts**: the `hermod` database may never have been created — `deploy/README.md`'s setup steps were written out rather than run — and nothing here can prove either way without the box.
 
 ---
 
