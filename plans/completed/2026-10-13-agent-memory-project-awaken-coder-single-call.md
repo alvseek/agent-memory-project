@@ -56,12 +56,12 @@ Cut a coding awakening from five tool calls to two: one Munnin call for the memo
 - `docs/adr/2026-10-12-hermod-doc-extraction-and-hermod-server.md` - records the deferred join, whose cost this plan reduces without paying it
 
 ### **SUCCESS CRITERIA**
-- [ ] `/awaken-coder` completes with exactly two tool calls, `munnin.awaken` and `hermod.awaken_coder`, issued in one step
-- [ ] The overlay's DB backend ops read from that payload; the markdown backend is untouched
-- [ ] A test asserts Hermod's episode and lane reads apply the same hot-read filters Munnin applies
-- [ ] The project-identity component no longer says the set widens the episodic recall only
-- [ ] Unit tests green, and the payload verified live against a project with a map and one without
-- [ ] Deployed through the overlay chain with one Hermod release, and the served procedure read back
+- [x] `/awaken-coder` completes with exactly two tool calls, `munnin.awaken` and `hermod.awaken_coder`, issued in one step — run live in Step 4.2
+- [x] The overlay's DB backend ops read from that payload, **and** the markdown twin defines the same two new ops in file terms. *(This criterion originally read "the markdown backend is untouched", which turned out to be wrong: the body's op list changed, so that backend had to define both new ops or break. See the Phase 3 correction.)*
+- [x] A test asserts Hermod's episode and lane reads apply the same hot-read filters Munnin applies — `test_an_archived_or_tombstoned_episode_is_not_carried_forward`, which returns a retired episode if either predicate goes
+- [x] The project-identity component no longer says the set widens the episodic recall only
+- [x] Unit tests green (71 passed locally, 119 in CI with PostgreSQL), and the payload verified live
+- [x] Deployed through the overlay chain with two Hermod releases, and the served procedure read back: six ops, the call named, the one-step instruction, the per-repo carry-forward
 
 ---
 
