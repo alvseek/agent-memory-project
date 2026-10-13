@@ -94,21 +94,34 @@ Call `create_map(project, content, template_version, description?)` with the map
 
 ## awaken-coder
 
+> **This whole section is one call.** `awaken_coder(domain, projects)` returns the coding half of an
+> awakening in a single read-only payload, and every op below reads from it. It is issued **together
+> with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
+> and the two of them are the whole awakening ([ADR-029](../docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
+
+### § awaken-coder-payload
+
+Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall, and the first element is the one the context index and the maps come from. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and private context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+
 ### § load-coding-reasoning
 
-Call the memory layer's `coding_reasoning()` tool and load the patterns it returns. The lane is memory, not project context, so this store does not hold it: it is delegated to the memory layer, the same way the core's shared content is read. This is a visible cost of the no-join decision (the store carries no episodes and no fleet memory). A client with no memory layer attached skips the layer, exactly as the markdown backend does when the file is missing.
+Read `coding_lane` from the payload; an empty lane is the silent skip, because a store that has not adopted the lane yet is a valid store. The lane is the memory layer's own record type, and the payload crosses that boundary once so no client has to.
 
 ### § load-context-indexes
 
-Call `list_context_entries(project, agent)` — the rows are the index projection for the resolved project, and they span both scopes, so this is both indexes in one call. `agent` is required here for the same reason it is in `update-project-context`.
+Read `context_index` from the payload. Each row carries its own `scope`, which is what the `[shared]` / `[private]` display reads, and the rows span the whole set, so a related repository's index is already in hand when the task moves into it.
 
 ### § check-fleet-roster
 
-The roster is store memory rather than project context, so the project store does not hold it: ask the memory layer whether the project has a roster, and skip the fleet pointer when there is none.
+Look for a roster in the payload's `context_index`: a project whose index carries a `fleet-agents` entry has a fleet, and the pointer fires. Everything else skips silently. The roster's own **read** belongs to the fleet layer's `/load-fleet`, which already replaced the roster read that used to live here, so nothing is re-added.
 
 ### § select-project-episode
 
-From the index the core returned, take the newest entry whose `project` is in the resolved set, then load that episode's body from the memory layer with `get(uuid)` when it is not the payload's `latest_episode`. `awaken` is project-blind, so its `latest_episode` is the newest overall and the index carries `project` on every entry. No entry in the set → the project has none yet: keep the payload's `latest_episode`, say it is not project-specific, and skip open items. Episodes remain Munnin's records, so a body beyond the default costs one memory-layer read.
+Take it from `episodes` in the payload: one newest body per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch and no `get` to make. A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid`.
+
+### § load-maps
+
+Read `maps` from the payload: one entry per project in the set that has a map, each carrying `content` and its dates. A project absent from `maps` has none — never auto-create one here. The dates are what the bare `/map-orientation` load's mtime check reads.
 
 ---
 

@@ -123,6 +123,10 @@ Write `MAP_PATH` **with the structure the template shows** — the fenced block 
 
 ## awaken-coder
 
+### § awaken-coder-payload
+
+No call, and nothing fetched: this backend's awakening set is the files the core awakening already read, and each op below names the file that answers its part. The one thing that is *not* the core's is the map, which `§ load-maps` reads. A markdown awakening therefore costs no tool call at all — the ops under this heading are file reads.
+
 ### § load-coding-reasoning
 
 Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context (silently skip if missing).
@@ -137,7 +141,11 @@ Test for `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md`. Present 
 
 ### § select-project-episode
 
-From the episodic index the core returned, take the newest entry whose `project` is in the project set, then read that episode's body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. No entry in the set → the project has none yet, so skip silently.
+From the episodic index the core returned, take the newest entry **per project** in the set — the session's own repository first — then read each body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. A project in the set with no entry is left out rather than filled with the newest overall's, so the report carries one carry-forward per repository.
+
+### § load-maps
+
+Read each project's `MAP_PATH` with the Read tool, silently skipping a project that has none. The resolved project's is the HOME value; a related repository's is the same path under its own project name (`[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md`). Never create one here — that is `/map-orientation create`'s job.
 
 ---
 

@@ -288,29 +288,60 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 - 🚫 **Blocked**: Get input from [USER-NAME] before assuming
 
 ### Phase 1:
-- [ ] **Step 1.1**: [link to step above]
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
-
-- [ ] **Step 1.2**: [link to step above]
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 1.1**: The two reads Hermod does not have yet
+  - **Implementation Log**: `Episode` and `CodingPattern` added in a new `src/hermod/data_entities/awakening.py`, deliberately not in `project_context.py` because these rows are Munnin's rather than project context. `newest_episode_per_project` and `coding_lane` added to the `ProjectRepository` Protocol and to `RecordProjectRepository`, with `EPISODE_TYPE`, `CODING_REASONING_TYPE` and two row mappers. One query each: `DISTINCT ON (project)` picks the newest per project, and the caller's order is restored outside the query in Python.
+  - **Testing Log**: `ruff check` clean on the four touched files. Suite 70 passed, 48 skipped. The five new tests are in `tests/test_record_repository.py` and are among the skips: this machine has no PostgreSQL (no service, nothing listening on 5432, no `psql`), and that module's own rule is to skip without `HERMOD_PG_TEST_URL`. They run in CI, which supplies a service container, and watching that run is part of Step 4.1.
+  - **Success Criteria**: Met on the code and the query shape. **The runtime half is unverified locally**, stated rather than hidden. The filter test is built to bite: both retired rows are seeded *newer* than the live one, so dropping either lifecycle filter returns a retired episode and fails the assertion.
+  - **Tech Debts**: the episode read filters `archived_date` while `_select` deliberately does not. Both places now say why: Munnin archives episodes, and nothing archives a context entry.
+  - **Result**: Done, with the local execution gap carried forward to CI rather than claimed.
+- [x] **Step 1.2**: The test doubles
+  - **Implementation Log**: Verified none exist. Every test drives the real `RecordProjectRepository` over PostgreSQL, or an unused URL for the surface test, and `ProjectRepository` has exactly one implementation.
+  - **Testing Log**: grepped the suite for fakes and for alternative implementations: none.
+  - **Success Criteria**: Pass — nothing to update, and the risk the step named (a fake quietly satisfying the new interface with an empty result) cannot arise in this suite.
+  - **Result**: Closed as a no-op, with its reason recorded.
 
 ### Phase 2:
-- [ ] **Step 2.1**: [link to step above]
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional - any shortcuts, TODOs, or future improvements noted]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 2.1**: The assembly
+  - **Implementation Log**: `AwakeningService` in a new `src/hermod/business_services/awakening_service.py`, holding a repository factory for the same reason `ContextService` does (the tenant belongs to the call) and one method, `awaken(domain, projects)`. It composes reads into a five-key payload: `coding_lane`, `episode_index`, `episodes` (the newest body per project), `context_index`, `maps`. An empty set is refused before any read happens. One read the step list did not name was added, `episode_index`, because decision 1's payload carries the set's index **and** one body per project, and a single read returning every body to derive both would drag exactly the text that index exists to avoid. `EpisodeIndexEntry` was added for that projection.
+  - **Testing Log**: ruff clean; suite 71 passed, 49 skipped. Seven tests written across this phase (six on the repository, one on the surface); the repository ones skip here because this machine has no PostgreSQL and run in CI.
+  - **Success Criteria**: Met on the payload's shape and the empty-set refusal. The store-backed half is unverified locally, deferred to CI in Step 4.1.
+  - **Tech Debts**: none new. `domain` is deliberately not validated, with the reason in the docstring: Munnin answered for that domain one call earlier.
+  - **Result**: Done, with the local execution gap stated.
+- [x] **Step 2.2**: Registration, annotations and the face's own test
+  - **Implementation Log**: `_register_awakening(mcp, awakening)` added to `api_mcp/server.py` and called from `build_mcp` **beside** `_register_store` rather than inside it, so the one-tool-per-op rule stays legible where it applies. `build_mcp` gained the required third parameter, and `app.py` now builds one `repository_for` factory and hands it to both services. The tool is `awaken_coder(domain, projects)`, read-only (`_READ`), titled, with a docstring stating it is this face's first assembled payload and that `projects[0]` is the session's repository.
+  - **Testing Log**: `test_mcp_surface.py` gained `test_the_awakening_tool_is_registered_and_refuses_an_empty_set`, which names the tool and drives its guard, so reachability is proved without a database. It passes. Suite 71 passed, 49 skipped; ruff clean across `src` and `tests`.
+  - **Success Criteria**: Pass — the tool is callable and read-only, and the face's own test names it. The store-tools assertion (`STORE_TOOLS <= names`) still holds, since the new tool deliberately is not one.
+  - **Result**: Done.
 
-...{next phases as needed}...
+### Phase 3:
+- [x] **Step 3.1**: The body
+  - **Implementation Log**: `procedures/awaken-coder.md`: the pre-step now issues **both calls in one step** (the core's `/awaken-agent` and `awaken_coder`); step 1 keeps the core awakening and hands the episode selection to the payload; step 2 reads the lane from the payload; step 3 reads the context index from it, with the HOME component now naming the home only for writes and load-on-relevance reads; step 4 reads the maps from it and gates the fleet pointer on a roster in the context index; step 6's report gains a **carry-forward per repository**, the session's own first. The Storage Mechanics list moved to the six ops, and its stale "(not yet implemented)" for the DB section was dropped.
+  - **Testing Log**: the overlay compiled all ten procedures with no error (`setup-scripts/compile-procedures.py`, output written to `output/`); the hermod suite stayed 71 passed, 49 skipped.
+  - **Success Criteria**: Met locally on composition. The served read-back is Step 4.1's, after the release.
+  - **Result**: Done.
+- [x] **Step 3.2**: The DB backend's ops
+  - **Implementation Log**: `storage-backends/db.md`'s `awaken-coder` section now opens with the one call and defines six ops: `§ awaken-coder-payload` (the call, its five keys, the empty-set refusal), `§ load-coding-reasoning`, `§ load-context-indexes`, `§ check-fleet-roster` (a lookup in the context index, with the roster read left to `hermod-fleet`), `§ select-project-episode` (from `episodes`, no `get`), and `§ load-maps`.
+  - **Testing Log**: the body's referenced ops and both backends' definitions were compared directly — the sets match, six for six.
+  - **Success Criteria**: Met.
+  - **Result**: Done.
+- [x] **Step 3.3**: The rule about the set
+  - **Implementation Log**: `components/project-identity.md`: "The set widens the episodic recall only" became "the episodes, the project-context index and the orientation maps all span it, while the resolved repository stays the home the session's memory is filed under."
+  - **Testing Log**: read back in the compiled output.
+  - **Success Criteria**: Met.
+  - **Result**: Done.
+- **Correction to this plan's own text**: the plan twice says `storage-backends/markdown.md` is "deliberately untouched". That is wrong, and Step 3.1 found it: the body now references two ops that backend did not define (`§ awaken-coder-payload`, `§ load-maps`), so a markdown-path awakening would have hit undefined ops. All three places were corrected: both ops were added in markdown terms, and `§ select-project-episode` was reworded to one body per project. What the line was protecting — a payload call changing nothing about how the markdown path reads files — still holds.
+
+### Phase 4:
+- [ ] **Step 4.1**: The chain and the release
+  - **Implementation Log**:
+  - **Testing Log**:
+  - **Success Criteria**:
+  - **Result**:
+- [ ] **Step 4.2**: The live awakening
+  - **Implementation Log**:
+  - **Testing Log**:
+  - **Success Criteria**:
+  - **Result**:
 
 ---
 
