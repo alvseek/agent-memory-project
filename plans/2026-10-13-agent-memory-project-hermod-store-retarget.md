@@ -46,13 +46,13 @@ Give Hermod's project-keyed memory one home instead of two: the records Valaskja
 - [2026-08-07 boundary plan](plans/completed/2026-08-07-agent-memory-ops-to-hermod-boundary.md) - the frame this work returns to.
 
 ### **SUCCESS CRITERIA**
-- [ ] Hermod's served ops read and write `shared_record` and `memory_record`, filtered by `project`, and by `agent` for the private scope; `title` carries the theme and `content_summary` the summary
-- [ ] The tenant comes from the verified token's `(iss, sub)` read against `user_identity`, with no manually configured user id
-- [ ] All 167 markdown entries and 7 maps import with nothing lost, the former collisions now distinct rows because `memory_record` carries the agent
+- [x] Hermod's served ops read and write `shared_record` and `memory_record`, filtered by `project`, and by `agent` for the private scope; `title` carries the theme and `content_summary` the summary
+- [x] The tenant comes from the verified token's `(iss, sub)` read against `user_identity`, with no manually configured user id
+- [x] All 167 markdown entries and 7 maps import with nothing lost, the former collisions now distinct rows because `memory_record` carries the agent
 - [ ] Munnin's knowledge reads exclude `project`-keyed rows; its episode, identity, reasoning and emotional reads are unchanged
 - [ ] Hermod's own tables, database, volume and migration folders are gone, and `hermod-deploy` points at the memory database
 - [ ] ADR-025 and ADR-026 corrected, `db.md` restated, and the reversal named in ADR-027
-- [ ] Green against PostgreSQL, which CI supplies as a service: the store has no second engine, so nothing shadows what is deployed
+- [x] Green against PostgreSQL, which CI supplies as a service: the store has no second engine, so nothing shadows what is deployed
 
 ---
 
@@ -196,26 +196,26 @@ The tenant is injected at the seam, never passed by a caller. The agent is a cal
 ## **IMPLEMENTATION PHASES**
 
 ### Phase 1: The record repository (crosses: DB)
-- [ ] **Step 1.1**: The record-backed repository
+- [x] **Step 1.1**: The record-backed repository
   - **Action**: Implement `ProjectRepository` over `shared_record` / `memory_record` for both engines.
   - **Implementation**: One class, two SQL dialects behind a small seam, mirroring the two classes it replaces: `%s` and `?`, an identity column instead of lastrowid, `deleted_date` as the tombstone. Reads filter on `record_type='knowledge'`, `project`, and `agent_id` for the private scope; writes carry `user_id`, `title`, `content_summary`, `tags` and dates. The map is a `shared_record` row with `title='orientation-map'`.
   - **Testing**: A contract test parametrized over SQLite and a real PostgreSQL, running the same assertions as `tests/test_store_backends.py` does today, plus a fixture that creates the record tables (the minimal DDL copy from Technical Considerations) and a test that fails when the copy drifts from the columns the code uses.
   - **Success Criteria**: Both engine suites green; create, read, update, move, delete and both map writes round-trip.
-- [ ] **Step 1.2**: Config, wiring and the deletions
+- [x] **Step 1.2**: Config, wiring and the deletions
   - **Action**: Point Hermod's store at Valaskjalf and delete the old one.
   - **Implementation**: `db_backend` / `db_url` become the Valaskjalf DSN and no local serving path (decision 8); `HERMOD_DB_PATH`/`db_path` lose their own-store meaning. Delete the two repositories, the two migration folders, the two runners and their tests, and update `app.py`'s factory.
   - **Testing**: Hermod's suite green with the deletions; a test that the app builds with no DDL of its own.
   - **Success Criteria**: No file under `hermod-server` creates a table; the suite passes.
 
 ### Phase 2: The tenant resolver (crosses: DB)
-- [ ] **Step 2.1**: `(iss, sub)` → `user_id`
+- [x] **Step 2.1**: `(iss, sub)` → `user_id`
   - **Action**: Resolve the tenant per request from the verified token, mirroring Munnin's resolver.
   - **Implementation**: A resolver reading `user_identity` and creating the account plus the mapping on a first contact. The MCP server pulls `(iss, sub)` off the verified token and hands it to the store layer; nothing reads a configured user id. With no issuer there is no token, so it refuses to start rather than naming a tenant by default (decision 8).
   - **Testing**: An isolated test proving two distinct subjects get two tenants and a returning subject keeps one, plus a test that the store layer never sees a caller-supplied `user_id`.
   - **Success Criteria**: A verified token alone determines whose rows are read and written.
 
 ### Phase 3: The importer, retargeted (crosses: DB)
-- [ ] **Step 3.1**: Write records instead of rows
+- [x] **Step 3.1**: Write records instead of rows
   - **Action**: Retarget `markdown_importer.py` at the record repository.
   - **Implementation**: `uuid5` over `agent | project | scope | theme` for idempotence; `content_summary` from the frontmatter description; the map into a `shared_record` row titled `orientation-map`. Discovery and reporting stay as they are, including the collision block, which should now report none.
   - **Testing**: The existing importer tests against both engines, plus a dry run over the real markdown tree asserting **167 entries and 7 maps with 0 collisions**.
@@ -273,7 +273,7 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Tech Debts**: `create_context_entry` still builds its shared column list by string-removing `agent_id` and splicing the matching parameter. It works and is tested, but it is fragile and wants a cleaner split at the quality review.
   - **Revision (same day, decision 9)**: the engine choice changed after this step was logged. The repository, `tests/valaskjalf_schema.py` and the contract are now **PostgreSQL-only**, and `.github/workflows/ci.yml` gained a `postgres:17` service with `HERMOD_PG_TEST_URL` set, because without it every store test skips and the job would go green by omission. Re-verified Postgres-only: **17 passed** for the contract, **148 passed** for the full suite with a service, and **117 passed + 31 skipped** without one. A fifth defect surfaced during the rewrite and was found the same way as the others, by reading the pass/fail split: `create_context_entry` passed 13 values to the 12-column shared table, so every shared create failed while every map create and every private create passed. The string-surgery tech debt is gone with the rewrite and the per-table value tuple is now written out.
 
-- [ ] **Step 1.2**: Config, the resolver and the wiring, then the deletions — **first half done: the tenant resolver**
+- [x] **Step 1.2**: Config, the resolver and the wiring, then the deletions — **complete**
   - **Implementation Log**: `src/hermod/business_services/tenant_resolver.py`, mirroring Munnin's mechanism rather than approximating it: `user_identity` keyed on `(iss, sub)`, a new tenant minted as `uuid4().hex` and never taken from the issuer's subject, the account created with the claims' labels, the write re-read afterwards because two simultaneous first logins settle on one row, and a WARNING on creation because admission belongs to the authorization server and a new tenant should appear only when somebody was invited. `current_user_id()` reads the verified token through FastMCP's accessor and refuses with `MissingTokenError` when there is none, or when it names no subject. The test fixture gained `user_identity` and the `account` label columns.
   - **Testing Log**: `tests/test_tenant_resolver.py`, 6 tests against a real PostgreSQL: a new pair is stable on the second resolve; the same subject under another issuer is another tenant; the id is minted rather than taken from the subject; labels are stored for a new tenant only and are never a lookup key (two pairs sharing an email get two tenants); a second resolve leaves stored labels alone; and a call with no token names no tenant. **6 passed, the full suite 154 passed with a service, ruff clean.**
   - **Success Criteria**: PARTIAL — the resolver is done and verified; the config fields, the `app.py` wiring and the deletions are not started.
@@ -286,7 +286,7 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Wiring, testing**: **111 passed with a service, 70 passed + 41 skipped without one, ruff clean.** The service-level coverage that had to outlive the deletion was moved into `test_record_repository.py` in the same pass, three tests: the stamp gate's three refusals, the line cap refusing rather than splitting, and reads answering with no overlay checkout while a write names why it cannot. `test_end_to_end.py` converted to the guarded, record-backed shape with a seeded mapping, so the resolver lands on the tenant whose agent rows exist rather than minting one with no agents. `test_mcp_surface.py` builds its service over a repository that is never connected, which is honest for a file that drives registration and reaches no store.
 
 ### Phase 2:
-- [ ] **Step 2.1**: **Absorbed into Step 1.2.** The resolver had to come first, because the repository is constructed with a resolved tenant and `app.py` cannot be pointed at it before one exists. Its implementation is what Step 1.2's first half above records; what this phase keeps is the part of Phase 2 that is not the resolver.
+- [x] **Step 2.1**: **Absorbed into Step 1.2.** The resolver had to come first, because the repository is constructed with a resolved tenant and `app.py` cannot be pointed at it before one exists. Its implementation is what Step 1.2's first half above records; what this phase keeps is the part of Phase 2 that is not the resolver.
   - **Implementation Log**:
   - **Testing Log**:
   - **Success Criteria**:
