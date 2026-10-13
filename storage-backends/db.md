@@ -108,7 +108,7 @@ The roster is store memory rather than project context, so the project store doe
 
 ### § select-project-episode
 
-**Delegated to the memory layer.** Episodes are Munnin's records and the project store holds none, so the two-part step resolves there: ask the memory layer for the newest episode whose `project` is in the resolved project set, and read its body there. This is the second and sharper cost of the no-join decision, and the strongest single argument for revisiting it.
+From the index the core returned, take the newest entry whose `project` is in the resolved set, then load that episode's body from the memory layer with `get(uuid)` when it is not the payload's `latest_episode`. `awaken` is project-blind, so its `latest_episode` is the newest overall and the index carries `project` on every entry. No entry in the set → the project has none yet: keep the payload's `latest_episode`, say it is not project-specific, and skip open items. Episodes remain Munnin's records, so a body beyond the default costs one memory-layer read.
 
 ---
 
