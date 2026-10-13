@@ -293,7 +293,11 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Result**:
 
 ### Phase 3:
-- [ ] **Step 3.1**: [link to step above]
+- [x] **Step 3.1**: Write records instead of rows — **done and verified against the real tree**
+  - **Implementation Log**: `markdown_importer.py` retargeted. Discovery carries the owner: a private source records the domain from its `agent-<domain>` folder, and the importer passes it on every private read, write and presence check. The CLI names the tenant with `--iss`/`--sub` through `resolve_existing`, refusing an unmapped pair, and reports the tenant it resolved rather than a backend. The claim key and the repository's `entry_uuid` both gained the agent — the two defects this step found, recorded at Step 1.2.
+  - **Testing Log**: `tests/test_markdown_importer.py` converted to the record repository with a real store and a seeded login: 13 tests, including one that asserts what the move was for, that the same theme under two agents is two rows rather than a reported collision, and one that asserts the importer refuses a pair nobody has signed in with. **Real-tree dry run against a real store: 167 entries, 7 maps, 0 colliding, 2 frontmatter mismatches reported and imported under their directories.**
+  - **Success Criteria**: PASS — nothing is lost, and the three collisions the old identity produced are gone because the owner is part of the identity.
+  - **Result**: Done. The count is the same 167 the markdown holds, which is the point: the store can now represent all of it.
   - **Implementation Log**:
   - **Testing Log**:
   - **Success Criteria**:
