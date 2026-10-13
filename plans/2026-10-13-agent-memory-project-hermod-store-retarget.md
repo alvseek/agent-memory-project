@@ -50,7 +50,7 @@ Give Hermod's project-keyed memory one home instead of two: the records Valaskja
 - [x] The tenant comes from the verified token's `(iss, sub)` read against `user_identity`, with no manually configured user id
 - [x] All 167 markdown entries and 7 maps import with nothing lost, the former collisions now distinct rows because `memory_record` carries the agent
 - [x] Munnin's knowledge reads exclude `project`-keyed rows; its episode, identity, reasoning and emotional reads are unchanged
-- [ ] Hermod's own tables, database, volume and migration folders are gone, and `hermod-deploy` points at the memory database — **all but the volume**: no table, no migration folder, and no `hermod` database ever existed, and the DSN points at the memory database; the `hermod-data` volume is still on the host, unmounted
+- [x] Hermod's own tables, database, volume and migration folders are gone, and `hermod-deploy` points at the memory database
 - [x] ADR-025 and ADR-026 corrected, `db.md` restated, and the reversal named in ADR-027
 - [x] Green against PostgreSQL, which CI supplies as a service: the store has no second engine, so nothing shadows what is deployed
 
@@ -246,7 +246,7 @@ The tenant is injected at the seam, never passed by a caller. The agent is a cal
   - **Implementation**: Munnin deploys first (it applies the migrations), then Hermod with the repointed DSN; then the importer runs against the live store, dry run first.
   - **Testing**: `/health`, a 401 with the discovery pointer, and a store round trip with a real token; the dry run's counts against the live store.
   - **Success Criteria**: The import reports 167 entries and 7 maps with nothing lost.
-- [ ] **Step 6.2**: Remove the old store
+- [x] **Step 6.2**: Remove the old store
   - **Action**: Execute decision 2.
   - **Implementation**: Drop the `hermod` database, remove the volume from `config/deploy.yml`, confirm no migration folder survives.
   - **Testing**: The deployed server still answers and reads its rows after the drop.
@@ -325,10 +325,10 @@ I have to use this document as my **ONLY** source of truth to execute and track 
 
 - [ ] **Step 6.2**: Remove the old store — **the database is already gone; the volume is not**
   - **Implementation Log**: The file half is done: no `volumes:` entry and no SQLite env in `config/deploy.yml`, and no migration folder, runner or schema file survives in `hermod-server`. On the box, `pg_database` lists **`munnin` only** — there is no `hermod` database, so the drop this step names has nothing to act on: the setup in `deploy/README.md` was written out rather than run. The `hermod-data` volume still exists and nothing mounts it.
-  - **Testing Log**: `docker volume ls` on the box showed `hermod-data` beside `munnin-data` and `munnin-pgdata`; the running Hermod container was started without it, and the import wrote and read rows with it unmounted, which is the check that mattered. The removal was then attempted on [USER-NAME]'s instruction and **refused**: `docker volume rm hermod-data` answers *"volume is in use"*, and `docker ps -a --filter volume=hermod-data` names the holder — `hermod-web-9749111`, the **previous release**, exited 25 minutes earlier and kept by Kamal as the rollback target.
-  - **Success Criteria**: PARTIAL — nothing in either repo references Hermod's own store, and no database of its own exists; one volume remains on the host, held by the container that would have to go with it.
-  - **Result**: **Blocked on its holder, and surfaced rather than forced.** Removing the volume means removing `hermod-web-9749111`, which is the rollback artifact, and that is a larger act than the one approved. It is also worth saying that the rollback is already inert for this change: `kamal rollback 9749111` would run the old image against the *current* config, which sets no `HERMOD_DB_BACKEND` and mounts no volume, so it would serve a fresh empty SQLite store rather than the pre-retarget state.
-  - **Tech Debts**: `hermod-data` is held by the previous release container; the `probe` nginx container is still running on the box.
+  - **Testing Log**: `docker volume ls` on the box showed `hermod-data` beside `munnin-data` and `munnin-pgdata`; the running Hermod container was started without it, and the import wrote and read rows with it unmounted, which is the check that mattered. The removal was then attempted on [USER-NAME]'s instruction and **refused**: `docker volume rm hermod-data` answers *"volume is in use"*, and `docker ps -a --filter volume=hermod-data` names the holder — `hermod-web-9749111`, the **previous release**, exited 25 minutes earlier and kept by Kamal as the rollback target. The holder was surfaced, [USER-NAME] chose to remove it, and both went: `docker rm hermod-web-9749111 && docker volume rm hermod-data` removed the container and the volume. **After**: `docker volume ls` lists `kamal-proxy-config`, `munnin-data` and `munnin-pgdata` and no Hermod volume; `docker ps` shows `hermod-web-3792b0b` and `munnin-web-ccfe2ae` both healthy; `https://hermod.lok.quest/health` answers 200.
+  - **Success Criteria**: PASS — nothing references Hermod's own store: no table, no migration folder, no database of its own (never created), no volume, and no container of the old release.
+  - **Result**: Done. The old store is gone in every place it existed, and the reason it took a second pass is worth keeping: a volume is not free to remove while a container holds it, and the container that holds it is the rollback artifact — so the honest sequence was to surface the holder rather than delete it under an approval that named only the volume. Worth recording alongside it: the rollback was already inert for this change, since `kamal rollback 9749111` would run the old image against the current config and come up on a fresh empty SQLite store rather than the pre-retarget state.
+  - **Tech Debts**: housekeeping that predates this work and is nobody's in particular — four stopped Munnin containers on the box (`munnin-web-1ac96e3`, three `_replaced_` copies of it, and `munnin-web-9df765c`), plus the `probe` nginx container, up seven weeks and publishing nothing.
 
 ---
 
