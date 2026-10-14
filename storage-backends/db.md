@@ -101,7 +101,7 @@ Call `create_map(project, content, template_version, content_summary?)` with the
 
 ### § awaken-coder-payload
 
-Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall, and the first element is the one the context index and the maps come from. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and private context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and private context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
 
 ### § load-coding-reasoning
 
