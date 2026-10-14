@@ -30,11 +30,11 @@ Tool calls visible (git commands); capture per-repo commit hashes + user-files-l
 
 **Resolve the project from the work, then state it.** The candidates are the repositories this session changed: the ones the pushes covered, plus any working tree that moved, with the repository at the working directory as the fallback when nothing changed. Then:
 
-- **One candidate, or several with one clear subject** → that repository is the session's project.
-- **Several with a subject** → the subject is the project, and the other repositories go into the record's `tags`, which `search` reads.
-- **Several with no subject** → no project at all, and every repository goes into the `tags`.
+- **One candidate** → that repository is the session's project.
+- **Several, one carrying the subject** (the majority of the session's changed paths, or the repository the session's own project-context or map writes name) → that repository is the session's project, and the others go into the record's `tags`, which `search` reads.
+- **Several, none carrying the subject** → no project at all, and every repository goes into the `tags`.
 
-**Ask before filing** when the candidate set is not exactly the working-directory repository, which covers both a different project and more than one. The identity itself comes from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
+**File without asking when the cases above settle on one repository; ask only when they do not**, naming the candidates and the reading you would take. The identity itself comes from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
 
 **First — the Project Context Gate** (the memory core is project-blind; the coding overlay owns project-context). Evaluate whether this session produced project-specific context worth persisting:
 - Project-specific conventions, setup, deployment, env details?
