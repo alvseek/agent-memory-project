@@ -24,7 +24,7 @@ No action. A store has no directories; the project, the scope and the owner are 
 
 ### § list-context-entries
 
-Call `list_context_entries(project, scope?, agent?)`. Omit `scope` to list both layers, and then pass `agent`, because the private rows are owned. Each row carries `scope`, `theme`, `description` and `tags` — that list **is** the context index, so check the theme against it: a row whose `theme` matches is the entry to update, and no match means a new entry. The same call answers the move sub-flow's collision check.
+Call `list_context_entries(project, scope?, agent?)`. Omit `scope` to list both layers, and then pass `agent`, because the private rows are owned. Each row carries `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index, so check the theme against it: a row whose `theme` matches is the entry to update, and no match means a new entry. The same call answers the move sub-flow's collision check.
 
 ### § read-context-entry
 
@@ -32,11 +32,11 @@ Call `read_context_entry(project, scope, theme, agent?)`, naming `agent` for a p
 
 ### § create-context-entry
 
-Call `create_context_entry(project, scope, theme, content, template_version, description?, tags?, agent?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `description` and `tags` from that frontmatter: they land in the row's `content_summary` and `tags`, which is what the listing reads. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it. The row's identity is derived from `user_id | project | scope | agent | theme`, so the same theme under two agents is two entries rather than one. Refused when a live entry already holds the identity, when `template_version` is missing or does not match the served template, and when a private create names no `agent`.
+Call `create_context_entry(project, scope, theme, content, template_version, content_summary?, tags?, agent?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `content_summary` and `tags` from that frontmatter, whose summary key is `description`: they land in the row's `content_summary` and `tags`, which is what the listing reads. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it. The row's identity is derived from `user_id | project | scope | agent | theme`, so the same theme under two agents is two entries rather than one. Refused when a live entry already holds the identity, when `template_version` is missing or does not match the served template, and when a private create names no `agent`.
 
 ### § update-context-entry
 
-Call `update_context_entry(project, scope, theme, content, template_version, description?, tags?, agent?)` with the entry's full new content and the template's current stamp. It replaces the row's `full_content`, `content_summary` and `tags` wholesale, so a caller that passes only `content` clears the other two. An update restates the whole document, so it carries the same gate the create does. Refused when no live entry holds the identity, so an update can never become a create, and when `template_version` is missing or stale.
+Call `update_context_entry(project, scope, theme, content, template_version, content_summary?, tags?, agent?)` with the entry's full new content and the template's current stamp. It replaces the row's `full_content`, `content_summary` and `tags` wholesale, so a caller that passes only `content` clears the other two. An update restates the whole document, so it carries the same gate the create does. Refused when no live entry holds the identity, so an update can never become a create, and when `template_version` is missing or stale.
 
 ### § move-context-entry
 
@@ -84,11 +84,11 @@ Call `read_map(project)`; `found: false` means the project has no map. `content`
 
 ### § write-map
 
-Call `write_map(project, content, template_version, description?)` with the full map text and the template's current stamp. It rewrites that one row and touches no other. Refused when the project has no map — writing never creates one — and when `template_version` is missing or stale.
+Call `write_map(project, content, template_version, content_summary?)` with the full map text and the template's current stamp. It rewrites that one row and touches no other. Refused when the project has no map — writing never creates one — and when `template_version` is missing or stale.
 
 ### § create-map
 
-Call `create_map(project, content, template_version, description?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the stamp sits outside the template's fenced block, so the map cannot carry it. The row's identity is derived from the project and the title, so a second create collides rather than adding a map. Refused when the project already has a map, and when `template_version` is missing or stale.
+Call `create_map(project, content, template_version, content_summary?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the stamp sits outside the template's fenced block, so the map cannot carry it. The row's identity is derived from the project and the title, so a second create collides rather than adding a map. Refused when the project already has a map, and when `template_version` is missing or stale.
 
 ---
 
