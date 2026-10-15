@@ -47,6 +47,8 @@ Two calls, in this order:
 1. Change the body with the memory layer's `edit(uuid, old_string, new_string, replace_all?)`, or with `append` / `prepend` / `multi_edit` for the shapes those take. The body is edited surgically and never restated wholesale.
 2. Change the line a listing shows with `edit_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
 
+**The summary and the tags live in two places**: inside the document's own frontmatter, and in the row's columns, which is what a listing reads. A change belongs in both, so the `edit` above carries the frontmatter line while `edit_metadata` carries the column. A caller that changes only one leaves the index describing a document it no longer matches.
+
 **The two calls are not atomic**: a failure between them leaves the summary describing the old body, so a caller that needs both should do the body first and the summary after. The template stamp is not required here, because it gates creation, and a surgical edit's own precondition is a body the caller has already read.
 
 ### § move-context-entry

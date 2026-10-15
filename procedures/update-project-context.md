@@ -88,9 +88,9 @@ List the layer's existing entries (**§ list-context-entries**) to check whether
 ### Step 5B: Update Existing Context Entry
 
 1. Read the existing entry (**§ read-context-entry**)
-2. Update or append the relevant content, then write it back (**§ update-context-entry**)
+2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
 3. Update the `updated:` date in YAML frontmatter to today's date
-4. Update `tags:` if new tags are relevant
+4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them
 5. Proceed to Step 6
 
 ### Step 6: Check the Entry Size
