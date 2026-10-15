@@ -55,6 +55,8 @@ Two calls, in this order:
 
 Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `demote_context_entry(uuid, agent)` to move it into an agent's. The uuid is kept, so a handle held before the move still resolves after it. One call does both halves — the target row is written and the source row tombstoned — because the layer *is* which table the row lives in, which is why the sub-flow's next step has nothing left to do. Refused when no live entry holds the uuid, and when the entry already lives in the target layer. **It checks no theme**: two rows may carry one, so the sub-flow's own collision step is what decides whether a move should happen at all.
 
+**A theme cannot be renamed in place here.** Giving an entry a different theme means creating it under the new one and retiring the old row with `soft_delete`, because the theme is what `title` holds.
+
 ### § delete-context-entry
 
 Call the memory layer's `soft_delete(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.

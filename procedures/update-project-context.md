@@ -43,17 +43,19 @@ Present the suggestion and wait for confirmation (show the reason, the suggested
 
 - [Brief reason for the suggestion — e.g., "This describes the project's deployment workflow, which applies to every agent."]
 
-  > A) Shared — `shared-memory/[project-name]/context/` `✓✓`
-  > B) Agent — `agent-[domain]/knowledge-base/[project-name]/`
+  > A) Shared — every agent of the project sees it `✓✓`
+  > B) Agent — one agent's own entries
 
   ([Reason: why this scope is suggested.])
 
 Reply with "shared", "agent", or your preferred scope.
 ```
 
-Based on the confirmed scope, the subsequent steps will use the matching path:
+Based on the confirmed scope, the markdown backend reads and writes the matching path:
 - **Shared scope**: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/`
 - **Agent scope**: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/`
+
+A store keeps no path: its mechanics say which layer a row lands in.
 
 > **Storage location**: use the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md)'s `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (agent). Use those dirs for every scope-aware step below (folder check, create, index).
 
@@ -90,7 +92,7 @@ List the layer's existing entries (**§ list-context-entries**) to check whether
 1. Read the existing entry (**§ read-context-entry**)
 2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
 3. Update the `updated:` date in YAML frontmatter to today's date
-4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them
+4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them (a store keeps the first as the row's `content_summary`)
 5. Proceed to Step 6
 
 ### Step 6: Check the Entry Size
@@ -120,7 +122,7 @@ If unclear which theme the user means, ask: "Which entry should I move? Availabl
 List the target scope's entries (**§ list-context-entries**) to check whether one with the same theme already exists.
 
 - **If no collision**: Proceed to M.3
-- **If collision**: **STOP**. Present the conflict to user: "A [to] entry with this name already exists. Options: A) merge the content manually first, B) rename the source entry before moving, C) cancel." Wait for user direction.
+- **If collision**: **STOP**. Present the conflict to user: "A [to] entry with this name already exists. Options: A) merge the content manually first, B) give the source entry a different theme first, C) cancel." Wait for user direction.
 
 ### M.3: Move to the Target Location
 
