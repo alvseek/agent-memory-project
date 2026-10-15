@@ -1,6 +1,6 @@
 # Load Project Context Protocol
 
-Load project-specific context files from **both** the per-agent layer (`agent-[domain]/knowledge-base/[project]/`) and the shared layer (`shared-memory/[project]/context/`) into working memory. Supports listing all available context or loading specific files by keyword. Entries are presented with `[shared]` / `[agent]` markers so the source layer is always visible.
+Load a project's context into working memory from **both** layers: the shared one every agent of the project sees, and the agent layer one agent owns. Supports listing all available entries or loading specific ones by keyword. Entries are presented with `[shared]` / `[agent]` markers so the layer is always visible.
 
 *How* the entries are physically read is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
 
