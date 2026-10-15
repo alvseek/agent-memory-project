@@ -10,10 +10,10 @@ Concrete storage mechanics for the **native markdown-over-git** world. Each `## 
 
 ### § ensure-context-dir
 
-Create the scope dir if it is missing (resolve `CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for private):
+Create the scope dir if it is missing (resolve `CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent):
 
 - Shared: `mkdir -p [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context`
-- Private: `mkdir -p [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]`
+- Agent: `mkdir -p [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]`
 
 ### § list-context-entries
 
@@ -28,7 +28,7 @@ Read `[scope-dir]/[theme].md` with the Read tool.
 Create the entry at the scope path **with the structure the template shows** — the fenced block below the template's `template_version` line — filling the frontmatter and every placeholder:
 
 - Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Private: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
+- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
 > **The template's `template_version` line sits outside that block.** That makes the stamp template metadata rather than entry content, so a file built from the block never carries it and there is nothing to strip afterwards.
 
@@ -38,7 +38,7 @@ Write the updated content back to `[scope-dir]/[theme].md`.
 
 ### § move-context-entry
 
-Copy the entry **verbatim** (same template) from the source scope to the target one. A **promote** goes private → shared; a **demote** goes shared → private:
+Copy the entry **verbatim** (same template) from the source scope to the target one. A **promote** goes agent → shared; a **demote** goes shared → agent:
 
 - **Promote**: `cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
 - **Demote**: `cp [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
@@ -54,7 +54,7 @@ Copy the entry **verbatim** (same template) from the source scope to the target 
 Remove the entry from its scope:
 
 - Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Private: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
+- Agent: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
 ### § check-entry-size
 
@@ -68,7 +68,7 @@ Count the lines in the written file.
 Edit the scope-aware `context-index.md`:
 
 - Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/context-index.md`
-- Private: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/context-index.md`
+- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/context-index.md`
 
 If it does not exist, create it with the header `# [project-name] Project Context`. Add or update the entry —
 
@@ -76,7 +76,7 @@ If it does not exist, create it with the header `# [project-name] Project Contex
 - [theme.md](theme.md) — description (tags: tag1, tag2, tag3)
 ```
 
-— and for a move, delete the line from the private index and add it to the shared index.
+— and for a move, delete the line from the agent index and add it to the shared index.
 
 ---
 
@@ -84,14 +84,14 @@ If it does not exist, create it with the header `# [project-name] Project Contex
 
 ### § list-context-entries
 
-Read the shared index (`CONTEXT_DIR/context-index.md`) and scan the private layer (`KNOWLEDGE_DIR` project subfolders, excluding `research/`) for its `context-index.md`. Parse each entry together with its scope marker (`[shared]` / `[private]`). A missing or empty layer is skipped silently.
+Read the shared index (`CONTEXT_DIR/context-index.md`) and scan the agent layer (`KNOWLEDGE_DIR` project subfolders, excluding `research/`) for its `context-index.md`. Parse each entry together with its scope marker (`[shared]` / `[agent]`). A missing or empty layer is skipped silently.
 
 ### § read-context-entry
 
 Read the selected entry file(s) from their source-layer path:
 
 - Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project]/context/[theme].md`
-- Private: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project]/[theme].md`
+- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project]/[theme].md`
 
 ---
 
@@ -133,7 +133,7 @@ Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your ow
 
 ### § load-context-indexes
 
-Read the shared context index (`CONTEXT_DIR/context-index.md`) and the private context index (`KNOWLEDGE_DIR/context-index.md`) — the resolved HOME values — silently skipping whichever is missing.
+Read the shared context index (`CONTEXT_DIR/context-index.md`) and the agent context index (`KNOWLEDGE_DIR/context-index.md`) — the resolved HOME values — silently skipping whichever is missing.
 
 ### § check-fleet-roster
 

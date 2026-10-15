@@ -2,17 +2,21 @@
 
 Concrete storage mechanics for the **Hermod project store**, which holds project-keyed memory: context entries and the orientation map. Each `## [procedure]` section defines the `§ op`s that procedure references. See the [seam contract](README.md).
 
-> **Ops here are tool calls, not shell commands.** A served client has no repository to write into, so every op below names the tool the agent calls on the Hermod server. An entry is addressed by `(project, scope, theme)` with `scope` ∈ `shared` | `private`, and there is no `[AGENT-MEMORY-PATH]`, `CONTEXT_DIR` or `KNOWLEDGE_DIR` here: the store replaces them, and the project is a column.
+> **Ops here are tool calls, not shell commands.** A served client has no repository to write into, so every op below names a tool the agent calls. A context entry is addressed by its **`uuid`**, which the store assigns when it is created: the listings return it, and every op that acts on one entry takes it. `scope` is no longer an argument anywhere: the layer is in the tool's own name, where `shared` (every agent of the tenant) is the counterpart of `agent` (one agent's own). There is no `[AGENT-MEMORY-PATH]`, `CONTEXT_DIR` or `KNOWLEDGE_DIR` here: the store replaces them, and the project is a column.
 
-> **The store is the memory database's records** ([ADR-027](../docs/adr/2026-10-13-hermod-store-is-valaskjalf-records.md)). A context entry is a `knowledge` record carrying a `project`: a row in `shared_record` for the `shared` scope and in `memory_record` for the `private` one, where `agent_id` carries the owner the markdown path kept in a folder name. An entry's `title` is its theme and its `content_summary` the description the index shows; the orientation map is a `shared_record` row titled `orientation-map`. That `project` column is also the whole boundary between the two corpora — a `knowledge` row without one is the memory store's own general knowledge, and its reads exclude the ones that have it, so a project entry is never served as general knowledge. **Hermod issues no DDL**: one owner holds both tables, so a missing table or column surfaces on the first call rather than being created here, and Hermod has no schema of its own to migrate.
+> **The store is the memory database's records** ([ADR-027](../docs/adr/2026-10-13-hermod-store-is-valaskjalf-records.md)). A context entry is a `knowledge` record carrying a `project`: a row in `shared_record` for the `shared` layer and in `memory_record` for the `agent` one, where `agent_id` carries the owner. An entry's `title` is its theme and its `content_summary` the line a listing shows beside it; the orientation map is a `shared_record` row titled `orientation-map`. That `project` column is the boundary between the two corpora, and the memory layer's own browse excludes the rows that carry it, which is why a **listing is the only door to an entry's uuid**. **Hermod issues no DDL**: one owner holds both tables, so a missing table or column surfaces on the first call rather than being created here.
 
-> **Two ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file and an index file beside it; a store has neither, so `§ ensure-context-dir` and `§ update-context-index` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
+> **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get(uuid)`, changing one is `edit` / `multi_edit` / `append` / `prepend`, changing its summary or tags is `edit_metadata`, and retiring it is `soft_delete`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
+
+> **Three ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file, an index file beside it, and a line count after a write; a store has none of the three, so `§ ensure-context-dir`, `§ update-context-index` and `§ check-entry-size` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
 
 ---
 
 ## all-procedures
 
-Every operation below is a **tool call on this server**, reading and writing `shared_record` and `memory_record` through the tenant the verified token resolves to. No op names a path and no op takes a user id: whose rows are read and written is the token's, the project is the `project` argument, and the agent, on the ops that involve a private row, is the `agent` argument. Those ops require it rather than defaulting, because the token names the person and never the agent, so no owner can be derived from the call.
+Every operation below is a **tool call**, reading and writing `shared_record` and `memory_record` through the tenant the verified token resolves to. No op names a path and no op takes a user id: whose rows are read and written is the token's, the project is the `project` argument, and the agent, on the ops that involve an agent-owned row, is the `agent` argument. Those ops require it rather than defaulting, because the token names the person and never the agent, so no owner can be derived from the call.
+
+**Where a tool lives.** This store's own ops are named exactly as they are here. The memory layer's ops are tools on the other connected server, so `get`, `edit`, `edit_metadata` and `soft_delete` below resolve against that server's tool list.
 
 ---
 
@@ -20,35 +24,42 @@ Every operation below is a **tool call on this server**, reading and writing `sh
 
 ### § ensure-context-dir
 
-No action. A store has no directories; the project, the scope and the owner are columns on the row.
+No action. A store has no directories; the project, the layer and the owner are columns on the row.
 
 ### § list-context-entries
 
-Call `list_context_entries(project, scope?, agent?)`. Omit `scope` to list both layers, and then pass `agent`, because the private rows are owned. Each row carries `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index, so check the theme against it: a row whose `theme` matches is the entry to update, and no match means a new entry. The same call answers the move sub-flow's collision check.
+Call `list_shared_context(project)` and/or `list_agent_context(project, agent)`, one call per layer the step is about. Each row carries `uuid`, `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index. A row whose `theme` matches is the entry the step means, and the `uuid` it carries is how every later call addresses it. The same call answers the move sub-flow's collision check. An agent-layer call requires its owner rather than defaulting, because those rows are owned.
 
 ### § read-context-entry
 
-Call `read_context_entry(project, scope, theme, agent?)`, naming `agent` for a private entry. `found: false` means no live entry holds that identity.
+Call the memory layer's `get(uuid)` with the uuid a listing returned. It answers `None` for a row that is absent or tombstoned. Reading by theme is not a thing here: a theme is a name a listing shows, and two rows may carry one.
 
 ### § create-context-entry
 
-Call `create_context_entry(project, scope, theme, content, template_version, content_summary?, tags?, agent?)`, with `content` the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. Pass `content_summary` and `tags` from that frontmatter, whose summary key is `description`: they land in the row's `content_summary` and `tags`, which is what the listing reads. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it. The row's identity is derived from `user_id | project | scope | agent | theme`, so the same theme under two agents is two entries rather than one. Refused when a live entry already holds the identity, when `template_version` is missing or does not match the served template, and when a private create names no `agent`.
+Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)`, whichever layer the flow confirmed. `content` is the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. `content_summary` is required: it is the line a listing shows beside the theme, taken from the document's frontmatter `description`, and `tags` comes from the same frontmatter. The row's `uuid` is assigned here and returned. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it.
+
+Refused when `template_version` is missing or does not match the served template, when `content` is over the 1000-line cap, when `content_summary` is blank, and when an agent-layer create names no `agent` or one this account has no row for. **No theme is checked**: two rows may carry one theme, so this op neither refuses a create over an existing theme nor revives a retired row. Deciding between creating and updating is the step's own comparison of themes against the listing.
 
 ### § update-context-entry
 
-Call `update_context_entry(project, scope, theme, content, template_version, content_summary?, tags?, agent?)` with the entry's full new content and the template's current stamp. It replaces the row's `full_content`, `content_summary` and `tags` wholesale, so a caller that passes only `content` clears the other two. An update restates the whole document, so it carries the same gate the create does. Refused when no live entry holds the identity, so an update can never become a create, and when `template_version` is missing or stale.
+Two calls, in this order:
+
+1. Change the body with the memory layer's `edit(uuid, old_string, new_string, replace_all?)`, or with `append` / `prepend` / `multi_edit` for the shapes those take. The body is edited surgically and never restated wholesale.
+2. Change the line a listing shows with `edit_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
+
+**The two calls are not atomic**: a failure between them leaves the summary describing the old body, so a caller that needs both should do the body first and the summary after. The template stamp is not required here, because it gates creation, and a surgical edit's own precondition is a body the caller has already read.
 
 ### § move-context-entry
 
-Call `move_context_entry(project, theme, from_scope, to_scope, agent?)`, naming `agent` for whichever side is private. **The direction is a choice, not a built-in**: a *promote* is `from_scope="private", to_scope="shared"` and a *demote* is the reverse. One call, two row operations — the scope *is* which table the row lives in, so the target table gains the row and the source's is tombstoned, the same copy-then-delete shape the markdown backend has and the same exposure if it fails between the two. The body is untouched. Refused when the source holds no live entry of that theme, when the target scope already holds one (the collision the move sub-flow stops on), and when a private side names no `agent`.
+Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `demote_context_entry(uuid, agent)` to move it into an agent's. The uuid is kept, so a handle held before the move still resolves after it. One call does both halves — the target row is written and the source row tombstoned — because the layer *is* which table the row lives in, which is why the sub-flow's next step has nothing left to do. Refused when the entry already lives in the target layer, when no live entry holds the uuid, and when a live row in the target layer already holds that theme, which is the collision this sub-flow stops on.
 
 ### § delete-context-entry
 
-Call `delete_context_entry(project, scope, theme, agent?)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards — over the same identity, which revives that row instead of adding a second one.
+Call the memory layer's `soft_delete(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
 
 ### § check-entry-size
 
-Call `check_entry_size(content)` for the measurement. `create` and `update` enforce it: an entry over **1000 lines** is refused. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file to split into, so the store refuses instead — same threshold, different remedy, and the fix is the same either way: write one entry per sub-theme.
+No action. The cap is a **creation** gate: `§ create-context-entry` refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.
 
 ### § update-context-index
 
@@ -60,11 +71,11 @@ No action. The index is not a file here: `§ list-context-entries` renders it fr
 
 ### § list-context-entries
 
-Call `list_context_entries(project, agent)` — both scopes in one call, each row carrying its own `scope`, which is what the `[shared]` / `[private]` display reads. `agent` is required, because the private rows are owned. An empty result is the silent skip.
+Call `list_shared_context(project)` and `list_agent_context(project, agent)`, one per layer, and read each row's own `scope` to tell them apart. A layer is its own op now, so this step is two calls where it used to be one. `agent` is required, because those rows are owned. An empty result is the silent skip.
 
 ### § read-context-entry
 
-Call `read_context_entry(project, scope, theme, agent?)` for each selected entry, naming `agent` for a private one, and load `content`.
+Call the memory layer's `get(uuid)` for each selected entry and load its `full_content`.
 
 ---
 
@@ -72,7 +83,7 @@ Call `read_context_entry(project, scope, theme, agent?)` for each selected entry
 
 ### § map-exists
 
-Call `map_exists(project)` and read `exists`: whether `shared_record` already holds this project's row titled `orientation-map`.
+No action. `§ read-map` answers the existence question: a project with no map comes back as `found: false`, so nothing checks for one first.
 
 ### § ensure-context-dir
 
@@ -82,13 +93,13 @@ No action. A store has no directories.
 
 Call `read_map(project)`; `found: false` means the project has no map. `content` is the whole map, frontmatter included.
 
-### § write-map
-
-Call `write_map(project, content, template_version, content_summary?)` with the full map text and the template's current stamp. It rewrites that one row and touches no other. Refused when the project has no map — writing never creates one — and when `template_version` is missing or stale.
-
 ### § create-map
 
-Call `create_map(project, content, template_version, content_summary?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the stamp sits outside the template's fenced block, so the map cannot carry it. The row's identity is derived from the project and the title, so a second create collides rather than adding a map. Refused when the project already has a map, and when `template_version` is missing or stale.
+Call `create_map(project, content, template_version, content_summary?)` with the map built from [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md) and the stamp that template carries below its title. Declared, never stored: the stamp sits outside the template's fenced block, so the map cannot carry it. The row's `uuid` is assigned here, and its identity for this flow is the project plus the reserved title, so a second create is refused: a project has one map, and it is updated thereafter.
+
+### § write-map
+
+Call `update_map(project, content, template_version, content_summary?)` with the full map text and the template's current stamp. It rewrites that one row and touches no other. Refused when the project has no map, so writing never creates one, and when `template_version` is missing or stale.
 
 ---
 
@@ -101,7 +112,7 @@ Call `create_map(project, content, template_version, content_summary?)` with the
 
 ### § awaken-coder-payload
 
-Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and private context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
 
 ### § load-coding-reasoning
 
@@ -109,7 +120,7 @@ Read `coding_lane` from the payload; an empty lane is the silent skip, because a
 
 ### § load-context-indexes
 
-Read `context_index` from the payload. Each row carries its own `scope`, which is what the `[shared]` / `[private]` display reads, and the rows span the whole set, so a related repository's index is already in hand when the task moves into it.
+Read `context_index` from the payload. Each row carries its own `scope`, which is what the `[shared]` / `[agent]` display reads, and its `uuid`, which is what every later read, edit or retirement of that entry is addressed by. The rows span the whole set, so a related repository's index is already in hand when the task moves into it.
 
 ### § check-fleet-roster
 

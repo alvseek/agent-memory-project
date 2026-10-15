@@ -1,6 +1,6 @@
 # Load Project Context Protocol
 
-Load project-specific context files from **both** the per-agent layer (`agent-[domain]/knowledge-base/[project]/`) and the shared layer (`shared-memory/[project]/context/`) into working memory. Supports listing all available context or loading specific files by keyword. Entries are presented with `[shared]` / `[private]` markers so the source layer is always visible.
+Load project-specific context files from **both** the per-agent layer (`agent-[domain]/knowledge-base/[project]/`) and the shared layer (`shared-memory/[project]/context/`) into working memory. Supports listing all available context or loading specific files by keyword. Entries are presented with `[shared]` / `[agent]` markers so the source layer is always visible.
 
 *How* the entries are physically read is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
 
@@ -19,12 +19,12 @@ Load project-specific context files from **both** the per-agent layer (`agent-[d
 
 ### Step 1: Scan Available Project Context
 
-List the project context entries across **both** layers (**§ list-context-entries**). Paths resolve through the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md): the shared layer is `CONTEXT_DIR`, the private layer is `KNOWLEDGE_DIR`.
+List the project context entries across **both** layers (**§ list-context-entries**). Paths resolve through the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md): the shared layer is `CONTEXT_DIR`, the agent layer is `KNOWLEDGE_DIR`.
 
 **Silent skip**: If either layer is missing or empty for a given project, skip it without error. Only present what exists.
 
 For each entry found, retain its **scope marker**:
-- Private-layer entry → marker `[private]`
+- Agent-layer entry → marker `[agent]`
 - Shared-layer entry → marker `[shared]`
 
 If no context files are found in either layer, inform the user: "No project context files found. Use `/update-project-context` to create your first one."
@@ -45,16 +45,16 @@ Project context files available:
 
 [project-name-1]
   1. [shared] [theme].md — [description] (tags: tag1, tag2)
-  2. [private] [theme].md — [description] (tags: tag1, tag2)
+  2. [agent] [theme].md — [description] (tags: tag1, tag2)
 
 [project-name-2]
   3. [shared] [theme].md — [description] (tags: tag1, tag2)
-  4. [private] [theme].md — [description] (tags: tag1, tag2)
+  4. [agent] [theme].md — [description] (tags: tag1, tag2)
 
 Enter number(s) to load (e.g., "1", "1,3", "all"), or "cancel":
 ```
 
-If a project has entries in only one layer, only that layer's entries are listed (no empty "shared" or "private" sub-list).
+If a project has entries in only one layer, only that layer's entries are listed (no empty "shared" or "agent" sub-list).
 
 Wait for user selection, then go to Step 5.
 
@@ -69,7 +69,7 @@ Search for the keyword(s) from arguments across **both layers** against:
 ```
 Found [N] matching context file(s) for "[keyword]":
   1. [shared] [project]/[theme].md — [description]
-  2. [private] [project]/[theme].md — [description]
+  2. [agent] [project]/[theme].md — [description]
 
 Loading...
 ```
@@ -87,7 +87,7 @@ After loading, confirm to the user with the scope marker for each file:
 ```
 Loaded [N] project context file(s):
   - [shared] [project]/[theme].md (tags: tag1, tag2)
-  - [private] [project]/[theme].md (tags: tag1, tag2)
+  - [agent] [project]/[theme].md (tags: tag1, tag2)
 ```
 
 ---

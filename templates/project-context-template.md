@@ -1,8 +1,8 @@
 # Project Context Template
 
-template_version: 2026-10-12-18-18
+template_version: 2026-10-15-10-03
 
-The structure of a project-context entry. Storage-agnostic: the markdown backend writes it to the scope directory as `[theme].md`; the DB backend passes it as the `content` of a `create_context_entry` or `update_context_entry` call. Copy the fenced block below and fill its placeholders.
+The structure of a project-context entry. Storage-agnostic: the markdown backend writes it to the scope directory as `[theme].md`; the DB backend passes it to `create_shared_context_entry` or `create_agent_context_entry`, which is where its `template_version` is declared, and every later change to it goes through the memory layer's own ops. Copy the fenced block below and fill its placeholders.
 
 ```markdown
 ---
