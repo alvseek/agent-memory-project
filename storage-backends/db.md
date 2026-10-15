@@ -57,6 +57,8 @@ Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `d
 
 Call the memory layer's `soft_delete(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
 
+**Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
+
 ### § check-entry-size
 
 No action. The cap is a **creation** gate: `§ create-context-entry` refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.

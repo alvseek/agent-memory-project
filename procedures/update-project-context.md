@@ -126,9 +126,9 @@ List the target scope's entries (**§ list-context-entries**) to check whether o
 
 Ensure the target scope exists (**§ ensure-context-dir**), then move the entry's content verbatim to the target scope (**§ move-context-entry**).
 
-### M.4: Remove the Source Entry
+### M.4: Ensure the Source Entry Is Gone
 
-Remove the entry from the source scope (**§ delete-context-entry**).
+Check the source layer for the entry (**§ list-context-entries**) and remove it if it is still there (**§ delete-context-entry**). A backend whose move already removes the source leaves nothing to do here, and its own mechanics say so.
 
 ### M.5: Update Both Indexes
 

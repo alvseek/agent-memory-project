@@ -269,69 +269,69 @@ sequenceDiagram
 ## **IMPLEMENTATION PHASES**
 
 ### Phase 1: The store's code, unit-tested
-- [ ] **Step 1.1**: The per-layer repository and its protocol
+- [x] **Step 1.1**: The per-layer repository and its protocol
   - **Action**: Replace the theme-addressed methods with per-layer primitives addressed by uuid, and update the protocol to match.
   - **Implementation**: in `record_project_repository.py`, delete `entry_uuid` and the derived identity, and drop `get_context_entry`, `update_context_entry`, `move_context_entry`, `delete_context_entry` and `map_exists`. Add the two lists, the two creates assigning `uuid4`, the two direction ops, and the map trio. Every entry probe filters to live rows (`deleted_date IS NULL AND archived_date IS NULL`) and excludes `title = 'orientation-map'`; a uuid found in both tables raises.
   - **Testing**: `tests/test_record_repository.py` rebuilt around the new surface: a create returns its uuid; a second create on one theme adds a second row and raises nothing; a list hides a tombstoned row, an archived row and the map row; a promote and a demote keep the uuid; a uuid present in both tables raises.
   - **Success Criteria**: the repository serves only the confirmed ops, and its tests pass against the schema copy.
 
-- [ ] **Step 1.2**: The service layer and its gates
+- [x] **Step 1.2**: The service layer and its gates
   - **Action**: keep the cap and the stamp, now at creation only, and expose the map ops.
   - **Implementation**: in `context_service.py`, delete `update_context_entry` and `check_entry_size`; keep `_refuse_oversized` and `_refuse_stale_template` on both creates; add the map methods.
   - **Testing**: units for a refused oversized create, a refused stale stamp, an accepted create, and a create over a theme that already has rows.
   - **Success Criteria**: no service method writes a body, a metadata field or a lifecycle flag.
 
-- [ ] **Step 1.3**: The MCP face
+- [x] **Step 1.3**: The MCP face
   - **Action**: register ten tools and remove the rest.
   - **Implementation**: in `server.py`, the two lists, the two creates, the two direction ops and the three map ops; the entry payload carries `uuid`; the dropped tools and their docstrings go.
   - **Testing**: `tests/test_mcp_surface.py` asserts the tool set by name and the payload keys.
   - **Success Criteria**: exactly nine store ops are served beside the awakening.
 
-- [ ] **Step 1.4**: The awakening, the importer and the contract copy
+- [x] **Step 1.4**: The awakening, the importer and the contract copy
   - **Action**: the uuid reaches the index rows, the importer calls the two creates, and the schema copy stays index-free.
   - **Implementation**: `_context_row` in `awakening_service.py` gains `uuid`; `markdown_importer.py` chooses the create from the source path's scope; `tests/valaskjalf_schema.py` states why no index is added.
   - **Testing**: `test_markdown_importer.py`, `test_end_to_end.py` and the payload test green, the last asserting the uuid.
   - **Success Criteria**: an import produces rows the lists return with their uuids, and the suite passes, with CI running the 49 database tests the local run skips.
 
 ### Phase 2: The seam and the served text
-- [ ] **Step 2.1**: `db.md`
+- [x] **Step 2.1**: `db.md`
   - **Action**: rewrite the op definitions around the new surface.
   - **Implementation**: the four ops naming the memory layer's tools (`get`, `edit`, `edit_metadata`, `soft_delete`), the two resolving to no action (`§ map-exists`, `§ check-entry-size`), the renamed map pair, the vocabulary, and the note that the cap and the stamp are creation gates.
   - **Testing**: hermod-server's `test_loader.py` and `test_fidelity.py`.
   - **Success Criteria**: every `§` op a procedure names resolves to a tool or to no action, and no definition names a dropped tool.
 
-- [ ] **Step 2.2**: The vocabulary sweep
+- [x] **Step 2.2**: The vocabulary sweep
   - **Action**: `private` becomes `agent` wherever it names this layer.
   - **Implementation**: `markdown.md`, the five procedures (`load-project-context`, `update-project-context`, `map-orientation`, `project-wrap-up`, `awaken-coder`), the payload value and the report prefixes. The map's own `role-private` stays, since it is a different concept.
   - **Testing**: a grep for the layer sense of `private` across the overlay, plus the overlay's own tests.
   - **Success Criteria**: one vocabulary for the layer across the seam and the procedures.
 
-- [ ] **Step 2.3**: The flow wording
+- [x] **Step 2.3**: The flow wording
   - **Action**: Step 4 of `update-project-context` says the theme only decides create versus update, and that every access is by uuid; `load-project-context` costs one list per layer.
   - **Implementation**: the two procedures' steps and their op references.
   - **Testing**: a read-through of both procedures against `db.md`.
   - **Success Criteria**: neither procedure implies a theme-addressed read or write.
 
-- [ ] **Step 2.4**: The entry template and its stamp
+- [x] **Step 2.4**: The entry template and its stamp
   - **Action**: the template's prose names the new tools, so its stamp bumps.
   - **Implementation**: `templates/project-context-template.md`, then `setup-scripts/compile-procedures.py --strict` and the served-content tests.
   - **Testing**: a strict compile with no unresolved reference, plus `test_fidelity.py`.
   - **Success Criteria**: the served text and the checkout agree, and the stamp a writer declares is the new one.
 
 ### Phase 3: The release
-- [ ] **Step 3.1**: Pin the overlay into `hermod-server`
+- [x] **Step 3.1**: Pin the overlay into `hermod-server`
   - **Action**: bump the submodule pin, commit, push, and wait for the image.
   - **Implementation**: `git add agent-memory-project`, commit, push, then wait for `build-image.yml` to publish the tag for that commit.
   - **Testing**: the build run's conclusion, read from the runs.
   - **Success Criteria**: an image exists for the new overlay pin.
 
-- [ ] **Step 3.2**: Pin and deploy
+- [x] **Step 3.2**: Pin and deploy
   - **Action**: bump the pin in `hermod-deploy` and dispatch the deploy.
   - **Implementation**: `git add hermod-server`, commit, push, then `gh workflow run deploy.yml -R alvseek/hermod-deploy -f version=<short sha> -f command=deploy`.
   - **Testing**: the deploy run's conclusion.
   - **Success Criteria**: the box runs the new image.
 
-- [ ] **Step 3.3**: Verify from outside
+- [x] **Step 3.3**: Verify from outside
   - **Action**: confirm the live surface from a client, not from the code.
   - **Implementation**: read the live tool list for `list_shared_context` and `create_agent_context_entry` and the absence of `read_context_entry`; call a list and check that a row carries `uuid`; call the memory layer's `get(uuid)` on it for the body.
   - **Testing**: those three calls, by hand, against the connected servers.
@@ -413,48 +413,57 @@ I have to use this document as my **ONLY** source of truth to execute and track 
   - **Result**: Complete.
 
 ### Phase 3:
-- [ ] **Step 3.1**: Pin the overlay into `hermod-server`
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.1**: Pin the overlay into `hermod-server`
+  - **Implementation Log**: Committed the overlay at `abadc7a` (the `db.md` rewrite, the vocabulary sweep, the flow wording, the template's stamp, ADR-030 and this plan) and pushed it. Then committed `hermod-server` at `eac226d` with the code, the tests and the bumped overlay pin, and pushed. **CI failed on that first push**, on the one test that asks about a demote with an unknown owner: the move's insert had no handler for the foreign-key violation the create path maps, so it reached the caller raw, and my test also reused a row it had already moved, which meant it never reached the owner check at all. Both were fixed in `121edbb`: the mapping now sits on the move's insert too, and the test asks with a fresh row plus the empty-owner case the service refuses first.
+  - **Testing Log**: `gh run list` on `hermod-server`: for `121edbb`, CI and Build image are both `completed/success`, which is where the 49 database tests this machine skips actually ran.
+  - **Success Criteria**: Met. An image exists for the pin, and both repos are pushed.
+  - **Tech Debts**: This plan file carries CRLF in the working tree and is normalized to LF in the blob, because it began as a copy of the wizard template. Harmless to the repo, and recorded because the framework tracks line-ending behaviour.
+  - **Result**: Complete, with one real defect found by CI rather than by me.
 
-- [ ] **Step 3.2**: Pin and deploy
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.2**: Pin and deploy
+  - **Implementation Log**: Pinned `hermod-server` at `121edbb` in `hermod-deploy` (`97e7c88`), pushed, then dispatched `deploy.yml` with `version=121edbb` and `command=deploy`. The dispatch printed its own run URL, so the run id (38674724251) came from the dispatch rather than from "the newest run", which is the trap that makes a stale green look like yours.
+  - **Testing Log**: That run: `completed/success`.
+  - **Success Criteria**: Met. The box is rebuilt onto the new image.
+  - **Tech Debts**: None new.
+  - **Result**: Complete.
 
-- [ ] **Step 3.3**: Verify from outside
-  - **Implementation Log**: [What was done]
-  - **Testing Log**: [What was tested and results]
-  - **Success Criteria**: [Pass/Fail against step's success criteria]
-  - **Tech Debts**: [Optional]
-  - **Result**: [Outcome compared to success criteria]
+- [x] **Step 3.3**: Verify from outside
+  - **Implementation Log**: Verified from a connected client rather than from the code. The live tool list came back with 16 tools: all nine confirmed store ops present and every one of the nine dropped names absent, `promote_context_entry` among them. `list_shared_context("agent-memory-project")` returned three rows, each carrying `uuid`, `scope`, `theme`, `content_summary`, `tags` and the two dates. `get(uuid)` on the memory layer returned that row's body, 3589 characters under the record's `content` field, with no `agent_id`, which is the layer read off the record itself. The served entry template carries `template_version: 2026-10-15-10-03`, and the served `update-project-context` names both layer creates, carries the "a theme is a name, not an address" note, and no longer names the dropped create. `list_agent_context` answers with an empty layer for all three projects, and `read_map` answers `found: false`, which is the existence-without-a-check claim in the map's definition.
+  - **Testing Log**: Those probes, by hand, against the deployed servers over MCP. One correction to record: my first body probe reported an empty body because it read `full_content`; the field is `content` and the row was intact, so the mistake was the probe's and not the data's.
+  - **Success Criteria**: Met. The served face answers to the new names, returns uuids, and its rows are readable through the memory layer.
+  - **Tech Debts**: None new.
+  - **Result**: Complete.
+
+### Post-review: the move sub-flow's M.4 step (raised by [USER-NAME])
+- **Implementation Log**: `update-project-context`'s M.4 said "Remove the entry from the source scope (**§ delete-context-entry**)", and on this backend the move already tombstones the source while the uuid still names that row, now the moved one. Followed literally, M.4 would retire the entry the caller just moved. It is retitled "Ensure the Source Entry Is Gone" with the check-then-remove reading, and `db.md`'s § delete-context-entry now names the move as the reason it has nothing to do inside that sub-flow. The markdown backend is unaffected: its move copies only, so its M.4 still finds the source and removes it.
+- **Testing Log**: the strict compile is clean, the overlay's own suite passes at 52, and hermod-server's loader and fidelity tests pass at 23, which is the mechanical proof that every `§` op the procedures name still resolves.
+- **Result**: Fixed and shipped as its own commit through the same chain.
 
 ---
 
 ## **QUALITY REVIEW**
 *Filled by procedure Step 16 (delegated to `/analyze-code-quality` in embedded mode) after all execution phases are complete. **Static** review — answers "is the code clean?".*
 
-- **Scope**: [Files reviewed — from Execution Log, reconciled against `git diff --name-only`]
-- **Quality Standard**: [quality-standard.md found / not found — dimensions applied]
-- **Findings**: [Issues found, or "No findings — implementation meets quality dimensions"]
-- **Fixed**: [What was fixed from approved findings, or "N/A"]
+- **Scope**: 21 files from the Execution Log, reconciled against the commits rather than the working tree, since every change is committed: `hermod-server` at `2b601b3..121edbb` (13 files, seven sources and six tests, plus the overlay gitlink), `agent-memory-project` at `0c34c7a..abadc7a` (the two backend docs, three procedures, the template, ADR-030 and this plan), and `hermod-deploy`'s single pin commit. Nothing changed on disk outside the logged set, and no logged file lacks a diff.
+- **Quality Standard**: Not found. There is no `quality-standard.md` anywhere in the tree, so the review is freeform and Dimension 8 is skipped. Dimensions 2 (UI states) and 3 (UX) do not apply to a store and a served text.
+- **Findings**: 0 critical, 2 medium, 2 low.
+  1. **Medium**, `record_project_repository.py` `_move_entry`: the direction change refuses a target layer that already holds the theme, while a create checks no theme at all, so one question carries two rules.
+  2. **Medium**, `record_project_repository.py` `_select_map`: a second live map row, which only a race between two creates can produce, would be served arbitrarily, where `_locate_entry` raises on exactly that ambiguity for a uuid.
+  3. **Low**, `_insert_entry` and `create_map`: the re-select after our own insert omits `user_id`, which every other read in the file carries.
+  4. **Low**, `markdown_importer.py`: the `ValueError` branch's comment describes a store-level refusal that cannot occur today, since only a missing agent and raw database errors can reach it.
+- **Fixed**: All five, as recommended. The direction change's theme check was dropped, with the sub-flow's collision step named as the guard in the code, the protocol, the tool's docstring and `db.md`; `_select_map` now names a project holding a second live map row instead of serving one of them; the three reads that follow our own insert carry the tenant filter; the importer's branch comment says what it guards; and the load procedure's opening names the two layers rather than the markdown paths. The tests followed: the occupied-theme case now asserts two rows on one theme, and a new test covers the duplicate map row. Shipped as `hermod-server@f7c12ff` and `agent-memory-project@3382367`, pinned at `hermod-deploy@6048fe4`, redeployed (run 38675415524) and re-verified live: the served description names no path, and the served move definition says it checks no theme.
 
 ---
 
 ## **QA HANDOFF**
 *Filled by procedure Step 17 after Quality Review is resolved. This plan is **not** runtime-verified — this section records the plan for that verification, which happens in a QA session with the stack up.*
 
-- **Scope**: [Modules touched — mapped from Execution Log scope]
+- **Scope**: `hermod-server`'s store surface (the repository, the service, the MCP registration, the awakening, the importer), its six test files and the schema copy; `agent-memory-project`'s two backend docs, three procedures and the entry template. The maps' own visibility vocabulary (`role-private`) and the markdown backend's storage layout are deliberately not touched.
 - **QA instrument**: NOT SET UP — there is no `qa/` folder and no `qa-map.md` anywhere in the tree, so this project has not opted into the QA ontology. `/map-qa-instrument create` then `/build-qa-bench` is what would change that.
 - **Integration coverage**: NONE — `/qa-status` reads the bench as not set up (so there is no OBSERVE mechanism to probe and the stack is reported unknown), which means no phase here can carry an integration test. Confirmed with [USER-NAME] at the final review; this plan ships with no integration coverage.
-- **Checklist**: [`qa/checklists/{feature}.md`, or "none — skipped, reason"]
-- **Coverage split**: [N automated (named tests) / N manual — of which N are UI-bound]
-- **Runtime verification**: **NOT DONE.** Next action: [`/run-qa-test --checklist qa/checklists/{feature}.md` once the stack is up | set up the instrument first: `/map-qa-instrument create` → `/build-qa-bench`]
+- **Checklist**: none — the QA instrument is not set up, so this step auto-skipped rather than inventing a `qa/` folder for a project that never opted in.
+- **Coverage split**: No checklist, so no split to report. What the change does carry is automated: `hermod-server`'s suite of 120 tests, 50 of which are database-backed and therefore run in CI rather than here, plus the overlay's 52, plus the end-to-end test that drives the served face over real HTTP. The live surface was also probed by hand after the deploy, which is not a repeatable artifact.
+- **Runtime verification**: **NOT DONE.** Next action: set up the instrument first (`/map-qa-instrument create` → `/build-qa-bench`), then `/run-qa-test` for a checklist this plan could not produce.
 
 > Do not read a filled checklist as a passed one. This section says a verification *plan* exists, nothing more.
 
