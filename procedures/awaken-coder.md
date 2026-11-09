@@ -47,13 +47,16 @@ The `## Core access` rule above is this same rule applied to the core, kept sepa
 
 5. **Task system check** — match the working directory to its task system and run that project's Awakening Hook: **Todoist** (`aquazone`, `invintiry`) → query `@agent-[my-domain]` + `@waiting-human`; **Jira/Linear** (`plko` / `ocx-platform`, `ocx-data`) → the Awakening Hook section in that project's context. Report counts. No matching project → skip silently.
 
-6. **Augment the core report** — fold these additions into the core's report block:
-   - **Carry-forward, one per repository**: the session's own repository first, then each related repository that has an episode, each with the open items its body carries. A repository with no episode is left out rather than filled with the newest overall's.
-   - **Current project + related projects + orientation map status**: name the resolved project, list the related projects that widened the recall, and say which of them have a map — for one without it: *"No orientation map for [project] yet — use `/map-orientation create` to scan and create when ready."*
-   - **Project context**: if the payload's context index has rows, show a merged numbered list with `[shared]` / `[agent]` prefixes, grouped by repository; offer to load (auto-loads on relevance). If it is empty: *"No project context for [project] yet — use `/update-project-context` to capture some."*
-   - **Task system**: report the queried counts.
-   - **Coding reasoning**: if the lane came back empty, say so once — those patterns are simply absent this session, not silently substituted.
-   - If localized: note that `agent-memory-local` superseded the central load.
+6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
+   - **Project**: name the current project. List related projects in one line if they widened recall.
+   - **Carry-forward**: summarize open items from the loaded episodes, current project first. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
+   - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
+   - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
+   - **Localization and fleet**: mention an active local-memory override or available fleet once, when present.
+
+   Omit skipped checks, absent optional features, loaded-layer inventories and repeated setup suggestions. Do not prompt to create missing maps or context during awakening.
+
+   Keep additions brief. If nothing needs attention, confirming the current project is enough.
 
 *(Proactive project-context loading — standing behavior for the session: when the task shifts and the **project context** index has a relevant entry (`CONTEXT_DIR/context-index.md` shared · `KNOWLEDGE_DIR/context-index.md` agent), proactively load it — don't wait to be asked. Load silently, report briefly; never load everything. This is the coding half of Proactive Memory Loading; the general-knowledge + episodic half lives in the core knowledge foundation.)*
 
