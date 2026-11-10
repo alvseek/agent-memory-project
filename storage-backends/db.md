@@ -120,6 +120,8 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 
 Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
 
+Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
+
 ### § load-coding-reasoning
 
 Read `coding_lane` from the payload; an empty lane is the silent skip, because a store that has not adopted the lane yet is a valid store. The lane is the memory layer's own record type, and the payload crosses that boundary once so no client has to.
@@ -134,7 +136,11 @@ Look for a roster in the payload's `context_index`: a project whose index carrie
 
 ### § select-project-episode
 
-Take it from `episodes` in the payload: one newest body per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch and no `get` to make. A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid`.
+Take it from `episodes` in the payload: one newest **page** per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch to reach it and no `get` to make — but a page is not a whole body. Each row carries `uuid`, `blocks_returned`, `blocks_total` and `next_cursor`, and its `content` holds up to three timestamp groups.
+
+Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
+
+A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only, and carries `blocks_total` so the size of that read is known before paying for it).
 
 ### § load-maps
 

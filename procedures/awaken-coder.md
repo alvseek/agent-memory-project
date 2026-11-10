@@ -49,7 +49,7 @@ The `## Core access` rule above is this same rule applied to the core, kept sepa
 
 6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
    - **Project**: name the current project. List related projects in one line if they widened recall.
-   - **Carry-forward**: summarize open items from the loaded episodes, current project first. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
+   - **Carry-forward**: summarize open items from the **page** that arrived per repository, current project first. A non-null `next_cursor` means the episode continues — say so and name that row's uuid and cursor rather than presenting the page as the whole record; a count below `blocks_total` with a null cursor is a complete final page. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
    - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
    - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
    - **Localization and fleet**: mention an active local-memory override or available fleet once, when present.
