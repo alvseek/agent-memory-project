@@ -140,7 +140,7 @@ Take it from `episodes` in the payload: one newest **page** per project in the s
 
 Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
 
-A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only, and carries `blocks_total` so the size of that read is known before paying for it).
+A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only and does not carry `blocks_total`; that count rides on the `episodes` row when the record itself is read).
 
 ### § load-maps
 
