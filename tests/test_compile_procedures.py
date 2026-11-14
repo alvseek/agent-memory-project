@@ -119,6 +119,18 @@ def test_compile_is_deterministic(tmp_path: Path) -> None:
 # ---------------------------------------------------------------- component inlining
 
 
+def test_awakening_keeps_recursive_discovery_and_agent_scoped_absence(tmp_path: Path) -> None:
+    reports = _compile(ROOT, tmp_path)
+    report = next(r for r in reports if r.name == "awaken-coder")
+    text = report.out_path.read_text(encoding="utf-8")
+
+    assert "Traverse submodules recursively" in text
+    assert "verify that every included repository was checked for nested submodules" in text
+    assert "report that discovery is incomplete" in text
+    assert "no episodes for this agent in this project set" in text
+    assert "do not automatically load other agents' episodes" in text
+
+
 def test_component_is_inlined_at_its_reference_point(tmp_path: Path) -> None:
     repo = _mkrepo(
         tmp_path / "repo",
