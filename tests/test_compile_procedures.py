@@ -131,6 +131,95 @@ def test_awakening_keeps_recursive_discovery_and_agent_scoped_absence(tmp_path: 
     assert "do not automatically load other agents' episodes" in text
 
 
+def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
+    report = next(r for r in _compile(ROOT, tmp_path) if r.name == "awaken-coder")
+    text = report.out_path.read_text(encoding="utf-8")
+    task_step = text.split("5. **Task workflow**", 1)[1].split(
+        "6. **Report the coding awakening**", 1
+    )[0]
+
+    assert "shared context entry named `task-workflow`" in task_step
+    assert "active home after any local-memory handoff" in task_step
+    assert "A related project's entry or an agent-private entry does not opt" in task_step
+    assert "No entry → skip silently; never create one" in task_step
+    assert "Multiple matching entries → report the ambiguity" in task_step
+    assert "project-owned, read-only instructions" in task_step
+    assert "what “me” means" in task_step
+    assert "task creation, assignment, comments and status changes are not authorized" in task_step
+    assert "rather than guessing or reporting zero tasks" in task_step
+    for forbidden in ("Todoist", "Jira", "Linear", "aquazone", "invintiry", "ocx-", "plko"):
+        assert forbidden not in task_step
+
+
+def test_task_workflow_storage_reads_match_each_backend() -> None:
+    markdown = (ROOT / "storage-backends" / "markdown.md").read_text(encoding="utf-8")
+    db = (ROOT / "storage-backends" / "db.md").read_text(encoding="utf-8")
+    for backend in (markdown, db):
+        composed = cc._seam.compose_backend_section(backend, "awaken-coder", [])
+        hook = composed.split("### § load-task-workflow\n", 1)[1].split("\n### ", 1)[0]
+        assert "CONTEXT_DIR/task-workflow.md" in hook
+        assert "local" in hook
+        assert "load failure" in hook
+
+    db_hook = db.split("### § load-task-workflow\n", 1)[1].split("\n---", 1)[0]
+    for constraint in (
+        "`project` is `projects[0]`",
+        "`scope` is `shared`",
+        "`theme` is exactly `task-workflow`",
+        "get(uuid)",
+        "Multiple matches",
+        "do not fall back to a central workflow",
+    ):
+        assert constraint in db_hook
+    assert "so nothing below costs a second call" not in db
+
+
+def test_task_workflow_authoring_compiles_with_identity_and_home(tmp_path: Path) -> None:
+    report = next(r for r in _compile(ROOT, tmp_path) if r.name == "set-project-task-workflow")
+    text = report.out_path.read_text(encoding="utf-8")
+
+    assert report.clean
+    assert report.components == ["project-identity", "home-contract"]
+    assert "$ARGUMENTS" in text
+    assert "git remote get-url origin" in text
+    assert "HOME = { MAP_PATH, CONTEXT_DIR, SESSION_DIR, KNOWLEDGE_DIR }" in text
+    assert "/components/" not in text
+    assert "Only the current project is a write target" in text
+    assert "**shared scope**, theme **`task-workflow`**" in text
+    assert "Preserve an existing local-memory override" in text
+    assert "Multiple matches: report the ambiguity" in text
+    assert "cannot be read is a load failure" in text
+    assert 'read_procedure("update-project-context")' in text
+    assert "Follow `/update-project-context` Steps 3–7" in text
+    assert "Do not restart its project/scope selection" in text
+    assert "Re-list before creating" in text
+    assert "Read back the saved entry and its shared index row" in text
+
+
+def test_task_workflow_authoring_keeps_incomplete_setup_read_only(tmp_path: Path) -> None:
+    reports = {r.name: r for r in _compile(ROOT, tmp_path)}
+    authoring = reports["set-project-task-workflow"].out_path.read_text(encoding="utf-8")
+    awakening = reports["awaken-coder"].out_path.read_text(encoding="utf-8")
+
+    for required in (
+        "Do not install integrations, initiate login or OAuth setup",
+        "Never create, assign, comment on, complete or transition tasks as a probe",
+        "smallest read-only check",
+        "account, project scope and query",
+        "Cover pagination when reporting a total",
+        "allow an **Incomplete** draft",
+        "explicitly `Not validated`",
+        "if readiness is `Incomplete`, report the missing setup and skip task queries",
+        "Wait for explicit approval before saving",
+        "preserve unrelated workflow content",
+        "Do not run awakening or modify actual tasks",
+    ):
+        assert required in authoring
+    assert "`Readiness: Incomplete`" in awakening
+    assert "skip task queries; do not repair or validate it during awakening" in awakening
+    assert "use `/set-project-task-workflow`" in awakening
+
+
 def test_component_is_inlined_at_its_reference_point(tmp_path: Path) -> None:
     repo = _mkrepo(
         tmp_path / "repo",

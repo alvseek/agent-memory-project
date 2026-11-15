@@ -147,6 +147,10 @@ From the episodic index the core returned, take the newest entry **per project**
 
 Read each project's `MAP_PATH` with the Read tool, silently skipping a project that has none. The resolved project's is the HOME value; a related repository's is the same path under its own project name (`[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md`). Never create one here — that is `/map-orientation create`'s job.
 
+### § load-task-workflow
+
+Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
+
 ---
 
 ## add-coding-reasoning

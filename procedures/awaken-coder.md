@@ -49,7 +49,11 @@ If the platform explicitly reports truncation or says the result was saved to a 
 
 4. **Orientation map + fleet pointer** — the maps arrived with the payload: one per project in the set that has one, with its dates (**§ load-maps**) — never auto-create. (The bare `/map-orientation` load is for a project you are working in outside an awakening.) Then, when a roster appears in the payload's context index (**§ check-fleet-roster**), the overlay's whole fleet statement is one pointer: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Resolve how to reach it from `[FLEET-ACCESS]` (see [Layer access](#layer-access)). The roster itself is loaded by the fleet repo's `/load-fleet`, not here.
 
-5. **Task system check** — match the working directory to its task system and run that project's Awakening Hook: **Todoist** (`aquazone`, `invintiry`) → query `@agent-[my-domain]` + `@waiting-human`; **Jira/Linear** (`plko` / `ocx-platform`, `ocx-data`) → the Awakening Hook section in that project's context. Report counts. No matching project → skip silently.
+5. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow` (**§ load-task-workflow**), using the active home after any local-memory handoff. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+
+   An **Awakening Hook** is the `Awakening Hook` section in that entry: project-owned, read-only instructions for checking assigned tasks and items waiting on a human. It declares the task system and required connection, the project/account scope, query filters (including what “me” means), the report format, and what to do when the connection is unavailable. Follow only this section during awakening; task creation, assignment, comments and status changes are not authorized by a hook. Report its results in the consolidated awakening report.
+
+   If the hook declares `Readiness: Incomplete`, report its missing setup and skip task queries; do not repair or validate it during awakening. If the entry cannot be read, the section is missing, or its scope or query is unspecified, report the problem and skip the hook rather than guessing or reporting zero tasks. Other workflow sections are documentation, not awakening actions. To configure or change the entry explicitly, use `/set-project-task-workflow`.
 
 6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
    - **Project**: name the current project. List related projects in one line if they widened recall.
@@ -68,9 +72,9 @@ If the platform explicitly reports truncation or says the result was saved to a 
 
 ## Storage Mechanics
 
-The operations referenced above — **§ awaken-coder-payload**, **§ load-coding-reasoning**, **§ load-context-indexes**, **§ check-fleet-roster**, **§ select-project-episode**, **§ load-maps** — are defined by the **active storage backend**:
+The operations referenced above — **§ awaken-coder-payload**, **§ load-coding-reasoning**, **§ load-context-indexes**, **§ check-fleet-roster**, **§ select-project-episode**, **§ load-maps**, **§ load-task-workflow** — are defined by the **active storage backend**:
 
 - **Markdown (native)** — follow `storage-backends/markdown.md` → its `awaken-coder` section.
-- **DB (Hermod)** — `storage-backends/db.md` → its `awaken-coder` section, where every one of those ops reads from the single payload `awaken_coder(domain, projects)` returns.
+- **DB (Hermod)** — `storage-backends/db.md` → its `awaken-coder` section: the base context comes from `awaken_coder(domain, projects)`, and an opted-in task workflow is read separately by the uuid in its context index.
 
 See the seam contract at `storage-backends/README.md` for how this swap works.

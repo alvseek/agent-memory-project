@@ -111,14 +111,14 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 
 ## awaken-coder
 
-> **This whole section is one call.** `awaken_coder(domain, projects)` returns the coding half of an
-> awakening in a single read-only payload, and every op below reads from it. It is issued **together
+> **The base payload is one call.** `awaken_coder(domain, projects)` returns the coding half of an
+> awakening in a single read-only payload. Its indexes drive the optional task-workflow body read below. It is issued **together
 > with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
 > and the two of them are the whole awakening ([ADR-029](../docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
 
 ### § awaken-coder-payload
 
-Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload answers every op in this section — `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps` — so nothing below costs a second call. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload supplies `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps`; an opted-in task workflow needs a separate body read by the uuid in that index. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
 
 Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
 
@@ -145,6 +145,10 @@ A project in the set with no episode is simply absent from `episodes`, so its ca
 ### § load-maps
 
 Read `maps` from the payload: one entry per project in the set that has a map, each carrying `content` and its dates. A project absent from `maps` has none — never auto-create one here. The dates are what the bare `/map-orientation` load's mtime check reads.
+
+### § load-task-workflow
+
+If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
 
 ---
 
