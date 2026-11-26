@@ -6,7 +6,7 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 > **The store is the memory database's records** ([ADR-027](../docs/adr/2026-10-13-hermod-store-is-valaskjalf-records.md)). A context entry is a `knowledge` record carrying a `project`: a row in `shared_record` for the `shared` layer and in `memory_record` for the `agent` one, where `agent_id` carries the owner. An entry's `title` is its theme and its `content_summary` the line a listing shows beside it; the orientation map is a `shared_record` row titled `orientation-map`. That `project` column is the boundary between the two corpora, and the memory layer's own browse excludes the rows that carry it, which is why a **listing is the only door to an entry's uuid**. **Hermod issues no DDL**: one owner holds both tables, so a missing table or column surfaces on the first call rather than being created here.
 
-> **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get(uuid)`, changing one is `edit` / `multi_edit` / `append` / `prepend`, changing its summary or tags is `edit_metadata`, and retiring it is `soft_delete`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
+> **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get_memory(uuid)`, changing one is `edit_memory_body` / `multi_edit_memory_body` / `append_memory_body` / `prepend_memory_body`, changing its summary or tags is `edit_memory_metadata`, and retiring it is `soft_delete_memory`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
 
 > **Three ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file, an index file beside it, and a line count after a write; a store has none of the three, so `§ ensure-context-dir`, `§ update-context-index` and `§ check-entry-size` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
 
@@ -16,7 +16,7 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 Every operation below is a **tool call**, reading and writing `shared_record` and `memory_record` through the tenant the verified token resolves to. No op names a path and no op takes a user id: whose rows are read and written is the token's, the project is the `project` argument, and the agent, on the ops that involve an agent-owned row, is the `agent` argument. Those ops require it rather than defaulting, because the token names the person and never the agent, so no owner can be derived from the call.
 
-**Where a tool lives.** This store's own ops are named exactly as they are here. The memory layer's ops are tools on the other connected server, so `get`, `edit`, `edit_metadata` and `soft_delete` below resolve against that server's tool list.
+**Where a tool lives.** This store's own ops are named exactly as they are here. The memory layer's ops are tools on the other connected server, so `get_memory`, `edit_memory_body`, `edit_memory_metadata` and `soft_delete_memory` below resolve against that server's tool list.
 
 ---
 
@@ -32,7 +32,7 @@ Call `list_shared_context(project)` and/or `list_agent_context(project, agent)`,
 
 ### § read-context-entry
 
-Call the memory layer's `get(uuid)` with the uuid a listing returned. It answers `None` for a row that is absent or tombstoned. Reading by theme is not a thing here: a theme is a name a listing shows, and two rows may carry one.
+Call the memory layer's `get_memory(uuid)` with the uuid a listing returned. It answers `None` for a row that is absent or tombstoned. Reading by theme is not a thing here: a theme is a name a listing shows, and two rows may carry one.
 
 ### § create-context-entry
 
@@ -44,10 +44,10 @@ Refused when `template_version` is missing or does not match the served template
 
 Two calls, in this order:
 
-1. Change the body with the memory layer's `edit(uuid, old_string, new_string, replace_all?)`, or with `append` / `prepend` / `multi_edit` for the shapes those take. The body is edited surgically and never restated wholesale.
-2. Change the line a listing shows with `edit_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
+1. Change the body with the memory layer's `edit_memory_body(uuid, old_string, new_string, replace_all?)`, or with `append_memory_body` / `prepend_memory_body` / `multi_edit_memory_body` for the shapes those take. The body is edited surgically and never restated wholesale.
+2. Change the line a listing shows with `edit_memory_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
 
-**The summary and the tags live in two places**: inside the document's own frontmatter, and in the row's columns, which is what a listing reads. A change belongs in both, so the `edit` above carries the frontmatter line while `edit_metadata` carries the column. A caller that changes only one leaves the index describing a document it no longer matches.
+**The summary and the tags live in two places**: inside the document's own frontmatter, and in the row's columns, which is what a listing reads. A change belongs in both, so the `edit_memory_body` above carries the frontmatter line while `edit_memory_metadata` carries the column. A caller that changes only one leaves the index describing a document it no longer matches.
 
 **The two calls are not atomic**: a failure between them leaves the summary describing the old body, so a caller that needs both should do the body first and the summary after. The template stamp is not required here, because it gates creation, and a surgical edit's own precondition is a body the caller has already read.
 
@@ -55,11 +55,11 @@ Two calls, in this order:
 
 Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `demote_context_entry(uuid, agent)` to move it into an agent's. The uuid is kept, so a handle held before the move still resolves after it. One call does both halves — the target row is written and the source row tombstoned — because the layer *is* which table the row lives in, which is why the sub-flow's next step has nothing left to do. Refused when no live entry holds the uuid, and when the entry already lives in the target layer. **It checks no theme**: two rows may carry one, so the sub-flow's own collision step is what decides whether a move should happen at all.
 
-**A theme cannot be renamed in place here.** Giving an entry a different theme means creating it under the new one and retiring the old row with `soft_delete`, because the theme is what `title` holds.
+**A theme cannot be renamed in place here.** Giving an entry a different theme means creating it under the new one and retiring the old row with `soft_delete_memory`, because the theme is what `title` holds.
 
 ### § delete-context-entry
 
-Call the memory layer's `soft_delete(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
+Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
 
 **Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
 
@@ -81,7 +81,7 @@ Call `list_shared_context(project)` and `list_agent_context(project, agent)`, on
 
 ### § read-context-entry
 
-Call the memory layer's `get(uuid)` for each selected entry and load its `full_content`.
+Call the memory layer's `get_memory(uuid)` for each selected entry and load its `full_content`.
 
 ---
 
@@ -136,9 +136,9 @@ Look for a roster in the payload's `context_index`: a project whose index carrie
 
 ### § select-project-episode
 
-Take it from `episodes` in the payload: one newest **page** per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch to reach it and no `get` to make — but a page is not a whole body. Each row carries `uuid`, `blocks_returned`, `blocks_total` and `next_cursor`, and its `content` holds up to three timestamp groups.
+Take it from `episodes` in the payload: one newest **page** per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch to reach it and no `get_memory` to make — but a page is not a whole body. Each row carries `uuid`, `blocks_returned`, `blocks_total` and `next_cursor`, and its `content` holds up to three timestamp groups.
 
-Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
+Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get_memory(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
 
 A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only and does not carry `blocks_total`; that count rides on the `episodes` row when the record itself is read).
 
@@ -148,7 +148,7 @@ Read `maps` from the payload: one entry per project in the set that has a map, e
 
 ### § load-task-workflow
 
-If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
+If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
 
 ---
 
@@ -168,7 +168,7 @@ The pattern's cited UUID is content, so any 8-4-4-4-12 will do; the write also r
 
 ### § persist-coding-reasoning
 
-Call the memory layer's `insert(scope="shared", record_type="coding_reasoning", title=..., content=..., template_version=<the template's stamp>)`. The record is fleet memory owned by nobody, and its `record_type` is the whole reason a chat agent's `awaken` never carries it.
+Call the memory layer's `insert_memory(scope="shared", record_type="coding_reasoning", title=..., content=..., template_version=<the template's stamp>)`. The record is fleet memory owned by nobody, and its `record_type` is the whole reason a chat agent's `awaken` never carries it.
 
 ## project-wrap-up
 

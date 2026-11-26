@@ -166,7 +166,7 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
         "`project` is `projects[0]`",
         "`scope` is `shared`",
         "`theme` is exactly `task-workflow`",
-        "get(uuid)",
+        "get_memory(uuid)",
         "Multiple matches",
         "do not fall back to a central workflow",
     ):
