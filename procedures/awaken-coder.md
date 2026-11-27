@@ -1,3 +1,12 @@
++++
+format_version = 2
+id = "awaken-coder"
+kind = "procedure"
+title = "Awaken Coder — Coding-Agent Awakening Overlay"
+description = "Orchestrating overlay for coding agents (working in a repo)."
+argument_name = "domain"
+argument_description = "the agent domain to awaken; asks if omitted"
++++
 # Awaken Coder — Coding-Agent Awakening Overlay
 
 Orchestrating overlay for **coding agents** (working in a repo). It composes the memory-core awakening with repo/environment context: the core loads central memory; this overlay adds coding-scoped reasoning, localization, orientation map, fleet, and task-system.
@@ -35,7 +44,10 @@ The `## Core access` rule above is this same rule applied to the core, kept sepa
 
 ## Procedure
 
-**Resolve the project first**: the repository this session is in, by [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md), together with the related repositories that widen the recall. Then make **both awakening calls in one step**: the core's `/awaken-agent [domain]` and the store's `awaken_coder(domain, projects)` (**§ awaken-coder-payload**), which is the coding half of the same awakening. Neither needs the other's answer, so they go out together. First return both full tool responses for reading in that step, without selecting fields, summarizing, slicing, or preemptively redirecting them to files. Do not assume they will truncate before trying. For file-backed loads, likewise try one whole read per required source first.
+**Resolve the project first**: the repository this session is in, by the project identity rule, together with the related repositories that widen the recall. Then make **both awakening calls in one step**: the core's `/awaken-agent [domain]` and the store's `awaken_coder(domain, projects)` (**§ awaken-coder-payload**), which is the coding half of the same awakening. Neither needs the other's answer, so they go out together. First return both full tool responses for reading in that step, without selecting fields, summarizing, slicing, or preemptively redirecting them to files. Do not assume they will truncate before trying. For file-backed loads, likewise try one whole read per required source first.
+
+@start component id="ref-1" ref="procedures/components/project-identity.md"
+@end component
 
 If the platform explicitly reports truncation or says the result was saved to a file, read the saved result to recover all omitted context before processing either payload or reporting completion. Try one whole read of that file first; only if that read also reports a limit, recover the missing content using a method that preserves it, including long lines. A preview, clipped JSON string, or summary is not a full load. If required context remains unavailable, name the source and failure and stop the work that depends on it. These recovery reads are only for observed output limits; a normal coding awakening still takes the two payload calls together. An episode's `next_cursor` is server-side pagination, not platform truncation: preserve the deliberate continuation rules below rather than automatically loading older sub-episodes.
 
@@ -43,7 +55,10 @@ If the platform explicitly reports truncation or says the result was saved to a 
 
 2. **Coding reasoning** — it arrived with the payload: read the lane from it (**§ load-coding-reasoning**); an empty lane is the silent skip. These are the reasoning patterns that only fire for a coding agent: they name repo artifacts, plan logs, foreign code, and fleet teammates, so the project-blind core does not carry them. Process them alongside the core reasoning patterns the core awakening already loaded — same lean shape, same weight.
 
-3. **Project context** — it arrived with the payload too: the merged index for the whole set, both scopes included (**§ load-context-indexes**), so a related repository's index is in hand when the task moves into it. The [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md) still names the home that this session's own writes and its load-on-relevance reads use.
+3. **Project context** — it arrived with the payload too: the merged index for the whole set, both scopes included (**§ load-context-indexes**), so a related repository's index is in hand when the task moves into it. The HOME contract component still names the home that this session's own writes and its load-on-relevance reads use.
+
+@start component id="ref-2" ref="procedures/components/home-contract.md"
+@end component
 
    **Localized detection + handoff** — if `.agents/` exists at cwd, the project is localized and its home (episodic, knowledge, map) is owned by `agent-memory-local`: run **`/load-local-context`** to load it. That read supersedes the central load above. If `.agents/` is absent, the central load stands. For a project already known to be localized, skip the detection entirely by running `agent-memory-local`'s `/awaken-local`, which runs this procedure with that check replaced by the same call.
 
@@ -70,11 +85,7 @@ If the platform explicitly reports truncation or says the result was saved to a 
 
 ---
 
-## Storage Mechanics
-
-The operations referenced above — **§ awaken-coder-payload**, **§ load-coding-reasoning**, **§ load-context-indexes**, **§ check-fleet-roster**, **§ select-project-episode**, **§ load-maps**, **§ load-task-workflow** — are defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `awaken-coder` section.
-- **DB (Hermod)** — `storage-backends/db.md` → its `awaken-coder` section: the base context comes from `awaken_coder(domain, projects)`, and an opted-in task workflow is read separately by the uuid in its context index.
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="awaken-coder"
+@end storage

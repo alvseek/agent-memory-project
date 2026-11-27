@@ -152,8 +152,8 @@ def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
 
 
 def test_task_workflow_storage_reads_match_each_backend() -> None:
-    markdown = (ROOT / "storage-backends" / "markdown.md").read_text(encoding="utf-8")
-    db = (ROOT / "storage-backends" / "db.md").read_text(encoding="utf-8")
+    markdown = (ROOT / "procedures/memory/storage-backends/markdown.md").read_text(encoding="utf-8")
+    db = (ROOT / "procedures/memory/storage-backends/db.md").read_text(encoding="utf-8")
     for backend in (markdown, db):
         composed = cc._seam.compose_backend_section(backend, "awaken-coder", [])
         hook = composed.split("### § load-task-workflow\n", 1)[1].split("\n### ", 1)[0]
@@ -406,7 +406,7 @@ def test_every_storage_op_resolves_on_the_real_tree(tmp_path: Path) -> None:
 def test_db_checklist_covers_every_referenced_op(tmp_path: Path) -> None:
     """Every `§ op` a procedure references is listed in db.md, so the deferred backend's
     TODO stays complete as procedures change."""
-    db_md = (ROOT / "storage-backends" / "db.md").read_text(encoding="utf-8")
+    db_md = (ROOT / "procedures/memory/storage-backends/db.md").read_text(encoding="utf-8")
     listed = set(cc._OP_RE.findall(db_md))
     referenced: set[str] = set()
     for report in cc.compile_all(ROOT, tmp_path, verbose=False):

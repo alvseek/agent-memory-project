@@ -1,3 +1,10 @@
++++
+format_version = 2
+id = "pull-all"
+kind = "procedure"
+title = "Pull All (Project + Agent Memory)"
+description = "Pull the latest changes for both the current working project and the agent-memory repository."
++++
 # Pull All (Project + Agent Memory)
 
 Pull the latest changes for both the current working project and the agent-memory repository.

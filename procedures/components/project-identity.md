@@ -1,10 +1,10 @@
-# Project Identity (project component)
-
-The rule that gives a project its identity, and the related repositories that widen a recall. **This is a component, not a standalone skill** — a procedure that reads or writes project memory invokes it.
-
-*Owned by `agent-memory-project`. The value it resolves is the `[project]` the project home is keyed by.*
-
----
++++
+format_version = 2
+id = "project-identity"
+kind = "component"
+title = "project-identity"
+description = "Procedure content: project-identity."
++++
 
 **A project is a git repository.** `git rev-parse --show-toplevel` finds the enclosing root, and because a submodule is its own repository that root stops at the submodule boundary rather than returning the parent. Its identity is the basename of `git remote get-url origin`, so a folder name cannot lie. A repository with no remote uses the folder name of its root, and outside any repository the identity is the working folder's name.
 

@@ -2,12 +2,13 @@
 
 Concrete storage mechanics for the **native markdown-over-git** world. Each `## [procedure]` section defines the `§ op`s that procedure references. See the [seam contract](README.md).
 
-> **Paths** resolve through the [HOME contract component](../components/home-contract.md): `CONTEXT_DIR` and `KNOWLEDGE_DIR` (central by default, a localized project's values otherwise). Where an op names a central path, read it as the resolved HOME value — identical for non-localized projects, in-project for localized ones.
+> **Paths** resolve through the [HOME contract component](../../components/home-contract.md): `CONTEXT_DIR` and `KNOWLEDGE_DIR` (central by default, a localized project's values otherwise). Where an op names a central path, read it as the resolved HOME value — identical for non-localized projects, in-project for localized ones.
 
 ---
 
 ## update-project-context
 
+@start region id="update-project-context"
 ### § ensure-context-dir
 
 Create the scope dir if it is missing (resolve `CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent):
@@ -79,9 +80,11 @@ If it does not exist, create it with the header `# [project-name] Project Contex
 — and for a move, delete the line from the agent index and add it to the shared index.
 
 ---
+@end region
 
 ## load-project-context
 
+@start region id="load-project-context"
 ### § list-context-entries
 
 Read the shared index (`CONTEXT_DIR/context-index.md`) and scan the agent layer (`KNOWLEDGE_DIR` project subfolders, excluding `research/`) for its `context-index.md`. Parse each entry together with its scope marker (`[shared]` / `[agent]`). A missing or empty layer is skipped silently.
@@ -94,9 +97,11 @@ Read the selected entry file(s) from their source-layer path:
 - Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project]/[theme].md`
 
 ---
+@end region
 
 ## map-orientation
 
+@start region id="map-orientation"
 ### § map-exists
 
 Test whether `MAP_PATH` exists (the resolved HOME value). A localized project whose `MAP_PATH` is missing is caught by `agent-memory-local`'s reachability guard.
@@ -120,9 +125,11 @@ Write `MAP_PATH` **with the structure the template shows** — the fenced block 
 > **The template's `template_version` line sits outside that block,** so a map written from the block never carries it.
 
 ---
+@end region
 
 ## awaken-coder
 
+@start region id="awaken-coder"
 ### § awaken-coder-payload
 
 No call, and nothing fetched: this backend's awakening set is the files the core awakening already read, and each op below names the file that answers its part. The one thing that is *not* the core's is the map, which `§ load-maps` reads. A markdown awakening therefore costs no tool call at all — the ops under this heading are file reads.
@@ -152,9 +159,11 @@ Read each project's `MAP_PATH` with the Read tool, silently skipping a project t
 Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
 
 ---
+@end region
 
 ## add-coding-reasoning
 
+@start region id="add-coding-reasoning"
 ### § read-coding-lane
 
 Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context (silently skip if missing).
@@ -171,9 +180,12 @@ The reasoning-pattern block format → read `[AGENT-MEMORY-PATH]/control-files/p
 ### § persist-coding-reasoning
 
 Append the completed pattern as a level-3 (`###`) block to `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md`, under an existing `## ` grouping. Transfer it with `copy-lines.sh` rather than retyping it, so the bytes arrive exactly.
+@end region
 
 ## project-wrap-up
 
+@start region id="project-wrap-up"
 ### § persist-store
 
 Execute `/push-all <mode>` — one call covering the agent-memory store and the working project together. Its memory half captures the writes the Step 1 project push ran too early to include; its project half captures what Steps 2–3 wrote.
+@end region

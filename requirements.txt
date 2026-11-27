@@ -1,0 +1,1 @@
+procedure-composer @ git+https://github.com/alvseek/agent-memory-system.git@4f1dab49ecebfd54a27ebcfcd681b3cbb032756d#subdirectory=packages/procedure-composer

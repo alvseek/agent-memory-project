@@ -1,10 +1,10 @@
-# HOME Contract (project component)
-
-The four-value home a procedure reads or writes project memory from. **This is a component, not a standalone skill** — a procedure that touches project memory invokes it.
-
-*Owned by `agent-memory-project`. It carries only the default home; a caller may inject different values.*
-
----
++++
+format_version = 2
+id = "home-contract"
+kind = "component"
+title = "home-contract"
+description = "Procedure content: home-contract."
++++
 
 **`HOME` is four values:**
 

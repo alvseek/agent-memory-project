@@ -4,9 +4,9 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 > **Ops here are tool calls, not shell commands.** A served client has no repository to write into, so every op below names a tool the agent calls. A context entry is addressed by its **`uuid`**, which the store assigns when it is created: the listings return it, and every op that acts on one entry takes it. `scope` is no longer an argument anywhere: the layer is in the tool's own name, where `shared` (every agent of the tenant) is the counterpart of `agent` (one agent's own). There is no `[AGENT-MEMORY-PATH]`, `CONTEXT_DIR` or `KNOWLEDGE_DIR` here: the store replaces them, and the project is a column.
 
-> **The store is the memory database's records** ([ADR-027](../docs/adr/2026-10-13-hermod-store-is-valaskjalf-records.md)). A context entry is a `knowledge` record carrying a `project`: a row in `shared_record` for the `shared` layer and in `memory_record` for the `agent` one, where `agent_id` carries the owner. An entry's `title` is its theme and its `content_summary` the line a listing shows beside it; the orientation map is a `shared_record` row titled `orientation-map`. That `project` column is the boundary between the two corpora, and the memory layer's own browse excludes the rows that carry it, which is why a **listing is the only door to an entry's uuid**. **Hermod issues no DDL**: one owner holds both tables, so a missing table or column surfaces on the first call rather than being created here.
+> **The store is the memory database's records** ([ADR-027](../../../docs/adr/2026-10-13-hermod-store-is-valaskjalf-records.md)). A context entry is a `knowledge` record carrying a `project`: a row in `shared_record` for the `shared` layer and in `memory_record` for the `agent` one, where `agent_id` carries the owner. An entry's `title` is its theme and its `content_summary` the line a listing shows beside it; the orientation map is a `shared_record` row titled `orientation-map`. That `project` column is the boundary between the two corpora, and the memory layer's own browse excludes the rows that carry it, which is why a **listing is the only door to an entry's uuid**. **Hermod issues no DDL**: one owner holds both tables, so a missing table or column surfaces on the first call rather than being created here.
 
-> **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get_memory(uuid)`, changing one is `edit_memory_body` / `multi_edit_memory_body` / `append_memory_body` / `prepend_memory_body`, changing its summary or tags is `edit_memory_metadata`, and retiring it is `soft_delete_memory`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
+> **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get_memory(uuid)`, changing one is `edit_memory_body` / `multi_edit_memory_body` / `append_memory_body` / `prepend_memory_body`, changing its summary or tags is `edit_memory_metadata`, and retiring it is `soft_delete_memory`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../../../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
 
 > **Three ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file, an index file beside it, and a line count after a write; a store has none of the three, so `§ ensure-context-dir`, `§ update-context-index` and `§ check-entry-size` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
 
@@ -14,14 +14,19 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 ## all-procedures
 
+@start region id="all-procedures" ending="none"
 Every operation below is a **tool call**, reading and writing `shared_record` and `memory_record` through the tenant the verified token resolves to. No op names a path and no op takes a user id: whose rows are read and written is the token's, the project is the `project` argument, and the agent, on the ops that involve an agent-owned row, is the `agent` argument. Those ops require it rather than defaulting, because the token names the person and never the agent, so no owner can be derived from the call.
 
 **Where a tool lives.** This store's own ops are named exactly as they are here. The memory layer's ops are tools on the other connected server, so `get_memory`, `edit_memory_body`, `edit_memory_metadata` and `soft_delete_memory` below resolve against that server's tool list.
 
 ---
 
+
+@end region
+
 ## update-project-context
 
+@start region id="update-project-context"
 ### § ensure-context-dir
 
 No action. A store has no directories; the project, the layer and the owner are columns on the row.
@@ -72,9 +77,11 @@ No action. The cap is a **creation** gate: `§ create-context-entry` refuses a d
 No action. The index is not a file here: `§ list-context-entries` renders it from the rows, so there is nothing to edit and nothing to keep in step.
 
 ---
+@end region
 
 ## load-project-context
 
+@start region id="load-project-context"
 ### § list-context-entries
 
 Call `list_shared_context(project)` and `list_agent_context(project, agent)`, one per layer, and read each row's own `scope` to tell them apart. A layer is its own op now, so this step is two calls where it used to be one. `agent` is required, because those rows are owned. An empty result is the silent skip.
@@ -84,9 +91,11 @@ Call `list_shared_context(project)` and `list_agent_context(project, agent)`, on
 Call the memory layer's `get_memory(uuid)` for each selected entry and load its `full_content`.
 
 ---
+@end region
 
 ## map-orientation
 
+@start region id="map-orientation"
 ### § map-exists
 
 No action. `§ read-map` answers the existence question: a project with no map comes back as `found: false`, so nothing checks for one first.
@@ -108,9 +117,11 @@ Call `create_map(project, content, template_version, content_summary?)` with the
 Call `update_map(project, content, template_version, content_summary?)` with the full map text and the template's current stamp. It rewrites that one row and touches no other. Refused when the project has no map, so writing never creates one, and when `template_version` is missing or stale.
 
 ---
+@end region
 
 ## awaken-coder
 
+@start region id="awaken-coder"
 > **The base payload is one call.** `awaken_coder(domain, projects)` returns the coding half of an
 > awakening in a single read-only payload. Its indexes drive the optional task-workflow body read below. It is issued **together
 > with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
@@ -151,9 +162,11 @@ Read `maps` from the payload: one entry per project in the set that has a map, e
 If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
 
 ---
+@end region
 
 ## add-coding-reasoning
 
+@start region id="add-coding-reasoning"
 ### § read-coding-lane
 
 Call the memory layer's `coding_reasoning()` tool and load the patterns it returns. An empty list is the silent skip: a store that has not adopted the lane yet is a valid store.
@@ -169,9 +182,12 @@ The pattern's cited UUID is content, so any 8-4-4-4-12 will do; the write also r
 ### § persist-coding-reasoning
 
 Call the memory layer's `insert_memory(scope="shared", record_type="coding_reasoning", title=..., content=..., template_version=<the template's stamp>)`. The record is fleet memory owned by nobody, and its `record_type` is the whole reason a chat agent's `awaken` never carries it.
+@end region
 
 ## project-wrap-up
 
+@start region id="project-wrap-up"
 ### § persist-store
 
 Execute **`/push-project <mode>`** on the project repository. Every op above writes its row as it runs, on the memory database, so the store is durable the moment it is written and there is nothing left for a memory push to persist at wrap-up — that half of the op dissolves. The project push is the half that still has work: the commits Steps 2-3 produced. In the default `agent` mode it stages only this agent's own work; `all` pushes the full tree.
+@end region

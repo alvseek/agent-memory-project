@@ -1,3 +1,10 @@
++++
+format_version = 2
+id = "push-all"
+kind = "procedure"
+title = "Push All (Project + Agent Memory)"
+description = "Commit and push both the current working project and the agent-memory repository — either the **full tree** of each (`all`) or **only the agent's own work** (`agent`). A thin composition of the two leaf pushers in whichever mode you name; it adds no git logic of its own."
++++
 # Push All (Project + Agent Memory)
 
 Commit and push both the current working project and the agent-memory repository — either the **full tree** of each (`all`) or **only the agent's own work** (`agent`). A thin composition of the two leaf pushers in whichever mode you name; it adds no git logic of its own.

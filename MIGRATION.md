@@ -50,7 +50,7 @@ The **localization lane** (`localize-context`, `localized-memory-workflow`, and 
 owns the new `load-local-context` reader. This overlay was renamed
 **`agent-memory-coding-skill` → `agent-memory-project`** and made **central-only**: its procedures no
 longer resolve `home: project` themselves; they operate on the `HOME` contract
-(`components/home-contract.md`, central default), and `agent-memory-local` resolves the localized
+(`procedures/components/home-contract.md`, central default), and `agent-memory-local` resolves the localized
 override. `awaken-coder` hands off to `/load-local-context` when it detects a localized project
 (`.agents/` at cwd). The repo had already split twice (fleet 2026-10-08, wizards 2026-10-09); it is
 now **four repos**: project, local, fleet, wizards.

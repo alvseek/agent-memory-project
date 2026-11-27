@@ -1,10 +1,19 @@
++++
+format_version = 2
+id = "map-orientation"
+kind = "procedure"
+title = "Map Orientation"
+description = "Maintain a per-project index of orientation artifacts (READMEs, architecture docs, flow diagrams, ADRs, sub-project maps) with staleness + role tracking."
+argument_name = "mode"
+argument_description = "`create` for a first-time full scan, or `--session-touched <paths>` to refresh named entries; loads the map if omitted"
++++
 # Map Orientation
 
 Maintain a per-project index of orientation artifacts (READMEs, architecture docs, flow diagrams, ADRs, sub-project maps) with staleness + role tracking.
 
 Map file: `shared-memory/[PROJECT-NAME]/context/orientation-map.md`. Format: [orientation-map-template.md]([path-to-agent-memory-project]/templates/orientation-map-template.md).
 
-*How* the map is physically read and written is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
+*How* the map is physically read and written is delegated to the active **storage backend**.
 
 ---
 
@@ -24,7 +33,10 @@ Map file: `shared-memory/[PROJECT-NAME]/context/orientation-map.md`. Format: [or
 
 1. **Identify project** — match cwd against known project mappings (`shared-memory/[project]/` existence + `shared-memory/integrations/external-integrations.md` task-system mapping). If a project-name arg is passed, use it. If neither: skip silently.
 2. **Compute central map path** — `[AGENT-MEMORY-PATH]/shared-memory/[PROJECT-NAME]/context/orientation-map.md`. Record `CENTRAL_MAP_EXISTS`.
-3. **Resolve the home** — apply the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md). `MAP_PATH` and `CONTEXT_DIR` are the active values. `MAP_EXISTS` = whether `MAP_PATH` exists (**§ map-exists**).
+3. **Resolve the home** — apply the HOME contract component. `MAP_PATH` and `CONTEXT_DIR` are the active values. `MAP_EXISTS` = whether `MAP_PATH` exists (**§ map-exists**).
+
+@start component id="ref-1" ref="procedures/components/home-contract.md"
+@end component
 
 > **All mode blocks below operate on `MAP_PATH` / `CONTEXT_DIR`.** Where a block names `shared-memory/[PROJECT-NAME]/context/orientation-map.md`, read it as `MAP_PATH`.
 
@@ -294,11 +306,7 @@ Used by **Load Mode L2** when reading entries:
 
 ---
 
-## Storage Mechanics
-
-The operations referenced above — **§ map-exists**, **§ ensure-context-dir**, **§ read-map**, **§ write-map**, **§ create-map** — are defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `map-orientation` section.
-- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `map-orientation` section (not yet implemented).
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="map-orientation"
+@end storage

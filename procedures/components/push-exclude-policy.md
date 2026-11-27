@@ -1,10 +1,10 @@
-# Push Exclude Policy (push component)
-
-Some repos must never be auto-committed or pushed. **This is a component, not a standalone skill** — a push flow's "check the exclude list first" step invokes it by reading and following this file.
-
-*Consumed by `/push-project`, and inherited from there by `/push-all` and by any wrap-up that composes them.*
-
----
++++
+format_version = 2
+id = "push-exclude-policy"
+kind = "component"
+title = "push-exclude-policy"
+description = "Procedure content: push-exclude-policy."
++++
 
 **Before pushing, consult the project's push-exclude list** — `push-policy.md` in the shared context dir (`CONTEXT_DIR`, per the HOME contract).
 

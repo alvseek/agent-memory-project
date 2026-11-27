@@ -1,10 +1,19 @@
++++
+format_version = 2
+id = "add-coding-reasoning"
+kind = "procedure"
+title = "Add Coding Reasoning Protocol"
+description = "Capture an anti-pattern or decision-making approach that only fires for a coding agent, and write it into the fleet's coding-reasoning lane."
+argument_name = "argument"
+argument_description = "Input text in the format described by this procedure's Arguments section"
++++
 # Add Coding Reasoning Protocol
 
 Capture an anti-pattern or decision-making approach that only fires for a **coding** agent, and write it into the fleet's **coding-reasoning lane**.
 
 The lane is fleet memory, but it is its own record type, so a chat agent's awakening never carries it: `awaken` loads its universal layer by type, and the coding lane is not that type. Only `/awaken-coder` reads it.
 
-*How* the lane is physically read and written is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
+*How* the lane is physically read and written is delegated to the active **storage backend**.
 
 ## Arguments
 
@@ -37,11 +46,7 @@ Write the completed pattern into the coding lane (**§ persist-coding-reasoning*
 
 ---
 
-## Storage Mechanics
-
-The operations referenced above — **§ read-coding-lane**, **§ template**, **§ generate-uuid**, **§ persist-coding-reasoning** — are defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `add-coding-reasoning` section.
-- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `add-coding-reasoning` section.
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="add-coding-reasoning"
+@end storage

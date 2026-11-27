@@ -1,3 +1,12 @@
++++
+format_version = 2
+id = "push-project"
+kind = "procedure"
+title = "Push Project Files"
+description = "Commit and push changes in the current working project repository — either the full tree (all) or only the agent's own work (agent)."
+argument_name = "mode"
+argument_description = "`all` or `agent`, optionally followed by a commit message"
++++
 # Push Project Files
 
 Commit and push changes in the current working project repository — either the **full tree** (`all`) or **only the agent's own work** (`agent`).
@@ -16,7 +25,10 @@ Examples: `/push-project` (all, auto-msg) · `/push-project agent` · `/push-pro
 
 ## Procedure
 
-> **Push-exclude list (check first).** Read and follow the [Push Exclude Policy component]([path-to-agent-memory-project]/components/push-exclude-policy.md) — excluded repos/submodules are never committed or pushed and never counted against completion (`skipped (excluded)`).
+> **Push-exclude list (check first).** Read and follow the Push Exclude Policy component — excluded repos/submodules are never committed or pushed and never counted against completion (`skipped (excluded)`).
+
+@start component id="ref-1" ref="procedures/components/push-exclude-policy.md"
+@end component
 
 > **In-scope repos.** The working project repo and its **owned git submodules** (recurse). A superproject's `git status` shows a dirty submodule only as a one-line gitlink — it does NOT reveal uncommitted files *inside* the submodule, and `git add` on the gitlink records only the pointer. So you MUST enter each owned submodule and commit/push **inside it first**, then commit the updated pointer in its superproject. Always process submodules **before** their superproject.
 

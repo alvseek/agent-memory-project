@@ -1,3 +1,12 @@
++++
+format_version = 2
+id = "set-project-task-workflow"
+kind = "procedure"
+title = "Set Project Task Workflow"
+description = "Configure the current project's task tracker and read-only Awakening Hook in its shared task-workflow context entry."
+argument_name = "argument"
+argument_description = "Input text in the format described by this procedure's Arguments section"
++++
 # Set Project Task Workflow
 
 Configure the current project's task tracker and read-only Awakening Hook in its shared `task-workflow` context entry. Inspect existing setup, ask only for missing details, and confirm the proposed changes before saving. This procedure configures instructions; it does not create a tracker integration or change tasks.
@@ -15,9 +24,15 @@ Details are free text, not a required vendor-specific syntax. Tracker names are 
 
 ### 1. Resolve the project and active home
 
-Resolve the current repository using [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). Only the current project is a write target; related repositories do not inherit its tracker configuration. If the user names a different project, clarify the target before proceeding rather than writing under the current repository's identity.
+Resolve the current repository using the project identity rule. Only the current project is a write target; related repositories do not inherit its tracker configuration. If the user names a different project, clarify the target before proceeding rather than writing under the current repository's identity.
 
-Use the active [HOME contract]([path-to-agent-memory-project]/components/home-contract.md). Preserve an existing local-memory override. If `.agents/` exists and local context has not been loaded, run `/load-local-context` before reading or writing project context; its active shared home supersedes central context. Do not create local memory or fall back to a central entry when local context is unavailable.
+@start component id="ref-1" ref="procedures/components/project-identity.md"
+@end component
+
+Use the active HOME contract. Preserve an existing local-memory override. If `.agents/` exists and local context has not been loaded, run `/load-local-context` before reading or writing project context; its active shared home supersedes central context. Do not create local memory or fall back to a central entry when local context is unavailable.
+
+@start component id="ref-2" ref="procedures/components/home-contract.md"
+@end component
 
 The target is fixed: **shared scope**, theme **`task-workflow`**. Do not ask the user to choose shared versus agent scope.
 

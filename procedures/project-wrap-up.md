@@ -1,3 +1,12 @@
++++
+format_version = 2
+id = "project-wrap-up"
+kind = "procedure"
+title = "Project Wrap Up Session"
+description = "End-of-session full orchestrator (coding/environment add-on): push the project's work → update memory → refresh the orientation map → push everything those steps wrote → final summary with a push-completion gate."
+argument_name = "mode"
+argument_description = "`all` or `agent` push mode, plus `fresh` to re-evaluate the whole session"
++++
 # Project Wrap Up Session
 
 End-of-session **full** orchestrator (coding/environment add-on): push the project's work → update memory → refresh the orientation map → push everything those steps wrote → final summary with a push-completion gate. It borrows the core memory update and adds the project and orientation-map work around it.
@@ -34,7 +43,10 @@ Tool calls visible (git commands); capture per-repo commit hashes + user-files-l
 - **Several, one carrying the subject** (the majority of the session's changed paths, or the repository the session's own project-context or map writes name) → that repository is the session's project, and the others go into the record's `tags`, which `search` reads.
 - **Several, none carrying the subject** → no project at all, and every repository goes into the `tags`.
 
-**File without asking when the cases above settle on one repository; ask only when they do not**, naming the candidates and the reading you would take. The identity itself comes from [the project identity rule]([path-to-agent-memory-project]/components/project-identity.md). The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
+**File without asking when the cases above settle on one repository; ask only when they do not**, naming the candidates and the reading you would take. The identity itself comes from the project identity rule. The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
+
+@start component id="ref-1" ref="procedures/components/project-identity.md"
+@end component
 
 **First — the Project Context Gate** (the memory core is project-blind; the coding overlay owns project-context). Evaluate whether this session produced project-specific context worth persisting:
 - Project-specific conventions, setup, deployment, env details?
@@ -124,11 +136,7 @@ Retry the push (or resolve the blocker) before leaving — the wrap-up is only c
 
 ---
 
-## Storage Mechanics
-
-The operation referenced above — **§ persist-store** — is defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `project-wrap-up` section.
-- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `project-wrap-up` section.
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="project-wrap-up"
+@end storage

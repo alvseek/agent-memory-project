@@ -9,6 +9,9 @@ authors = [
     { name = "Alviandi Widiasto", email = "alviandi@msn.com" }
 ]
 requires-python = ">=3.12"
+dependencies = [
+    "procedure-composer @ git+https://github.com/alvseek/agent-memory-system.git@4f1dab49ecebfd54a27ebcfcd681b3cbb032756d#subdirectory=packages/procedure-composer",
+]
 
 # This repo ships markdown procedures + the compile/install tooling, not an installable
 # package — so it is never built/distributed.

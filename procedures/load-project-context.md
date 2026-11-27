@@ -1,8 +1,17 @@
++++
+format_version = 2
+id = "load-project-context"
+kind = "procedure"
+title = "Load Project Context Protocol"
+description = "Load a project's context into working memory from both layers: the shared one every agent of the project sees, and the agent layer one agent owns."
+argument_name = "keyword"
+argument_description = "match context files by keyword; lists all if omitted"
++++
 # Load Project Context Protocol
 
 Load a project's context into working memory from **both** layers: the shared one every agent of the project sees, and the agent layer one agent owns. Supports listing all available entries or loading specific ones by keyword. Entries are presented with `[shared]` / `[agent]` markers so the layer is always visible.
 
-*How* the entries are physically read is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
+*How* the entries are physically read is delegated to the active **storage backend**.
 
 ## Arguments
 
@@ -19,7 +28,10 @@ Load a project's context into working memory from **both** layers: the shared on
 
 ### Step 1: Scan Available Project Context
 
-List the project context entries across **both** layers (**§ list-context-entries**). Paths resolve through the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md): the shared layer is `CONTEXT_DIR`, the agent layer is `KNOWLEDGE_DIR`.
+List the project context entries across **both** layers (**§ list-context-entries**). Paths resolve through the HOME contract component: the shared layer is `CONTEXT_DIR`, the agent layer is `KNOWLEDGE_DIR`.
+
+@start component id="ref-1" ref="procedures/components/home-contract.md"
+@end component
 
 **Silent skip**: If either layer is missing or empty for a given project, skip it without error. Only present what exists.
 
@@ -92,11 +104,7 @@ Loaded [N] project context file(s):
 
 ---
 
-## Storage Mechanics
-
-The operations referenced above — **§ list-context-entries**, **§ read-context-entry** — are defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `load-project-context` section.
-- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `load-project-context` section (not yet implemented).
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="load-project-context"
+@end storage

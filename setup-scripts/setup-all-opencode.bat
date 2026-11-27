@@ -29,10 +29,15 @@ REM the System32 WSL "bash" that used to break this installer.
 set "PY="
 set "PYARGS="
 
-for /f "delims=" %%i in ('where py 2^>nul ^| findstr /v /i "WindowsApps"') do (
-    if not defined PY set "PY=%%i"
+if defined VIRTUAL_ENV if exist "%VIRTUAL_ENV%\Scripts\python.exe" (
+    set "PY=%VIRTUAL_ENV%\Scripts\python.exe"
 )
-if defined PY set "PYARGS=-3"
+if not defined PY (
+    for /f "delims=" %%i in ('where py 2^>nul ^| findstr /v /i "WindowsApps"') do (
+        if not defined PY set "PY=%%i"
+    )
+    if defined PY set "PYARGS=-3"
+)
 
 if not defined PY (
     for /f "delims=" %%i in ('where python 2^>nul ^| findstr /v /i "WindowsApps"') do (

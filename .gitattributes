@@ -1,2 +1,5 @@
 # Windows batch files must keep CRLF line endings (safe for CMD, required for label/goto scripts)
 *.bat text eol=crlf
+
+# Format 2 composition preserves source bytes; keep authored inputs identical on Windows and Linux.
+procedures/** text eol=lf

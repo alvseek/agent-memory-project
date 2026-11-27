@@ -1,8 +1,17 @@
++++
+format_version = 2
+id = "update-project-context"
+kind = "procedure"
+title = "Update Project Context Protocol"
+description = "Create or update project-specific context files."
+argument_name = "context"
+argument_description = "the project context to capture; asks if omitted"
++++
 # Update Project Context Protocol
 
 Create or update project-specific context files. Routes new entries to **shared** (`shared-memory/[project-name]/context/`, for cross-agent universal facts) or **agent** (`agent-[domain]/knowledge-base/[project-name]/`, for domain-specialized facts) based on a heuristic + user confirmation. Also supports moving an existing agent entry to shared.
 
-*How* the entries are physically stored is delegated to the active **storage backend** (see [Storage Mechanics](#storage-mechanics)).
+*How* the entries are physically stored is delegated to the active **storage backend**.
 
 ## Arguments
 
@@ -57,7 +66,10 @@ Based on the confirmed scope, the markdown backend reads and writes the matching
 
 A store keeps no path: its mechanics say which layer a row lands in.
 
-> **Storage location**: use the [HOME contract component]([path-to-agent-memory-project]/components/home-contract.md)'s `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (agent). Use those dirs for every scope-aware step below (folder check, create, index).
+> **Storage location**: use the HOME contract component's `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (agent). Use those dirs for every scope-aware step below (folder check, create, index).
+
+@start component id="ref-1" ref="procedures/components/home-contract.md"
+@end component
 
 > **Move operation**: If the user has asked to **move** an existing entry between scopes — a **promote** (agent → shared, e.g. "move X to shared") or a **demote** (shared → agent) — skip the rest of this procedure and follow the [Move Between Scopes Sub-Flow](#move-between-scopes-sub-flow) section below.
 
@@ -73,7 +85,7 @@ List the layer's existing entries (**§ list-context-entries**) to check whether
 - **If an existing entry matches**: Proceed to Step 5B (Update)
 - **If no match**: Proceed to Step 5A (Create New)
 
-> **A theme is a name, not an address.** This comparison is the only thing the theme decides, and it decides exactly one question: create, or update. How an entry is then read, changed or retired is the storage backend's business, and a store's answer may be more than one call (see [Storage Mechanics](#storage-mechanics)).
+> **A theme is a name, not an address.** This comparison is the only thing the theme decides, and it decides exactly one question: create, or update. How an entry is then read, changed or retired is the storage backend's business, and a store's answer may be more than one call.
 
 ### Step 5A: Create New Context Entry
 
@@ -138,11 +150,7 @@ Remove the entry from the source index and add it to the target index (**§ upda
 
 ---
 
-## Storage Mechanics
-
-The operations referenced above — **§ ensure-context-dir**, **§ list-context-entries**, **§ read-context-entry**, **§ create-context-entry**, **§ update-context-entry**, **§ move-context-entry**, **§ delete-context-entry**, **§ check-entry-size**, **§ update-context-index** — are defined by the **active storage backend**:
-
-- **Markdown (native)** — follow `storage-backends/markdown.md` → its `update-project-context` section.
-- **DB (Hermod)** — the equivalents live in `storage-backends/db.md` → its `update-project-context` section (not yet implemented).
-
-See the seam contract at `storage-backends/README.md` for how this swap works.
+@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@end storage
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="update-project-context"
+@end storage

@@ -1,3 +1,12 @@
++++
+format_version = 2
+id = "pull-project"
+kind = "procedure"
+title = "Pull Project Files"
+description = "Pull the latest changes from the remote for the current working project repository."
+argument_name = "argument"
+argument_description = "Input text in the format described by this procedure's Arguments section"
++++
 # Pull Project Files
 
 Pull the latest changes from the remote for the current working project repository.

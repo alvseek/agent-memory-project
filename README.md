@@ -18,8 +18,8 @@ This repo holds the coding- and repository-oriented procedures that sit **on top
 - **Doc-gen** (moved out 2026-10-12): the doc generators and `discovery-contract` now live in [`agent-memory-doc`](https://github.com/alvseek/agent-memory-doc) (`hermod-doc`); `dockerize` moved to [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards)
 - **QA** (moved out 2026-10-09): the QA pipeline (`analyze-code-quality`, `generate-standard`, `pixel-wizard`, `setup-qa-visual-instrument`, `map-qa-instrument`, `build-qa-bench`, `integration-test`, `run-qa-test`, `qa-status`, `generate-qa-checklist`) now lives in [`agent-memory-wizards`](https://github.com/alvseek/agent-memory-wizards) (`hermod-wizards`).
 - **Repo / integration**: `map-orientation`, `update-project-context`, `load-project-context`, `pull-all`/`pull-project`, `push-all`/`push-project`. Use `/set-project-task-workflow [details]` to configure the current project's tracker and read-only Awakening Hook in shared context named `task-workflow`; incomplete setup can be saved explicitly, but awakening skips its task queries until setup is validated.
-- **Storage backends** (`storage-backends/`): the seam the project-memory procedures delegate their mechanics to — `markdown` live, `db` declared and deferred (ADR-023).
-- **Localization** (moved out 2026-10-09): `localize-context`, `localized-memory-workflow`, and the `HOME`-resolution rule now live in [`agent-memory-local`](https://github.com/alvseek/agent-memory-local) (`hermod-local`). This repo carries only `components/home-contract.md` (the central default) and hands off to `/load-local-context`.
+- **Storage backends** (`procedures/memory/storage-backends/`): canonical Markdown file mechanics and DB tool-call instructions, selected by the composer.
+- **Localization** (moved out 2026-10-09): `localize-context`, `localized-memory-workflow`, and the `HOME`-resolution rule now live in [`agent-memory-local`](https://github.com/alvseek/agent-memory-local) (`hermod-local`). This repo carries `procedures/components/home-contract.md` (the central default) and hands off to `/load-local-context`.
 - **Fleet** (moved out 2026-10-08): lives in the sibling repo [`agent-memory-fleet`](https://github.com/alvseek/agent-memory-fleet) (`hermod-fleet`). `awaken-coder` surfaces a one-line pointer to it — the commands, scripts, and templates are no longer here.
 
 > **`push-memory`/`pull-memory`** live in the memory **core** (moved 2026-08-07) — persisting the memory store is the memory server's own job; the overlay's `push-all`/`pull-all` compose `/push-project` (overlay) + the core's `/push-memory`.
@@ -33,10 +33,11 @@ This overlay ships its **own** installers (`setup-scripts/`) — it does not dep
 python /path/to/control-files/procedures/setup-scripts/setup-all-claude-code.py
 
 # 2. This overlay:
+python -m pip install -r requirements.txt
 python setup-scripts/setup-all-claude-code.py
 ```
 
-On Windows, double-click (or run) `setup-scripts\setup-all-claude-code.bat` — a thin wrapper that finds Python and runs the same installer. Requires Python 3; no other dependencies.
+On Windows, install `requirements.txt` with the Python interpreter that will run the installer, then run `setup-scripts\setup-all-claude-code.bat`. Python 3.12+ and Git are required. The dependency is pinned to a public Git commit; no sibling checkout or server environment is needed.
 
 Both target `~/.claude/commands/` but keep **separate manifests** (core = `.agent-memory-manifest`, overlay = `.agent-memory-project-manifest`), so re-running either one cleans up only its own commands.
 
@@ -53,7 +54,13 @@ A skill is **model-invoked** rather than typed: the agent sees only each skill's
 
 ## Status
 
-Extracted from the memory core on **2026-08-06** (Phase 2 of the memory-core / coding-skill decoupling — see [ADR-012](https://github.com/alvseek/agent-memory-system) in the core repo). Wrapping this overlay as a 2nd-layer **MCP server** is the target delivery model but a **separate future project** — this repo is currently the procedure content that such a server will serve.
+Extracted from the memory core on **2026-08-06** (Phase 2 of the memory-core / coding-skill decoupling — see [ADR-012](https://github.com/alvseek/agent-memory-system) in the core repo). The standalone compilers install the Markdown backend; Hermod serves the DB backend.
+
+## Authoring procedures
+
+Sources in `procedures/` use Format 2: TOML metadata followed by Markdown and paired component or storage references. `procedures/awaken-coder.md` is a working example: it references the project-identity and HOME components and selects the `awaken-coder` region from each backend. Its DB-only preamble references the shared `all-procedures` region. The referenced component bodies and backend regions are canonical; do not paste their rendered content into the procedure. Each reference has a stable ID and an empty interior. Keep source files LF: the composer preserves their bytes.
+
+Run `python setup-scripts/compile-procedures.py --strict --out <disposable-directory>` to compile the Markdown backend. The compiler fails on missing Format 2 references; template-copy links remain paths. See [the backend contract](procedures/memory/storage-backends/README.md) for the two backend files.
 
 See [MIGRATION.md](MIGRATION.md) for the move details.
 

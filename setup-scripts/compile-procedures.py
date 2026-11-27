@@ -1,19 +1,14 @@
 """Compile ``procedures/*.md`` into self-contained ``output/*.md``.
 
-Produces install-ready commands with NO references to the overlay's own component/template
-files, so an installed slash command never points at a path the agent cannot reach:
+Format 2 sources are composed with the pinned procedure-composer package for the markdown
+backend. Legacy sources still use the inliner and seam below for compatibility with callers
+that compile their own trees. Templates remain paths because procedures copy them at runtime.
 
-- **Components** (``[label](.../components/X.md)``) are INLINED at the reference point — the
-  link becomes its label text and the component body is inserted right after, so caller
-  params written into the sentence survive.
 - **Templates are NOT inlined.** Every template in this repo is *copied to disk* by the
   procedure that references it, so what the agent needs is a path, not the text: a plan
   template becomes a plan file, a doc template becomes a doc. Inlining one hands over the
   content and takes away the source, which is why ``cp {source} ...`` had nothing to
   substitute. References are left exactly as authored and resolve at run time.
-- **The storage seam is composed.** A procedure carrying a ``## Storage Mechanics`` section
-  is swapped onto the **markdown** backend's concrete ops (``storage-backends/markdown.md``)
-  — the swap point a future db backend replaces. See ``storage-backends/README.md``.
 - **Runtime refs are left alone**: ``[AGENT-MEMORY-PATH]/...`` (where memory lives) and
   ``[path-to-agent-memory-project]/templates/*.md`` (files the agent copies by path).
 
@@ -43,6 +38,14 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+try:
+    from procedure_composer import CompositionError, FileSource, compose
+except ImportError as exc:
+    raise SystemExit(
+        "Missing procedure-composer. Install the standalone dependencies with "
+        "'python -m pip install -r requirements.txt'."
+    ) from exc
+
 # Repo root (this script lives at setup-scripts/compile-procedures.py).
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,7 +66,7 @@ _TPL_REF = re.compile(r"/(?:plan-templates|templates)/([a-z-]+)\.md")
 def _load_seam():
     """Import the vendored seam module (definitions live once in storage-backends/)."""
     spec = importlib.util.spec_from_file_location(
-        "overlay_seam", _ROOT / "storage-backends" / "seam.py"
+        "overlay_seam", _ROOT / "procedures" / "memory" / "storage-backends" / "seam.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -79,7 +82,9 @@ _OP_DEF_RE = re.compile(r"^#{1,6}\s*§\s*([a-z][a-z0-9-]*)", re.MULTILINE)
 
 def _read_markdown_backend(root: Path) -> str | None:
     """The markdown backend doc for this repo, or None when it is not present."""
-    path = root / "storage-backends" / "markdown.md"
+    path = root / "procedures" / "memory" / "storage-backends" / "markdown.md"
+    if not path.is_file():
+        path = root / "storage-backends" / "markdown.md"
     return path.read_text(encoding="utf-8") if path.is_file() else None
 
 
@@ -261,6 +266,25 @@ def compile_one(src: Path, out_dir: Path, root: Path) -> Report:
     """Compile a single procedure into ``out_dir``."""
     report = Report(name=src.stem, out_path=out_dir / src.name)
 
+    if src.read_bytes().startswith(b"+++"):
+        try:
+            result = compose(src.stem, "markdown", FileSource(root))
+        except CompositionError as exc:
+            raise CompositionError(f"{src}: {exc}") from exc
+        component_refs = dict.fromkeys(
+            (span.id, span.path) for span in result.spans if span.kind == "component"
+        )
+        report.components = [Path(path).stem for _, path in component_refs]
+        body = "".join(span.text for span in result.spans if span.kind in ("text", "component"))
+        mechanics = "".join(span.text for span in result.spans if span.kind == "storage")
+        report.referenced_ops = sorted(set(_OP_RE.findall(body)))
+        report.unresolved_ops = sorted(
+            set(report.referenced_ops) - set(_OP_DEF_RE.findall(mechanics))
+        )
+        report.templates, report.missing_templates = collect_templates(result.text, root)
+        report.out_path.write_bytes(result.text.encode("utf-8"))
+        return report
+
     text, used, missing = inline_components(_read(src), root / "components")
     report.components = used
     report.missing_components = missing
@@ -352,7 +376,7 @@ def main(argv: list[str] | None = None) -> int:
         if r.missing_backend:
             print(
                 f"  WARNING: {r.name}: seam marker but no markdown backend section "
-                f"(storage-backends/markdown.md → ## {r.name})",
+                f"(procedures/memory/storage-backends/markdown.md → {r.name})",
                 file=sys.stderr,
             )
         for name in r.unresolved_ops:
