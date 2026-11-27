@@ -35,11 +35,12 @@ import importlib.util
 import re
 import shutil
 import sys
+from codecs import BOM_UTF8
 from dataclasses import dataclass, field
 from pathlib import Path
 
 try:
-    from procedure_composer import CompositionError, FileSource, compose
+    from procedure_composer import Composition, CompositionError, FileSource, compose
 except ImportError as exc:
     raise SystemExit(
         "Missing procedure-composer. Install the standalone dependencies with "
@@ -58,6 +59,25 @@ _TEMPLATE_DIRNAMES = ("plan-templates", "templates")
 _COMPONENT_LINK = re.compile(r"\[([^\]]*)\]\([^)\n]*/components/([a-z-]+)\.md\)")
 # A template reference anywhere (link or backtick code-path form) → its bare name.
 _TPL_REF = re.compile(r"/(?:plan-templates|templates)/([a-z-]+)\.md")
+
+
+def _is_format2(src: Path) -> bool:
+    raw = src.read_bytes()
+    lines = raw.splitlines()
+    if lines and lines[0] == b"+++":
+        return True
+
+    # Only look for a misplaced opener at the start of the document. Fenced,
+    # blockquoted and indented examples are legacy prose, not frontmatter.
+    lines = raw.removeprefix(BOM_UTF8).lstrip().splitlines()
+    if lines and lines[0].rstrip() == b"+++":
+        first_field = next(
+            (line for line in lines[1:] if line.strip() and not line.lstrip().startswith(b"#")),
+            b"",
+        )
+        if re.match(rb" {0,3}[a-z_][a-z0-9_-]*[ \t]*=", first_field):
+            raise CompositionError(f"{src}: the +++ metadata opener must be alone on line 1")
+    return False
 
 
 # ---------------------------------------------------------------- storage seam
@@ -108,6 +128,14 @@ def _core_without_mechanics(text: str) -> str:
 def _referenced_ops(text: str) -> set[str]:
     """Ops the procedure body references (mechanics section excluded)."""
     return set(_OP_RE.findall(_core_without_mechanics(text)))
+
+
+def storage_ops(result: Composition) -> tuple[list[str], list[str]]:
+    """Return referenced and unresolved ops for one composed backend."""
+    body = "".join(span.text for span in result.spans if span.kind in ("text", "component"))
+    mechanics = "".join(span.text for span in result.spans if span.kind == "storage")
+    referenced = set(_OP_RE.findall(body))
+    return sorted(referenced), sorted(referenced - set(_OP_DEF_RE.findall(mechanics)))
 
 
 @dataclass
@@ -266,7 +294,7 @@ def compile_one(src: Path, out_dir: Path, root: Path) -> Report:
     """Compile a single procedure into ``out_dir``."""
     report = Report(name=src.stem, out_path=out_dir / src.name)
 
-    if src.read_bytes().startswith(b"+++"):
+    if _is_format2(src):
         try:
             result = compose(src.stem, "markdown", FileSource(root))
         except CompositionError as exc:
@@ -275,12 +303,7 @@ def compile_one(src: Path, out_dir: Path, root: Path) -> Report:
             (span.id, span.path) for span in result.spans if span.kind == "component"
         )
         report.components = [Path(path).stem for _, path in component_refs]
-        body = "".join(span.text for span in result.spans if span.kind in ("text", "component"))
-        mechanics = "".join(span.text for span in result.spans if span.kind == "storage")
-        report.referenced_ops = sorted(set(_OP_RE.findall(body)))
-        report.unresolved_ops = sorted(
-            set(report.referenced_ops) - set(_OP_DEF_RE.findall(mechanics))
-        )
+        report.referenced_ops, report.unresolved_ops = storage_ops(result)
         report.templates, report.missing_templates = collect_templates(result.text, root)
         report.out_path.write_bytes(result.text.encode("utf-8"))
         return report
@@ -361,7 +384,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    reports = compile_all(_ROOT, args.out, verbose=not args.quiet)
+    try:
+        reports = compile_all(_ROOT, args.out, verbose=not args.quiet)
+    except CompositionError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     out_dir = Path(args.out) if args.out else _ROOT / "output"
     print(f"Compiled {len(reports)} procedures -> {out_dir}")
 

@@ -15,6 +15,9 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+from procedure_composer import FileSource, MemorySource, validate_catalog
+
 ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = ROOT / "setup-scripts" / "compile-procedures.py"
 
@@ -346,6 +349,37 @@ def test_strict_passes_on_the_real_tree(tmp_path: Path) -> None:
     assert cc.main(["--strict", "--quiet", "--out", str(tmp_path)]) == 0
 
 
+@pytest.mark.parametrize("prefix", ["\n", "  ", "\ufeff"])
+def test_misplaced_format2_opener_fails_even_without_strict(tmp_path, monkeypatch, capsys, prefix):
+    source = (ROOT / "procedures/awaken-coder.md").read_text(encoding="utf-8")
+    repo = _mkrepo(tmp_path / "repo", procedures={"awaken-coder": prefix + source})
+    monkeypatch.setattr(cc, "_ROOT", repo)
+    out = tmp_path / "out"
+    for options in ([], ["--strict"]):
+        assert cc.main([*options, "--quiet", "--out", str(out)]) == 1
+        assert "awaken-coder.md: the +++ metadata opener must be alone on line 1" in (
+            capsys.readouterr().err
+        )
+        assert not (out / "awaken-coder.md").exists()
+
+
+@pytest.mark.parametrize(
+    "legacy",
+    [
+        "+++ marks the start of metadata.\n\nMention `@start storage` in prose.\n",
+        '```toml\n+++\nformat_version = 2\n+++\n```\n',
+        '~~~markdown\n@start component id="sample" ref="example.md"\n@end component\n~~~\n',
+        "> +++\n> format_version = 2\n> +++\n> @start storage\n",
+        "    +++\n    format_version = 2\n    +++\n    @start storage\n",
+    ],
+)
+def test_legacy_prose_and_literal_format2_examples_still_compile(tmp_path, legacy):
+    repo = _mkrepo(tmp_path / "repo", procedures={"p": legacy})
+    report = _compile(repo, tmp_path / "out")[0]
+    assert report.clean
+    assert report.out_path.read_bytes() == legacy.encode("utf-8")
+
+
 # ------------------------------------------------------------------ storage seam
 
 _BACKEND = "# Backend\n\n## p\n\n### § do-thing\n\nECHO DO THING\n"
@@ -403,12 +437,26 @@ def test_every_storage_op_resolves_on_the_real_tree(tmp_path: Path) -> None:
         assert not report.missing_backend, report.name
 
 
-def test_db_checklist_covers_every_referenced_op(tmp_path: Path) -> None:
-    """Every `§ op` a procedure references is listed in db.md, so the deferred backend's
-    TODO stays complete as procedures change."""
-    db_md = (ROOT / "procedures/memory/storage-backends/db.md").read_text(encoding="utf-8")
-    listed = set(cc._OP_RE.findall(db_md))
-    referenced: set[str] = set()
-    for report in cc.compile_all(ROOT, tmp_path, verbose=False):
-        referenced.update(report.referenced_ops)
-    assert referenced - listed == set()
+def test_db_regions_define_every_referenced_op() -> None:
+    catalog = validate_catalog(FileSource(ROOT))
+    for name in catalog.procedures:
+        _, unresolved = cc.storage_ops(catalog.compose(name, "db"))
+        assert not unresolved, f"{name}: unresolved DB storage ops: {unresolved}"
+
+
+def test_db_op_must_be_defined_in_a_selected_region() -> None:
+    source = FileSource(ROOT)
+    files = {path: source.read(path) for path in source.paths("procedures")}
+    db_path = "procedures/memory/storage-backends/db.md"
+    marker = b'@start region id="load-project-context"\n'
+    before, region, remaining = files[db_path].partition(marker)
+    body, closing, after = remaining.partition(b"@end region")
+    heading = "### § list-context-entries\n".encode()
+    assert heading in before and heading in body
+    files[db_path] = before + region + body.replace(heading, b"", 1) + closing + after
+
+    catalog = validate_catalog(MemorySource(files))
+    assert cc.storage_ops(catalog.compose("load-project-context", "db"))[1] == [
+        "list-context-entries"
+    ]
+    assert cc.storage_ops(catalog.compose("pull-project", "db")) == ([], [])

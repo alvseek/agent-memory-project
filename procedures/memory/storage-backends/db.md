@@ -125,7 +125,7 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 > **The base payload is one call.** `awaken_coder(domain, projects)` returns the coding half of an
 > awakening in a single read-only payload. Its indexes drive the optional task-workflow body read below. It is issued **together
 > with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
-> and the two of them are the whole awakening ([ADR-029](../docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
+> and the two of them are the whole awakening ([ADR-029](https://github.com/alvseek/agent-memory-project/blob/6fb676dd545dd74686663bc9905f8eaae3538395/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
 
 ### § awaken-coder-payload
 

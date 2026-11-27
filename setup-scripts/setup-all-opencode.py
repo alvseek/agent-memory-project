@@ -91,11 +91,6 @@ def main(argv: list[str] | None = None) -> int:
     base = _config_base()
     target = Path(os.environ.get("AGENT_MEMORY_TARGET_DIR") or base / "skills")
 
-    legacy_removed = 0
-    commands_dir = base / "commands"
-    if commands_dir != target:
-        legacy_removed = _migrate_from_commands(commands_dir)
-
     rc = _skills.run(
         platform="OpenCode",
         target_dir=target,
@@ -108,6 +103,11 @@ def main(argv: list[str] | None = None) -> int:
     ],
         instructions_file=base / "AGENTS.md",
     )
+    commands_dir = base / "commands"
+    if rc != 0 or commands_dir == target:
+        return rc
+
+    legacy_removed = _migrate_from_commands(commands_dir)
     if legacy_removed:
         print(
             f"\nMigrated away from commands: removed {legacy_removed} "

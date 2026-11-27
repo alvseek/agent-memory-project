@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import importlib.util
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -182,6 +184,49 @@ def test_any_sibling_manifest_protects_its_skills(tmp_path: Path) -> None:
 
     sk.install(target, _MANIFEST, _SIBLING_MANIFESTS, root=ROOT, output_dir=out)
     assert fleet_owned.is_dir(), "cleanup deleted a skill a second sibling claims"
+
+
+def test_opencode_migrates_flat_commands_only_after_success(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    scripts = repo / "setup-scripts"
+    shutil.copytree(ROOT / "setup-scripts", scripts, ignore=shutil.ignore_patterns("__pycache__"))
+    backend = repo / "procedures/memory/storage-backends"
+    backend.mkdir(parents=True)
+    shutil.copyfile(ROOT / "procedures/memory/storage-backends/seam.py", backend / "seam.py")
+    procedure = repo / "procedures/p.md"
+    header = '+++\nformat_version = 2\nid = "p"\ntitle = "Example"\ndescription = "Example."\n+++\n'
+    reference = (
+        '@start component id="recipe" ref="procedures/components/missing.md"\n'
+        "@end component\n"
+    )
+    procedure.write_bytes((header + reference).encode())
+    home = tmp_path / "home"
+    base = home / "config/opencode"
+    commands = base / "commands"
+    commands.mkdir(parents=True)
+    legacy = commands / "p.md"
+    legacy.write_bytes(b"Working command\n")
+    manifest = commands / ".agent-memory-project-opencode-manifest"
+    manifest.write_bytes(b"p.md\n")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(home / "config"))
+    monkeypatch.delenv("AGENT_MEMORY_TARGET_DIR", raising=False)
+    command = [sys.executable, "-B", str(scripts / "setup-all-opencode.py")]
+    skill = base / "skills/agent-project-p/SKILL.md"
+
+    failed = subprocess.run(command, capture_output=True, check=False)
+    assert failed.returncode != 0
+    assert b"missing component: procedures/components/missing.md" in failed.stderr
+    assert legacy.read_bytes() == b"Working command\n"
+    assert manifest.read_bytes() == b"p.md\n"
+    assert not skill.exists()
+
+    procedure.write_bytes((header + "# Example\n\nWorking skill.\n").encode())
+    subprocess.run(command, capture_output=True, check=True)
+    assert skill.read_bytes().endswith(b"Working skill.\n")
+    assert not legacy.exists()
+    assert not manifest.exists()
 
 
 def test_coding_layer_access_registration_is_idempotent(tmp_path: Path) -> None:
