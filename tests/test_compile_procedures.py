@@ -448,7 +448,11 @@ def test_db_op_must_be_defined_in_a_selected_region() -> None:
     before, region, remaining = files[db_path].partition(marker)
     body, closing, after = remaining.partition(b"@end region")
     heading = "### § list-context-entries\n".encode()
-    assert heading in before and heading in body
+    assert heading in body
+    # Leave a definition in another procedure's region, outside the selected one.
+    other = b'@start region id="check-move-target"\n'
+    assert other in before
+    before = before.replace(other, other + heading, 1)
     files[db_path] = before + region + body.replace(heading, b"", 1) + closing + after
 
     catalog = validate_catalog(MemorySource(files))

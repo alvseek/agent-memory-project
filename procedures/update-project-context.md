@@ -35,12 +35,18 @@ If no project was supplied and the current directory is outside Git, ask “Whic
 A move changes an existing entry from `agent` to `shared`, or from `shared` to `agent`, without changing its content. For a create or update, skip to Step 2.
 
 1. Identify the entry in the source scope. If the request could refer to several entries, ask which one to move.
-2. Check the target scope for the same theme (**§ list-context-entries**). If it already exists there, stop and ask whether to merge, use a different theme, or cancel. Do not overwrite it.
+2. Check the target scope for the same theme. If it already exists there, stop and ask whether to merge, use a different theme, or cancel. Do not overwrite it.
+
+@start storage id="check-move-target" ref="procedures/memory/storage-backends/{backend}.md" target="check-move-target"
+@end storage
 
 @start storage id="prepare-move-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
 @end storage
 
-3. Move the entry verbatim (**§ move-context-entry**). Verify the source entry is gone; remove it only if the move left it there (**§ delete-context-entry**).
+3. Move the selected entry without changing its content.
+
+@start storage id="move-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="move-context-entry"
+@end storage
 @start storage id="index-move" ref="procedures/memory/storage-backends/{backend}.md" target="index-move" applies_to="markdown"
 @end storage
 
@@ -91,10 +97,3 @@ Update the entry selected in Step 3. Correct or add the relevant facts and prese
 @end storage
 
 Report `created` or `updated` with the resulting entry names. If a required write failed, report what was saved and what remains incomplete.
-
----
-
-@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
-@end storage
-@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="update-project-context"
-@end storage

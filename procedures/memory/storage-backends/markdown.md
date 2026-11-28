@@ -42,32 +42,12 @@ In the selected scope’s `context-index.md`, add or update one line per saved f
    Remove the entry’s line from the source `context-index.md` and add it to the target `context-index.md`, preserving the link, description, and tags. If the target index does not exist, create it with the heading `# [project-name] Project Context`.
 @end region
 
-@start region id="update-project-context"
-### § list-context-entries
+@start region id="check-move-target"
+   List the entry files in the source and target directories, excluding `context-index.md`. Check that the destination filename is unused.
+@end region
 
-For a move, list the entry files in the relevant scope (exclude `context-index.md`). Check the target directory for a filename collision before copying.
-
-### § move-context-entry
-
-Copy the entry **verbatim** (same template) from the source scope to the target one. A **promote** goes agent → shared; a **demote** goes shared → agent:
-
-- **Promote**: `cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- **Demote**: `cp [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the source delete (**§ delete-context-entry**), then both index updates. If a step fails partway:
-> - **After the copy, before the delete**: both files exist. Delete the duplicate (the source one).
-> - **After the delete, before the index updates**: the file is moved but the indexes are inconsistent. Finish the index updates.
->
-> If any step fails, report the partial state to the user and ask before retrying.
-
-### § delete-context-entry
-
-Remove the entry from its scope:
-
-- Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Agent: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
----
+@start region id="move-context-entry"
+   Copy the source file to the destination without overwriting an existing file. Compare the two files byte for byte; remove the source only after they match. If any step fails, report which files and index entries exist and ask before retrying. Resume from the verified state rather than repeating the copy or deletion.
 @end region
 
 ## load-project-context

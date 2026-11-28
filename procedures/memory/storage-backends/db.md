@@ -44,24 +44,12 @@ Keep the UUID. Read Munnin’s `get_memory(uuid, include_edit_context=true)`. Fo
 For a description or tag change alone, call only `edit_memory_metadata`. The record fields are authoritative even if an older body contains YAML. If both body and metadata changed, save the body first and use the returned revision for the metadata write. Use the tenant and revision guards, reread on conflict, and report a partial write if the second operation fails. Valaskjalf maintains `modified_date`.
 @end region
 
-@start region id="update-project-context"
-### § list-context-entries
+@start region id="check-move-target"
+   List the source and target scopes using `list_shared_context(project)` or `list_agent_context(project, agent)` as appropriate. Identify the source by UUID; the move tools do not check for a matching theme in the target.
+@end region
 
-For a move, list the relevant scope with `list_shared_context(project)` or `list_agent_context(project, agent)`. Check the target for a theme collision and identify the source by UUID.
-
-### § move-context-entry
-
-Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `demote_context_entry(uuid, agent)` to move it into an agent's. The uuid is kept, so a handle held before the move still resolves after it. One call does both halves — the target row is written and the source row tombstoned — because the layer *is* which table the row lives in, which is why the sub-flow's next step has nothing left to do. Refused when no live entry holds the uuid, and when the entry already lives in the target layer. **It checks no theme**: two rows may carry one, so the sub-flow's own collision step is what decides whether a move should happen at all.
-
-**A theme cannot be renamed in place here.** Giving an entry a different theme means creating it under the new one and retiring the old row with `soft_delete_memory`, because the theme is what `title` holds.
-
-### § delete-context-entry
-
-Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
-
-**Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
-
----
+@start region id="move-context-entry"
+   Call `promote_context_entry(uuid)` for agent to shared, or `demote_context_entry(uuid, agent)` for shared to agent. One call transfers the record and preserves its UUID. Do not delete the UUID afterward: it now identifies the destination entry. If the result is uncertain, check both listings before retrying.
 @end region
 
 ## load-project-context
