@@ -9,7 +9,7 @@ argument_description = "the project context to capture; asks if omitted"
 +++
 # Update Project Context Protocol
 
-Create or update project-specific context files. Routes new entries to **shared** (`shared-memory/[project-name]/context/`, for cross-agent universal facts) or **agent** (`agent-[domain]/knowledge-base/[project-name]/`, for domain-specialized facts) based on a heuristic + user confirmation. Also supports moving an existing agent entry to shared.
+Create or update project-specific context in the shared or agent layer. Use the scope supplied by the caller; if none was supplied, suggest a scope for confirmation. An explicit request can also move an existing entry between scopes.
 
 *How* the entries are physically stored is delegated to the active **storage backend**.
 
@@ -30,14 +30,14 @@ If no arguments provided, ask: "What project context should I capture? (e.g., en
 
 ### Step 1: Determine Project Name
 
-Identify the project this context belongs to:
+Use the caller’s resolved project if supplied. Otherwise identify the project this context belongs to:
 - **From working directory**: Infer project name from the current repository/folder name
 - **From user input**: Ask if unclear: "Which project is this context for?"
 - **Naming convention**: Use lowercase-hyphenated format (e.g., `ocx-platform`, `my-saas-app`, `data-pipeline`)
 
 ### Step 2: Determine Scope (Shared vs Agent)
 
-Decide whether this context belongs in the **shared** layer (cross-agent universal facts) or the **agent** layer (domain-specialized facts for this agent only).
+If the caller supplies `shared` or `agent`, use it without asking again. Otherwise, decide which layer to suggest:
 
 **Heuristic:**
 - **Shared** (default when in doubt): Universal facts that are true for every agent on this project. Examples: GitButler usage, deployment process, env vars, repo conventions, infrastructure URLs.
@@ -45,7 +45,7 @@ Decide whether this context belongs in the **shared** layer (cross-agent univers
 
 > **Why this matters**: Under-sharing causes drift (agent A learns a fact, agent B doesn't know it). Over-sharing is just slightly noisier loads. When the call is genuinely ambiguous, default to **shared**.
 
-Present the suggestion and wait for confirmation (show the reason, the suggested scope, and the alternative so [USER-NAME] can confirm or switch):
+Only when the caller did not supply a scope, present the suggestion and wait for confirmation:
 
 ```
 **Scope determination for "[context summary]":**

@@ -11,21 +11,21 @@ argument_description = "`all` or `agent` push mode, plus `fresh` to re-evaluate 
 
 Close the coding session: push the project work, save what the session learned, and report what remains open.
 
-Run the steps without progress messages. Give one final summary. If you need a decision to continue, ask.
+Run without progress messages or routine confirmation. If a memory write needs a decision the session did not settle, defer that write, continue the remaining steps, and list it under **Needs review** in the final summary.
 
 ## Arguments
 
 `$ARGUMENTS` = `[all|agent] [fresh]`
 
-- **Push mode** (optional): `agent` (default) pushes only the agent's own work across project + memory (leaves the user's unrelated changes and other agents' in-flight memory untouched); `all` pushes the **full working tree** of both — a deliberate choice that includes the user's unrelated changes.
-- **`fresh`** (optional): force fresh mode for the memory wrap-up (pass-through to `/update-memory`); default auto-detects delta vs fresh.
-- Examples: `/project-wrap-up` (agent + delta) · `/project-wrap-up all` · `/project-wrap-up fresh` · `/project-wrap-up all fresh`.
+- `agent` (default) — push only this agent’s work.
+- `all` — push the full in-scope working trees, including unrelated changes.
+- `fresh` — review the whole session for memory updates. Otherwise, let `/update-memory` determine what’s new.
 
 ---
 
 ## Procedure
 
-**Resolve args first**: `<mode>` = `all` if `$ARGUMENTS` contains the token `all`, else `agent` (the default). Pass `fresh` through to the memory wrap-up if present. `<mode>` drives every push step below.
+Use the selected push mode for every push below.
 
 ### Step 1: Push the Project's Work (silent) — MANDATORY
 
@@ -41,17 +41,12 @@ Tool calls visible (git commands); capture per-repo commit hashes + user-files-l
 - **Several, one carrying the subject** (the majority of the session's changed paths, or the repository the session's own project-context or map writes name) → that repository is the session's project, and the others go into the record's `tags`, which `search` reads.
 - **Several, none carrying the subject** → no project at all, and every repository goes into the `tags`.
 
-**File without asking when the cases above settle on one repository; ask only when they do not**, naming the candidates and the reading you would take. The identity itself comes from the project identity rule. The memory update files under the resolved project, so **state it as this session's project** when it runs: the core otherwise derives one of its own from the working directory.
+Pass the resolved project (or explicitly no project and the repository tags) to the memory update so it does not infer a different one from the working directory. If a project-specific fact cannot be attributed to one repository, defer that entry for review rather than guessing or waiting for an answer.
 
 @start component id="ref-1" ref="procedures/components/project-identity.md"
 @end component
 
-**First — the Project Context Gate** (the memory core is project-blind; the coding overlay owns project-context). Evaluate whether this session produced project-specific context worth persisting:
-- Project-specific conventions, setup, deployment, env details?
-- Workarounds, configs, or decisions specific to the current project?
-- New credentials, URLs, API endpoints, infrastructure details?
-
-**YES to any** → run `/update-project-context` for the material (it operates on the injected home). Run it **before** the memory wrap-up below, so the core `/update-memory` promotion pre-scan catches the write and records it in the episodic **Promotions** field. **NO to all** → skip silently.
+**Save project context first.** For each reusable project fact, pass its project, content, and scope to `/update-project-context`. Use the user’s explicit scope when given; otherwise use `shared` for project-wide facts and `agent` for role-specific facts. Default to `shared` when in doubt. Save access instructions, not credential values. Skip this step if there is nothing to save. Saving before `/update-memory` lets it record completed writes as promotions.
 
 **Then — the memory update**: Execute **`/update-memory`**, passing `fresh` through if present. Capture its results (mode, gate decisions, episodic entry, carry-forward count, promotions, emotional status) as data for Step 5, together with the **`Tech Debts` + `Next Steps`** it hands up from the sub-episode just written (the return contract `/update-episodic` declares). Print nothing here — it all folds into Step 5.
 
@@ -76,6 +71,8 @@ Tool calls visible (git commands); capture per-repo commit hashes + agent-work-p
 **Then verify (drives the Step 5 completion gate)**: from the leaf pushers' `git status -sb [ahead N]` verification (Step 4 of `/push-project` + `/push-memory`, reached directly in Step 1 and through the persistence op in Step 4) across both pushes, record per repo whether **every agent-work path is committed AND pushed** (branch not ahead of remote) + a count of user files left. **Excluded repos are exempt** (report as `skipped (excluded)`). Do NOT attempt elaborate recovery — if an *agent-work* push fails or any agent-work path remains, that is carried to Step 5, where the wrap-up fails loudly.
 
 ### Step 5: Final Summary (only visible output)
+
+In either outcome, add **Needs review** only for deferred writes. Name the proposed change and the decision needed; do not count it as saved.
 
 **Completion gate (per NO TODOS LEFT BEHIND, UUID a1b2c3d4)**: using the Step 4 verification (covering both the Step 1 project push and the Step 4 memory push), the wrap-up is **complete ONLY if every agent-work path is committed AND pushed** in every in-scope repo. A project repo that still holds the **user's own** uncommitted changes is still complete — leftover user files are expected and exempt (so are push-excluded repos). The wrap-up is **NOT complete** only if an **agent-work** path is uncommitted, a branch carrying agent commits is ahead of its remote, or an agent-work push failed → print the *WRAP-UP INCOMPLETE* block (at the bottom of this step) instead, and never claim completion.
 
