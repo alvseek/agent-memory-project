@@ -9,11 +9,9 @@ argument_description = "`all` or `agent` push mode, plus `fresh` to re-evaluate 
 +++
 # Project Wrap Up Session
 
-End-of-session **full** orchestrator (coding/environment add-on): push the project's work → update memory → refresh the orientation map → push everything those steps wrote → final summary with a push-completion gate. It borrows the core memory update and adds the project and orientation-map work around it.
+Close the coding session: push the project work, save what the session learned, and report what remains open.
 
-**Delta-aware**: the memory update (Step 2) re-scopes to the delta on re-run. `/project-wrap-up fresh` forces full-session re-eval.
-
-**Execution style**: silent. Run Steps 1-5 silently — tool calls (bash, edit, write) stay visible, but no prose narration of phases. Produce ONE summary block at Step 5 as the only user-facing output.
+Run the steps without progress messages. Give one final summary. If you need a decision to continue, ask.
 
 ## Arguments
 
