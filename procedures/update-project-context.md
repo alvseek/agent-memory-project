@@ -47,20 +47,23 @@ A move changes an existing entry from `agent` to `shared`, or from `shared` to `
 
 Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
 
-### Step 3: Determine Theme and Check Existing Entries
+### Step 3: Find the entry
+
+Use names and summaries to find likely matches in the selected project and scope. If the caller requires a particular entry or exact theme, stay within that target. Read the candidates to see whether they answer the same question as the fact being saved.
+
+@start storage id="find-project-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="find-project-context-entry"
+@end storage
+
+- **Skip** if an entry already covers the fact accurately. Name it and finish without writing.
+- **Update** if one entry answers the question but needs a correction or addition. Use that entry in Step 4B.
+- **Create** if no entry answers the question. Choose a descriptive theme and continue to Step 4A.
+
+If several entries still fit, use an explicitly identified target. Otherwise ask which to update on a direct request, or defer just that fact to **Needs review** during wrap-up. An unreadable candidate is not evidence that no entry exists.
+
+### Step 4A: Create New Context Entry
 
 @start storage id="prepare-write-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
 @end storage
-
-Identify the theme of the context being captured (e.g., `environment-setup`, `deployment`, `auth-module`, `database-conventions`).
-
-List the layer's existing entries (**§ list-context-entries**) to check whether one already covers this theme:
-- **If an existing entry matches**: Proceed to Step 4B (Update)
-- **If no match**: Proceed to Step 4A (Create New)
-
-> **A theme is a name, not an address.** This comparison is the only thing the theme decides, and it decides exactly one question: create, or update. How an entry is then read, changed or retired is the storage backend's business, and a store's answer may be more than one call.
-
-### Step 4A: Create New Context Entry
 
 1. Create the new entry from the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) (**§ create-context-entry**).
 2. Fill the YAML frontmatter:
@@ -74,7 +77,7 @@ List the layer's existing entries (**§ list-context-entries**) to check whether
 
 ### Step 4B: Update Existing Context Entry
 
-1. Read the existing entry (**§ read-context-entry**)
+1. Use the entry read in Step 3.
 2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
 3. Update the `updated:` date in YAML frontmatter to today's date
 4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them (a store keeps the first as the row's `content_summary`)

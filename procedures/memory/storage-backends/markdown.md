@@ -12,14 +12,14 @@ Concrete storage mechanics for the **native markdown-over-git** world. Each `## 
 Use `CONTEXT_DIR` for shared entries and `KNOWLEDGE_DIR` for agent entries. Create the destination directory if it does not exist.
 @end region
 
+@start region id="find-project-context-entry"
+Use `context-index.md` in the selected directory to shortlist by name and description. Check the entry files as well if the index is missing or incomplete; exclude the index itself. Read each plausible file and keep its path for an update. For a new entry, use an unused filename; never overwrite a different entry with the same name.
+@end region
+
 @start region id="update-project-context"
 ### § list-context-entries
 
-List the `*.md` files in the scope dir (exclude `context-index.md`). A file whose name matches the theme is an existing entry to update; no match means a new entry. The same listing answers the collision check in the Move sub-flow.
-
-### § read-context-entry
-
-Read `[scope-dir]/[theme].md` with the Read tool.
+For a move, list the entry files in the relevant scope (exclude `context-index.md`). Check the target directory for a filename collision before copying.
 
 ### § create-context-entry
 

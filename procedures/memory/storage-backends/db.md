@@ -26,20 +26,20 @@ Every operation below is a **tool call**, reading and writing `shared_record` an
 
 ## update-project-context
 
+@start region id="find-project-context-entry"
+Use `list_shared_context(project)` for shared entries or `list_agent_context(project, agent)` for this agent’s entries. Shortlist by `theme` and `content_summary`, then read candidate bodies with Munnin’s `get_memory(uuid)`. Keep the selected UUID for the update; a theme is not a unique address.
+@end region
+
 @start region id="update-project-context"
 ### § list-context-entries
 
-Call `list_shared_context(project)` and/or `list_agent_context(project, agent)`, one call per layer the step is about. Each row carries `uuid`, `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index. A row whose `theme` matches is the entry the step means, and the `uuid` it carries is how every later call addresses it. The same call answers the move sub-flow's collision check. An agent-layer call requires its owner rather than defaulting, because those rows are owned.
-
-### § read-context-entry
-
-Call the memory layer's `get_memory(uuid)` with the uuid a listing returned. It answers `None` for a row that is absent or tombstoned. Reading by theme is not a thing here: a theme is a name a listing shows, and two rows may carry one.
+For a move, list the relevant scope with `list_shared_context(project)` or `list_agent_context(project, agent)`. Check the target for a theme collision and identify the source by UUID.
 
 ### § create-context-entry
 
 Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)`, whichever layer the flow confirmed. `content` is the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. `content_summary` is required: it is the line a listing shows beside the theme, taken from the document's frontmatter `description`, and `tags` comes from the same frontmatter. The row's `uuid` is assigned here and returned. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it.
 
-Refused when `template_version` is missing or does not match the served template, when `content` is over the 1000-line cap, when `content_summary` is blank, and when an agent-layer create names no `agent` or one this account has no row for. **No theme is checked**: two rows may carry one theme, so this op neither refuses a create over an existing theme nor revives a retired row. Deciding between creating and updating is the step's own comparison of themes against the listing.
+Refused when `template_version` is missing or does not match the served template, when `content` is over the 1000-line cap, when `content_summary` is blank, and when an agent-layer create names no `agent` or one this account has no row for. The store permits duplicate themes; creating a row does not revive a retired one.
 
 ### § update-context-entry
 
