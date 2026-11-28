@@ -22,7 +22,7 @@ When a step calls another procedure, use the access setting for the layer that o
 
 `$ARGUMENTS`
 
-`[domain]` — the agent domain to awaken (e.g. `invintiry`, `aquazone`).
+`domain` — the agent domain to awaken (for example, `software-architect`). If omitted, ask which domain to awaken.
 
 ## Procedure
 
