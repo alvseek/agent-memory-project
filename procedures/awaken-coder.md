@@ -51,15 +51,12 @@ Read each tool response in full in the step that requests it. Do not select fiel
 If the platform reports truncation or saves a result to a file, read the saved result in full before using the awakening data. If that read is also clipped, recover all missing content, including long lines. If required context remains unavailable, name the source and failure and stop the work that depends on it. An episode’s `next_cursor` is pagination, not truncation; follow the episode instructions before requesting older entries.
 
 1. **Coding reasoning** — apply the coding reasoning patterns alongside the core reasoning patterns.
-
 @start storage id="load-coding-reasoning" ref="procedures/memory/storage-backends/{backend}.md" target="load-coding-reasoning"
 @end storage
 
 2. **Project context** — load the shared and agent context indexes. When the task changes, read any entry relevant to the new work without waiting to be asked. Don’t load every entry.
-
 @start storage id="load-context-indexes" ref="procedures/memory/storage-backends/{backend}.md" target="load-context-indexes"
 @end storage
-
 @start component id="ref-2" ref="procedures/components/home-contract.md"
 @end component
 
