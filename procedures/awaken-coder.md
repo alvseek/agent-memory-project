@@ -26,10 +26,16 @@ When a step calls another procedure, use the access setting for the layer that o
 
 ## Procedure
 
-**Resolve the project first**: the repository this session is in, by the project identity rule, together with the related repositories that widen the recall. Then make **both awakening calls in one step**: the core's `/awaken-agent [domain]` and the store's `awaken_coder(domain, projects)` (**§ awaken-coder-payload**), which is the coding half of the same awakening. Neither needs the other's answer, so they go out together. First return both full tool responses for reading in that step, without selecting fields, summarizing, slicing, or preemptively redirecting them to files. Do not assume they will truncate before trying. For file-backed loads, likewise try one whole read per required source first.
+### Identify the project set
+
+Start in the current working directory. Identify the home project first, then the related projects whose memory should be loaded.
 
 @start component id="ref-1" ref="procedures/components/project-identity.md"
 @end component
+
+### Load the awakening data
+
+Then make **both awakening calls in one step**: the core's `/awaken-agent [domain]` and the store's `awaken_coder(domain, projects)` (**§ awaken-coder-payload**), which is the coding half of the same awakening. Neither needs the other's answer, so they go out together. First return both full tool responses for reading in that step, without selecting fields, summarizing, slicing, or preemptively redirecting them to files. Do not assume they will truncate before trying. For file-backed loads, likewise try one whole read per required source first.
 
 If the platform explicitly reports truncation or says the result was saved to a file, read the saved result to recover all omitted context before processing either payload or reporting completion. Try one whole read of that file first; only if that read also reports a limit, recover the missing content using a method that preserves it, including long lines. A preview, clipped JSON string, or summary is not a full load. If required context remains unavailable, name the source and failure and stop the work that depends on it. These recovery reads are only for observed output limits; a normal coding awakening still takes the two payload calls together. An episode's `next_cursor` is server-side pagination, not platform truncation: preserve the deliberate continuation rules below rather than automatically loading older sub-episodes.
 
