@@ -9,7 +9,7 @@ argument_description = "The project to update. If not supplied, resolve it from 
 +++
 # Update Project Context Protocol
 
-Save project-specific knowledge for future sessions. Create or update an entry shared by the project’s agents or private to one agent. Move an existing entry between those scopes only when explicitly requested.
+Save project-specific knowledge for future sessions. Create or update an entry shared by the project’s agents or private to one agent.
 
 ## Arguments
 
@@ -29,28 +29,6 @@ If no project was supplied and the current directory is outside Git, ask “Whic
 
 @start component id="ref-1" ref="procedures/components/home-contract.md" applies_to="markdown"
 @end component
-
-### If the user asks to move an entry
-
-A move changes an existing entry from `agent` to `shared`, or from `shared` to `agent`, without changing its content. For a create or update, skip to Step 2.
-
-1. Identify the entry in the source scope. If the request could refer to several entries, ask which one to move.
-2. Check the target scope for the same theme. If it already exists there, stop and ask whether to merge, use a different theme, or cancel. Do not overwrite it.
-
-@start storage id="check-move-target" ref="procedures/memory/storage-backends/{backend}.md" target="check-move-target"
-@end storage
-
-@start storage id="prepare-move-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
-@end storage
-
-3. Move the selected entry without changing its content.
-
-@start storage id="move-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="move-context-entry"
-@end storage
-@start storage id="index-move" ref="procedures/memory/storage-backends/{backend}.md" target="index-move" applies_to="markdown"
-@end storage
-
-4. Verify the entry is listed only in the target scope. Report its name and destination scope, then finish. Do not run the create/update steps.
 
 ### Step 2: Determine Scope (Shared vs Agent)
 

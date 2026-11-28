@@ -38,18 +38,6 @@ In the selected scope’s `context-index.md`, add or update one line per saved f
 ```
 @end region
 
-@start region id="index-move"
-   Remove the entry’s line from the source `context-index.md` and add it to the target `context-index.md`, preserving the link, description, and tags. If the target index does not exist, create it with the heading `# [project-name] Project Context`.
-@end region
-
-@start region id="check-move-target"
-   List the entry files in the source and target directories, excluding `context-index.md`. Check that the destination filename is unused.
-@end region
-
-@start region id="move-context-entry"
-   Copy the source file to the destination without overwriting an existing file. Compare the two files byte for byte; remove the source only after they match. If any step fails, report which files and index entries exist and ask before retrying. Resume from the verified state rather than repeating the copy or deletion.
-@end region
-
 ## load-project-context
 
 @start region id="load-project-context"
