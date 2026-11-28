@@ -150,7 +150,7 @@ Reuse the memory and episodic index that Munnin loaded. Read the coding reasonin
 @end region
 
 @start region id="load-task-workflow"
-   Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
+   Use the current project's shared context index (`CONTEXT_DIR/context-index.md`). Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
 @end region
 
 @start region id="select-project-episode"

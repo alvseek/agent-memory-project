@@ -26,6 +26,8 @@ When a step calls another procedure, use the access setting for the layer that o
 
 ## Procedure
 
+If `.agents/` exists in the current working directory, suggest `/awaken-coder-local` instead.
+
 ### Identify the project set
 
 Start in the current working directory. Identify the home project first, then the related projects whose memory should be loaded.
@@ -55,12 +57,10 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @end storage
 
 2. **Project context** — load the shared and agent context indexes. When the task changes, read any entry relevant to the new work without waiting to be asked. Don’t load every entry.
+@start component id="ref-2" ref="procedures/components/home-contract.md" applies_to="markdown"
+@end component
 @start storage id="load-context-indexes" ref="procedures/memory/storage-backends/{backend}.md" target="load-context-indexes"
 @end storage
-@start component id="ref-2" ref="procedures/components/home-contract.md"
-@end component
-
-   **Localized detection + handoff** — if `.agents/` exists at cwd, the project is localized and its home (episodic, knowledge, map) is owned by `agent-memory-local`: run **`/load-local-context`** to load it. That read supersedes the central load above. If `.agents/` is absent, the central load stands. For a project already known to be localized, skip the detection entirely by running `agent-memory-local`'s `/awaken-local`, which runs this procedure with that check replaced by the same call.
 
 3. **Orientation map + fleet pointer** — load existing maps only; never create one during awakening.
 
@@ -72,7 +72,7 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
    If a roster is present, report once: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Use `[FLEET-ACCESS]` to reach it. Leave reading the roster to `/load-fleet`.
 
-4. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`, using the active home after any local-memory handoff. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+4. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
 
 @start storage id="load-task-workflow" ref="procedures/memory/storage-backends/{backend}.md" target="load-task-workflow"
 @end storage
@@ -90,7 +90,7 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
    - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
    - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
-   - **Localization and fleet**: mention an active local-memory override or available fleet once, when present.
+   - **Fleet**: mention the fleet once, when present.
 
    Omit skipped checks, absent optional features, loaded-layer inventories and repeated setup suggestions. Do not prompt to create missing maps or context during awakening.
 

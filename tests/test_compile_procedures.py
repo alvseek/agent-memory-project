@@ -142,7 +142,6 @@ def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
     )[0]
 
     assert "shared context entry named `task-workflow`" in task_step
-    assert "active home after any local-memory handoff" in task_step
     assert "A related project's entry or an agent-private entry does not opt" in task_step
     assert "No entry → skip silently; never create one" in task_step
     assert "Multiple matching entries → report the ambiguity" in task_step
@@ -160,8 +159,10 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
     for backend in ("markdown", "db"):
         text = catalog.compose("awaken-coder", backend).text
         hook = text.split("**Task workflow**", 1)[1].split("An **Awakening Hook**", 1)[0]
-        assert "CONTEXT_DIR/task-workflow.md" in hook
-        assert "local" in hook
+        assert text.index("suggest `/awaken-coder-local` instead") < text.index("### Identify the project set")
+        assert "/load-local-context" not in text
+        assert ("HOME = { MAP_PATH" in text) == (backend == "markdown")
+        assert ("CONTEXT_DIR/task-workflow.md" in hook) == (backend == "markdown")
         assert "load failure" in hook
         hooks[backend] = hook
 
@@ -171,7 +172,6 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
         "`theme` is exactly `task-workflow`",
         "get_memory(uuid)",
         "Multiple matches",
-        "do not fall back to a central workflow",
     ):
         assert constraint in hooks["db"]
 

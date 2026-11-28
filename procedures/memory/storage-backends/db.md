@@ -142,7 +142,7 @@ Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load
 @end region
 
 @start region id="load-task-workflow"
-   If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
+   Select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
 @end region
 
 @start region id="select-project-episode"
