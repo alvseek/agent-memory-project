@@ -55,7 +55,7 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @start storage id="load-coding-reasoning" ref="procedures/memory/storage-backends/{backend}.md" target="load-coding-reasoning"
 @end storage
 
-2. **Project context** — load the shared and agent context indexes. Use the resolved home for this session’s writes and for entries loaded when relevant.
+2. **Project context** — load the shared and agent context indexes. When the task changes, read any entry relevant to the new work without waiting to be asked. Don’t load every entry.
 
 @start storage id="load-context-indexes" ref="procedures/memory/storage-backends/{backend}.md" target="load-context-indexes"
 @end storage
@@ -98,5 +98,3 @@ If the platform reports truncation or saves a result to a file, read the saved r
    Omit skipped checks, absent optional features, loaded-layer inventories and repeated setup suggestions. Do not prompt to create missing maps or context during awakening.
 
    Keep additions brief. If nothing needs attention, confirming the current project is enough.
-
-*(Proactive project-context loading — standing behavior for the session: when the task shifts and the **project context** index has a relevant entry (`CONTEXT_DIR/context-index.md` shared · `KNOWLEDGE_DIR/context-index.md` agent), proactively load it — don't wait to be asked. Load silently, report briefly; never load everything. This is the coding half of Proactive Memory Loading; the general-knowledge + episodic half lives in the core knowledge foundation.)*
