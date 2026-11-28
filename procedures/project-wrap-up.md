@@ -30,24 +30,16 @@ Use the selected push mode for every push below.
 
 Before updating memory, run `/push-project <mode>`. For the final summary, record each repository’s push result, any commit hashes, and how many files were left for the user.
 
-### Step 2: Project Context Gate + Memory Update (silent)
+### Step 2: Select the project and save memory
 
-**Resolve the project from the work, then state it.** The candidates are the repositories this session changed: the ones the pushes covered, plus any working tree that moved, with the repository at the working directory as the fallback when nothing changed. Then:
-
-- **One candidate** → that repository is the session's project.
-- **Several, one carrying the subject** (the majority of the session's changed paths, or the repository the session's own project-context or map writes name) → that repository is the session's project, and the others go into the record's `tags`, which `search` reads.
-- **Several, none carrying the subject** → no project at all, and every repository goes into the `tags`.
-
-Pass the resolved project (or explicitly no project and the repository tags) to the memory update so it does not infer a different one from the working directory. If a project-specific fact cannot be attributed to one repository, defer that entry for review rather than guessing or waiting for an answer.
+**Select the project.** Use the repository this session changed. If several changed, use the one the work was mainly about and tag the others. If no single repository was primary, file the episode without a project and tag all of them. If nothing changed, use the current repository.
 
 @start component id="ref-1" ref="procedures/components/project-identity.md"
 @end component
 
-**Save project context first.** For each reusable project fact, pass its project, content, and scope to `/update-project-context`. Use the user’s explicit scope when given; otherwise use `shared` for project-wide facts and `agent` for role-specific facts. Default to `shared` when in doubt. Save access instructions, not credential values. Skip this step if there is nothing to save. Saving before `/update-memory` lets it record completed writes as promotions.
+**Save project context first.** Pass each reusable project fact, its repository, and its scope to `/update-project-context`. Honor an explicit scope; otherwise use `shared` for project-wide facts and `agent` for role-specific facts. Default to `shared` when in doubt. Save access instructions, not credential values. If the repository for a fact is unclear, defer just that entry to **Needs review**.
 
-**Then — the memory update**: Run `/update-memory` and let it determine how much of the session to review. Capture its results (mode, gate decisions, episodic entry, carry-forward count, promotions, emotional status) as data for Step 5, together with the **`Tech Debts` + `Next Steps`** it hands up from the sub-episode just written (the return contract `/update-episodic` declares). Print nothing here — it all folds into Step 5.
-
-> **Why this borrows one step rather than running the core `/wrap-up` whole.** That procedure also *persists* the memory store immediately after updating it, which here would fire too early: Step 3 refreshes the orientation map and Step 4 has to capture those writes too. So take the memory update and its returned open items, and leave the persistence to Step 4, where one call covers both repos at once.
+**Save session memory.** Run `/update-memory` with the resolved project and tags, explicitly stating when there is no project. Let it choose the review window. Keep its results, **Tech Debts**, and **Next Steps** for the final summary.
 
 ### Step 3: Refresh Orientation Map (silent)
 
