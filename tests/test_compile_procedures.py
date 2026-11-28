@@ -190,7 +190,7 @@ def test_task_workflow_authoring_compiles_with_identity_and_home(tmp_path: Path)
     assert "Multiple matches: report the ambiguity" in text
     assert "cannot be read is a load failure" in text
     assert 'read_procedure("update-project-context")' in text
-    assert "Follow `/update-project-context` Steps 3–7" in text
+    assert "Start at Step 3 of `/update-project-context`" in text
     assert "Do not restart its project/scope selection" in text
     assert "Re-list before creating" in text
     assert "Read back the saved entry and its shared index row" in text

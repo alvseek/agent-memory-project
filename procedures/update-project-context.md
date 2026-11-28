@@ -31,34 +31,25 @@ If no project was supplied and the current directory is outside Git, ask “Whic
 
 Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
 
-Based on the confirmed scope, the markdown backend reads and writes the matching path:
-- **Shared scope**: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/`
-- **Agent scope**: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/`
-
-A store keeps no path: its mechanics say which layer a row lands in.
-
-> **Storage location**: use the HOME contract component's `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (agent). Use those dirs for every scope-aware step below (folder check, create, index).
-
-@start component id="ref-1" ref="procedures/components/home-contract.md"
+@start component id="ref-1" ref="procedures/components/home-contract.md" applies_to="markdown"
 @end component
 
 > **Move operation**: If the user has asked to **move** an existing entry between scopes — a **promote** (agent → shared, e.g. "move X to shared") or a **demote** (shared → agent) — skip the rest of this procedure and follow the [Move Between Scopes Sub-Flow](#move-between-scopes-sub-flow) section below.
 
-### Step 3: Ensure the Project Folder
+### Step 3: Determine Theme and Check Existing Entries
 
-Ensure the scope-aware project folder exists (**§ ensure-context-dir**), creating it if missing. Proceed to Step 4.
-
-### Step 4: Determine Theme and Check Existing Entries
+@start storage id="prepare-write-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
+@end storage
 
 Identify the theme of the context being captured (e.g., `environment-setup`, `deployment`, `auth-module`, `database-conventions`).
 
 List the layer's existing entries (**§ list-context-entries**) to check whether one already covers this theme:
-- **If an existing entry matches**: Proceed to Step 5B (Update)
-- **If no match**: Proceed to Step 5A (Create New)
+- **If an existing entry matches**: Proceed to Step 4B (Update)
+- **If no match**: Proceed to Step 4A (Create New)
 
 > **A theme is a name, not an address.** This comparison is the only thing the theme decides, and it decides exactly one question: create, or update. How an entry is then read, changed or retired is the storage backend's business, and a store's answer may be more than one call.
 
-### Step 5A: Create New Context Entry
+### Step 4A: Create New Context Entry
 
 1. Create the new entry from the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) (**§ create-context-entry**).
 2. Fill the YAML frontmatter:
@@ -68,21 +59,21 @@ List the layer's existing entries (**§ list-context-entries**) to check whether
    - `created`: today's date
    - `updated`: today's date
 3. Fill the markdown sections (Purpose, Quick Reference, Details, Sources)
-4. Proceed to Step 6
+4. Proceed to Step 5
 
-### Step 5B: Update Existing Context Entry
+### Step 4B: Update Existing Context Entry
 
 1. Read the existing entry (**§ read-context-entry**)
 2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
 3. Update the `updated:` date in YAML frontmatter to today's date
 4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them (a store keeps the first as the row's `content_summary`)
-5. Proceed to Step 6
+5. Proceed to Step 5
 
-### Step 6: Check the Entry Size
+### Step 5: Check the Entry Size
 
-Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 7. Over it, split the entry into one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, and index every new file in Step 7.
+Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 6. Over it, split the entry into one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, and index every new file in Step 6.
 
-### Step 7: Update the Context Index
+### Step 6: Update the Context Index
 
 Update the scope-aware context index (**§ update-context-index**) with this entry.
 
@@ -109,7 +100,10 @@ List the target scope's entries (**§ list-context-entries**) to check whether o
 
 ### M.3: Move to the Target Location
 
-Ensure the target scope exists (**§ ensure-context-dir**), then move the entry's content verbatim to the target scope (**§ move-context-entry**).
+@start storage id="prepare-move-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
+@end storage
+
+Move the entry's content verbatim to the target scope (**§ move-context-entry**).
 
 ### M.4: Ensure the Source Entry Is Gone
 

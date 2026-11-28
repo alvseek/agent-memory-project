@@ -27,10 +27,6 @@ Every operation below is a **tool call**, reading and writing `shared_record` an
 ## update-project-context
 
 @start region id="update-project-context"
-### § ensure-context-dir
-
-No action. A store has no directories; the project, the layer and the owner are columns on the row.
-
 ### § list-context-entries
 
 Call `list_shared_context(project)` and/or `list_agent_context(project, agent)`, one call per layer the step is about. Each row carries `uuid`, `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index. A row whose `theme` matches is the entry the step means, and the `uuid` it carries is how every later call addresses it. The same call answers the move sub-flow's collision check. An agent-layer call requires its owner rather than defaulting, because those rows are owned.

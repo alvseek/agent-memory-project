@@ -88,7 +88,7 @@ Show the target project and shared home (or store scope), whether this is a crea
 
 ### 6. Save through the existing context writer
 
-Follow `/update-project-context` Steps 3–7 with these already-confirmed inputs: the resolved project, active HOME, shared scope, exact theme `task-workflow`, and approved content. Do not restart its project/scope selection or reopen those decisions. Re-list before creating to catch a newly appeared entry; an unexpected collision returns to inspection and confirmation rather than overwriting.
+Start at Step 3 of `/update-project-context` with these already-confirmed inputs: the resolved project, active HOME, shared scope, exact theme `task-workflow`, and approved content. Do not restart its project/scope selection or reopen those decisions. Re-list before creating to catch a newly appeared entry; an unexpected collision returns to inspection and confirmation rather than overwriting.
 
 Use its existing template, create/update operations, size checks and index maintenance; do not introduce a new record type, CRUD tool or workflow-specific store. Preserve unrelated body content and keep frontmatter descriptions/tags and index metadata consistent. Stored entries do not contain template-version stamps.
 

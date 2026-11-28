@@ -8,14 +8,11 @@ Concrete storage mechanics for the **native markdown-over-git** world. Each `## 
 
 ## update-project-context
 
+@start region id="ensure-project-context-directory"
+Use `CONTEXT_DIR` for shared entries and `KNOWLEDGE_DIR` for agent entries. Create the destination directory if it does not exist.
+@end region
+
 @start region id="update-project-context"
-### § ensure-context-dir
-
-Create the scope dir if it is missing (resolve `CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent):
-
-- Shared: `mkdir -p [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context`
-- Agent: `mkdir -p [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]`
-
 ### § list-context-entries
 
 List the `*.md` files in the scope dir (exclude `context-index.md`). A file whose name matches the theme is an existing entry to update; no match means a new entry. The same listing answers the collision check in the Move sub-flow.
