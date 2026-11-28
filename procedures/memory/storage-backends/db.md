@@ -33,13 +33,13 @@ Use `list_shared_context(project)` for shared entries or `list_agent_context(pro
 @start region id="create-context-entry"
 Read the template with Hermod’s `read_resource("project-context-template")`.
 
-Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass the filled document, including frontmatter, as `content` (at most 1000 lines). Pass the template stamp separately as `template_version`; never include it in the body. Use the frontmatter description and tags for the listing. The call creates the record and listing and returns the UUID.
+Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass only the filled entry body as `content` (at most 1000 lines). Supply the description as `content_summary`, the tags as `tags`, and the template stamp as `template_version`. Valaskjalf timestamps the record and returns its UUID.
 @end region
 
 @start region id="edit-context-entry"
-Keep the UUID. Read Munnin’s `get_memory(uuid, include_edit_context=true)` and edit the affected text with `edit_memory_body`, `append_memory_body`, `prepend_memory_body`, or `multi_edit_memory_body`. Valaskjalf sets `modified_date` on write; do not supply an edit date.
+Keep the UUID. Read Munnin’s `get_memory(uuid, include_edit_context=true)`. For body changes, edit only the affected text with `edit_memory_body`, `append_memory_body`, `prepend_memory_body`, or `multi_edit_memory_body`.
 
-If the description or tags changed, update the body and then the listing with `edit_memory_metadata`. Change only the affected fields; use the current tenant and revision guards for each write. On conflict, reread before retrying. If the body was saved but the listing was not, report the partial write.
+For a description or tag change alone, call only `edit_memory_metadata`. The record fields are authoritative even if an older body contains YAML. If both body and metadata changed, save the body first and use the returned revision for the metadata write. Use the tenant and revision guards, reread on conflict, and report a partial write if the second operation fails. Valaskjalf maintains `modified_date`.
 @end region
 
 @start region id="update-project-context"

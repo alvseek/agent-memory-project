@@ -19,7 +19,7 @@ Use `context-index.md` in the selected directory to shortlist by name and descri
 @start region id="create-context-entry"
 Read the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md).
 
-Write the filled template block to a new `[theme].md` in the selected directory (`CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent). Do not include the template version line or overwrite an existing file.
+Write the filled Markdown file header followed by the entry body to a new `[theme].md` in the selected directory (`CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent). Do not include the template version line or overwrite an existing file.
 @end region
 
 @start region id="edit-context-entry"

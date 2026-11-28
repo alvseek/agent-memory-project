@@ -73,7 +73,7 @@ Wait for user selection, then go to Step 5.
 ### Step 4: Match Mode
 
 Search for the keyword(s) from arguments across **both layers** against:
-1. **Tags**: Match against `tags: [...]` in YAML frontmatter
+1. **Tags**: Match against the entry’s tags from the listing or Markdown file header.
 2. **File names**: Match against the file name (e.g., keyword "deploy" matches `deployment.md`)
 3. **Project names**: Match against project folder names
 

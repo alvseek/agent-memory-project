@@ -74,7 +74,7 @@ If any required detail or validation is unavailable, allow an **Incomplete** dra
 
 ### 5. Draft and confirm
 
-Build the entry using the existing Project Context Template obtained through the context writer. Retain its normal frontmatter and sections. Within Details, write a section named exactly **Awakening Hook** containing the tracker/connection, account/project scope, queries, reporting and failure behavior.
+Build the entry using the Project Context Template for the active backend. Within Details, write a section named exactly **Awakening Hook** containing the tracker/connection, account/project scope, queries, reporting and failure behavior.
 
 The hook itself must include:
 
@@ -90,7 +90,7 @@ Show the target project and shared home (or store scope), whether this is a crea
 
 Start at Step 3 of `/update-project-context` with these already-confirmed inputs: the resolved project, active HOME, shared scope, exact theme `task-workflow`, and approved content. Do not restart its project/scope selection or reopen those decisions. Re-list before creating to catch a newly appeared entry; an unexpected collision returns to inspection and confirmation rather than overwriting.
 
-Use its existing template, create/update operations, size checks and index maintenance; do not introduce a new record type, CRUD tool or workflow-specific store. Preserve unrelated body content and keep frontmatter descriptions/tags and index metadata consistent. Stored entries do not contain template-version stamps.
+Use its existing template, create/update operations, size checks and index maintenance; do not introduce a new record type, CRUD tool or workflow-specific store. Preserve unrelated body content and use the context writer’s backend instructions for description and tags. Stored entries do not contain template-version stamps.
 
 Read back the saved entry and its shared index row. Verify the project, exact theme, hook, readiness and approved changes. If a write or read-back fails, report the partial result; do not claim the workflow is configured or retry a create blindly.
 

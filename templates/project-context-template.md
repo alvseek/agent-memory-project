@@ -1,8 +1,10 @@
 # Project Context Template
 
-template_version: 2026-11-29-02-08
+template_version: 2026-11-29-02-10
 
-The structure of a project-context entry. Storage-agnostic: the markdown backend writes it to the scope directory as `[theme].md`; the DB backend passes it to `create_shared_context_entry` or `create_agent_context_entry`, which is where its `template_version` is declared, and every later change to it goes through the memory layer's own ops. Copy the fenced block below and fill its placeholders.
+Use the body below for both backends. For a Markdown file, prepend the file header. For a DB record, pass the project, theme, description (`content_summary`) and tags as record fields and the template version as a separate argument. Do not put the file header or template version in the DB body.
+
+**Markdown file header only:**
 
 ```markdown
 ---
@@ -13,7 +15,11 @@ created: "YYYY-MM-DD"
 ---
 
 # [Theme Title]
+```
 
+**Entry body:**
+
+```markdown
 ## **PURPOSE**
 [Brief description of what this context file covers and when to use it]
 

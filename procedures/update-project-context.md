@@ -83,7 +83,7 @@ Continue to Step 5.
 
 ### Step 5: Check the Entry Size
 
-Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 6. Over it, split the entry into one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, and index every new file in Step 6.
+Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 6. When the backend requires a split, save one entry per distinct sub-theme, remove the original, and index the new entries in Step 6.
 
 ### Step 6: Update the Context Index
 
