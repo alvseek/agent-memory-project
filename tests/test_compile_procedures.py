@@ -155,16 +155,16 @@ def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
 
 
 def test_task_workflow_storage_reads_match_each_backend() -> None:
-    markdown = (ROOT / "procedures/memory/storage-backends/markdown.md").read_text(encoding="utf-8")
-    db = (ROOT / "procedures/memory/storage-backends/db.md").read_text(encoding="utf-8")
-    for backend in (markdown, db):
-        composed = cc._seam.compose_backend_section(backend, "awaken-coder", [])
-        hook = composed.split("### § load-task-workflow\n", 1)[1].split("\n### ", 1)[0]
+    catalog = validate_catalog(FileSource(ROOT))
+    hooks = {}
+    for backend in ("markdown", "db"):
+        text = catalog.compose("awaken-coder", backend).text
+        hook = text.split("**Task workflow**", 1)[1].split("An **Awakening Hook**", 1)[0]
         assert "CONTEXT_DIR/task-workflow.md" in hook
         assert "local" in hook
         assert "load failure" in hook
+        hooks[backend] = hook
 
-    db_hook = db.split("### § load-task-workflow\n", 1)[1].split("\n---", 1)[0]
     for constraint in (
         "`project` is `projects[0]`",
         "`scope` is `shared`",
@@ -173,8 +173,7 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
         "Multiple matches",
         "do not fall back to a central workflow",
     ):
-        assert constraint in db_hook
-    assert "so nothing below costs a second call" not in db
+        assert constraint in hooks["db"]
 
 
 def test_task_workflow_authoring_compiles_with_identity_and_home(tmp_path: Path) -> None:

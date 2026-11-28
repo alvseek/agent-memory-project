@@ -137,29 +137,24 @@ Reuse the memory and episodic index that Munnin loaded. Read the coding reasonin
    Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context. If the file is missing, skip this step.
 @end region
 
-@start region id="awaken-coder"
+@start region id="load-context-indexes"
+   Read the shared index (`CONTEXT_DIR/context-index.md`) and the agent index (`KNOWLEDGE_DIR/context-index.md`) at their resolved HOME paths. Skip missing indexes.
+@end region
 
-### § load-context-indexes
+@start region id="load-maps"
+   Read `MAP_PATH` for the home project and `[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md` for each related project. Skip missing files.
+@end region
 
-Read the shared context index (`CONTEXT_DIR/context-index.md`) and the agent context index (`KNOWLEDGE_DIR/context-index.md`) — the resolved HOME values — silently skipping whichever is missing.
+@start region id="check-fleet-roster"
+   Check whether `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md` exists.
+@end region
 
-### § check-fleet-roster
+@start region id="load-task-workflow"
+   Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
+@end region
 
-Test for `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md`. Present → the project has a fleet; absent → skip the fleet pointer.
-
-### § select-project-episode
-
-From the episodic index the core returned, take the newest entry **per project** in the set — the session's own repository first — then read each body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. A project in the set with no entry is left out rather than filled with the newest overall's, so the report carries one carry-forward per repository.
-
-### § load-maps
-
-Read each project's `MAP_PATH` with the Read tool, silently skipping a project that has none. The resolved project's is the HOME value; a related repository's is the same path under its own project name (`[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md`). Never create one here — that is `/map-orientation create`'s job.
-
-### § load-task-workflow
-
-Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
-
----
+@start region id="select-project-episode"
+     Use the episodic index Munnin loaded to select the newest entry for each project. Read each selected body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]`.
 @end region
 
 ## add-coding-reasoning

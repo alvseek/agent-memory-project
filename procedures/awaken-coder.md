@@ -55,16 +55,30 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @start storage id="load-coding-reasoning" ref="procedures/memory/storage-backends/{backend}.md" target="load-coding-reasoning"
 @end storage
 
-2. **Project context** — it arrived with the payload too: the merged index for the whole set, both scopes included (**§ load-context-indexes**), so a related repository's index is in hand when the task moves into it. The HOME contract component still names the home that this session's own writes and its load-on-relevance reads use.
+2. **Project context** — load the shared and agent context indexes. Use the resolved home for this session’s writes and for entries loaded when relevant.
+
+@start storage id="load-context-indexes" ref="procedures/memory/storage-backends/{backend}.md" target="load-context-indexes"
+@end storage
 
 @start component id="ref-2" ref="procedures/components/home-contract.md"
 @end component
 
    **Localized detection + handoff** — if `.agents/` exists at cwd, the project is localized and its home (episodic, knowledge, map) is owned by `agent-memory-local`: run **`/load-local-context`** to load it. That read supersedes the central load above. If `.agents/` is absent, the central load stands. For a project already known to be localized, skip the detection entirely by running `agent-memory-local`'s `/awaken-local`, which runs this procedure with that check replaced by the same call.
 
-3. **Orientation map + fleet pointer** — the maps arrived with the payload: one per project in the set that has one, with its dates (**§ load-maps**) — never auto-create. (The bare `/map-orientation` load is for a project you are working in outside an awakening.) Then, when a roster appears in the payload's context index (**§ check-fleet-roster**), the overlay's whole fleet statement is one pointer: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Resolve how to reach it from `[FLEET-ACCESS]` (see [Access](#access)). The roster itself is loaded by the fleet repo's `/load-fleet`, not here.
+3. **Orientation map + fleet pointer** — load existing maps only; never create one during awakening.
 
-4. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow` (**§ load-task-workflow**), using the active home after any local-memory handoff. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+@start storage id="load-maps" ref="procedures/memory/storage-backends/{backend}.md" target="load-maps"
+@end storage
+
+@start storage id="check-fleet-roster" ref="procedures/memory/storage-backends/{backend}.md" target="check-fleet-roster"
+@end storage
+
+   If a roster is present, report once: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Use `[FLEET-ACCESS]` to reach it. Leave reading the roster to `/load-fleet`.
+
+4. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`, using the active home after any local-memory handoff. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+
+@start storage id="load-task-workflow" ref="procedures/memory/storage-backends/{backend}.md" target="load-task-workflow"
+@end storage
 
    An **Awakening Hook** is the `Awakening Hook` section in that entry: project-owned, read-only instructions for checking assigned tasks and items waiting on a human. It declares the task system and required connection, the project/account scope, query filters (including what “me” means), the report format, and what to do when the connection is unavailable. Follow only this section during awakening; task creation, assignment, comments and status changes are not authorized by a hook. Report its results in the consolidated awakening report.
 
@@ -72,7 +86,11 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
 5. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
    - **Project**: name the current project. List related projects in one line if they widened recall.
-   - **Carry-forward**: summarize open items from the newest available episode page for each project in the resolved set (**§ select-project-episode**), home project first. If a project has no episode for this agent, say so; do not substitute another project's episode. An empty set of results means **no episodes for this agent in this project set**; do not automatically load other agents' episodes. A non-null `next_cursor` means the episode continues — say so and name that row's uuid and cursor rather than presenting the page as the whole record; a count below `blocks_total` with a null cursor is a complete final page. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
+   - **Carry-forward**: summarize open items from the newest episode available for each project, home project first. If a project has no episode for this agent, say so; do not substitute another project's episode. An empty set of results means **no episodes for this agent in this project set**; do not automatically load other agents' episodes. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
+
+@start storage id="select-project-episode" ref="procedures/memory/storage-backends/{backend}.md" target="select-project-episode"
+@end storage
+
    - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
    - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
    - **Localization and fleet**: mention an active local-memory override or available fleet once, when present.
@@ -82,10 +100,3 @@ If the platform reports truncation or saves a result to a file, read the saved r
    Keep additions brief. If nothing needs attention, confirming the current project is enough.
 
 *(Proactive project-context loading — standing behavior for the session: when the task shifts and the **project context** index has a relevant entry (`CONTEXT_DIR/context-index.md` shared · `KNOWLEDGE_DIR/context-index.md` agent), proactively load it — don't wait to be asked. Load silently, report briefly; never load everything. This is the coding half of Proactive Memory Loading; the general-knowledge + episodic half lives in the core knowledge foundation.)*
-
----
-
-@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
-@end storage
-@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="awaken-coder"
-@end storage

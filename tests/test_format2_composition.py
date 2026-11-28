@@ -37,7 +37,7 @@ def test_unknown_component_and_storage_region_fail() -> None:
     path = "procedures/awaken-coder.md"
     for old, new in (
         (b"procedures/components/project-identity.md", b"procedures/components/missing.md"),
-        (b'target="awaken-coder"', b'target="missing-region"'),
+        (b'target="load-context-indexes"', b'target="missing-region"'),
     ):
         altered = dict(files)
         assert old in altered[path]

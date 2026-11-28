@@ -129,36 +129,28 @@ Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load
    Read `coding_lane` from the awakening response. If it is empty, skip this step.
 @end region
 
-@start region id="awaken-coder"
-The coding response contains `coding_lane`, `episode_index`, `episodes`, `context_index` and `maps`. An opted-in task workflow needs a separate body read using the UUID from `context_index`.
+@start region id="load-context-indexes"
+   Read `context_index` for the whole project set. Each entry carries its project, scope (shared or agent), and the UUID to use for later reads.
+@end region
 
-Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
+@start region id="load-maps"
+   Read `maps` from the awakening response. Each entry contains the whole map and its dates. A project without an entry has no map.
+@end region
 
-### § load-context-indexes
+@start region id="check-fleet-roster"
+   Look for a `fleet-agents` entry in the project context index.
+@end region
 
-Read `context_index` from the payload. Each row carries its own `scope`, which is what the `[shared]` / `[agent]` display reads, and its `uuid`, which is what every later read, edit or retirement of that entry is addressed by. The rows span the whole set, so a related repository's index is already in hand when the task moves into it.
+@start region id="load-task-workflow"
+   If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
+@end region
 
-### § check-fleet-roster
+@start region id="select-project-episode"
+     ### § select-project-episode
 
-Look for a roster in the payload's `context_index`: a project whose index carries a `fleet-agents` entry has a fleet, and the pointer fires. Everything else skips silently. The roster's own **read** belongs to the fleet layer's `/load-fleet`, which already replaced the roster read that used to live here, so nothing is re-added.
+     Use the pages already in `episodes`, one per project that has an episode. Each page contains up to three timestamp groups. If `next_cursor` is non-null, report the row's UUID and cursor so the reader knows the episode continues. A null cursor marks the final page even if `blocks_returned` is less than `blocks_total`.
 
-### § select-project-episode
-
-Take it from `episodes` in the payload: one newest **page** per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch to reach it and no `get_memory` to make — but a page is not a whole body. Each row carries `uuid`, `blocks_returned`, `blocks_total` and `next_cursor`, and its `content` holds up to three timestamp groups.
-
-Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get_memory(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
-
-A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only and does not carry `blocks_total`; that count rides on the `episodes` row when the record itself is read).
-
-### § load-maps
-
-Read `maps` from the payload: one entry per project in the set that has a map, each carrying `content` and its dates. A project absent from `maps` has none — never auto-create one here. The dates are what the bare `/map-orientation` load's mtime check reads.
-
-### § load-task-workflow
-
-If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
-
----
+     Only if older entries are needed, call the memory layer's `get_memory(uuid, cursor=…)` with that row's values. To read a different episode, use its UUID from `episode_index`. Index entries and search snippets are not episode bodies.
 @end region
 
 ## add-coding-reasoning
