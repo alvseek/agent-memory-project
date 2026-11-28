@@ -63,10 +63,8 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @end storage
 
 3. **Orientation map + fleet pointer** — load existing maps only; never create one during awakening.
-
 @start storage id="load-maps" ref="procedures/memory/storage-backends/{backend}.md" target="load-maps"
 @end storage
-
 @start storage id="check-fleet-roster" ref="procedures/memory/storage-backends/{backend}.md" target="check-fleet-roster"
 @end storage
 
