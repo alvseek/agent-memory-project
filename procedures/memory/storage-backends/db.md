@@ -8,7 +8,7 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 > **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get_memory(uuid)`, changing one is `edit_memory_body` / `multi_edit_memory_body` / `append_memory_body` / `prepend_memory_body`, changing its summary or tags is `edit_memory_metadata`, and retiring it is `soft_delete_memory`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../../../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
 
-> **Three ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file, an index file beside it, and a line count after a write; a store has none of the three, so `§ ensure-context-dir`, `§ update-context-index` and `§ check-entry-size` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
+> DB context entries need no directory, separate index file, or post-write line count. The size limit applies when creating a record.
 
 ---
 
@@ -33,7 +33,9 @@ Use `list_shared_context(project)` for shared entries or `list_agent_context(pro
 @start region id="create-context-entry"
 Read the template with Hermod’s `read_resource("project-context-template")`.
 
-Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass only the filled entry body as `content` (at most 1000 lines). Supply the description as `content_summary`, the tags as `tags`, and the template stamp as `template_version`. Valaskjalf timestamps the record and returns its UUID.
+Before creating a record, check the length of the filled entry body. Up to 1,000 lines is valid. If it is longer, split it by topic first and create a separate entry within the limit for each topic.
+
+Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass only the body as `content`. Supply the description as `content_summary`, the tags as `tags`, and the template stamp as `template_version`. Valaskjalf timestamps the record and returns its UUID.
 @end region
 
 @start region id="edit-context-entry"
@@ -58,10 +60,6 @@ Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `d
 Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
 
 **Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
-
-### § check-entry-size
-
-No action. The cap is a **creation** gate: the create operation refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.
 
 ### § update-context-index
 

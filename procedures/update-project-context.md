@@ -79,15 +79,12 @@ Update the entry selected in Step 3. Correct or add the relevant facts and prese
 @start storage id="edit-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="edit-context-entry"
 @end storage
 
-Continue to Step 5.
+### Step 5: Finish the write
 
-### Step 5: Check the Entry Size
+@start storage id="check-entry-size" ref="procedures/memory/storage-backends/{backend}.md" target="check-entry-size" applies_to="markdown"
+@end storage
 
-Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 6. When the backend requires a split, save one entry per distinct sub-theme, remove the original, and index the new entries in Step 6.
-
-### Step 6: Update the Context Index
-
-Update the scope-aware context index (**§ update-context-index**) with this entry.
+Update the scope-aware context index (**§ update-context-index**) for the resulting entries.
 
 ---
 

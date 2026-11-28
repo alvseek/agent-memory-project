@@ -26,6 +26,10 @@ Write the filled Markdown file header followed by the entry body to a new `[them
 Save the changes to the same file. Its modification time records the edit; do not maintain an `updated` frontmatter field. If an older entry has that field, remove it when editing the file.
 @end region
 
+@start region id="check-entry-size"
+Count the lines in the saved file. At 1,000 lines or fewer, keep it as one entry. Above 1,000 lines, split it by topic into files within the limit, each with its own header and tags. Verify the new files before removing the original; replace its index entry with the new entries.
+@end region
+
 @start region id="update-project-context"
 ### § list-context-entries
 
@@ -50,13 +54,6 @@ Remove the entry from its scope:
 
 - Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
 - Agent: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-### § check-entry-size
-
-Count the lines in the written file.
-
-- **Under 1000** → done.
-- **Over 1000** → split: create one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, then index every new file (**§ update-context-index**).
 
 ### § update-context-index
 
