@@ -158,7 +158,8 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
     for backend in ("markdown", "db"):
         text = catalog.compose("awaken-coder", backend).text
         hook = text.split("**Task workflow.**", 1)[1].split("Follow only the entry’s", 1)[0]
-        assert text.index("suggest `/awaken-coder-local` instead") < text.index("### Identify the project set")
+        local_hint = text.index("suggest `/awaken-coder-local` instead")
+        assert local_hint < text.index("### Identify the project set")
         assert "/load-local-context" not in text
         assert ("HOME = { MAP_PATH" in text) == (backend == "markdown")
         assert ("CONTEXT_DIR/task-workflow.md" in hook) == (backend == "markdown")
