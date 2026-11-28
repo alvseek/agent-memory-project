@@ -41,13 +41,9 @@ Before updating memory, run `/push-project <mode>`. For the final summary, recor
 
 **Save session memory.** Run `/update-memory` with the resolved project and tags, explicitly stating when there is no project. Let it choose the review window. Keep its results, **Tech Debts**, and **Next Steps** for the final summary.
 
-### Step 3: Refresh Orientation Map (silent)
+### Step 3: Refresh the orientation map
 
-If this session touched orientation docs (READMEs, architecture, flow diagrams, ADRs):
-
-`/map-orientation --session-touched [path1,path2,...]`
-
-Silent no-op if no map exists or no orientation docs touched. Capture refresh count / no-op reason for Step 5.
+Skip this step if no orientation documents changed. Otherwise, pass the changed paths (such as READMEs, architecture docs, flow diagrams, or ADRs) to `/map-orientation --session-touched [paths]`. Update mode checks whether the project already has a map and skips if none exists; do not create one. For the final summary, record the refresh count or the reason for skipping. If the procedure is unavailable, report that and continue.
 
 ### Step 4: Persist Everything Steps 2–3 Wrote (silent) — MANDATORY
 
