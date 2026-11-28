@@ -62,15 +62,15 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @start storage id="load-context-indexes" ref="procedures/memory/storage-backends/{backend}.md" target="load-context-indexes"
 @end storage
 
-3. **Orientation map + fleet pointer** — load existing maps only; never create one during awakening.
+3. **Orientation maps.** Load the existing map for each project in the set. Skip missing maps; don’t create them during awakening.
 @start storage id="load-maps" ref="procedures/memory/storage-backends/{backend}.md" target="load-maps"
 @end storage
+
+4. **Fleet.** If a project has a `fleet-agents` roster, name that project in the report and mention `/load-fleet`. Don’t load the roster during awakening.
 @start storage id="check-fleet-roster" ref="procedures/memory/storage-backends/{backend}.md" target="check-fleet-roster"
 @end storage
 
-   If a roster is present, report once: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Use `[FLEET-ACCESS]` to reach it. Leave reading the roster to `/load-fleet`.
-
-4. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+5. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
 
 @start storage id="load-task-workflow" ref="procedures/memory/storage-backends/{backend}.md" target="load-task-workflow"
 @end storage
@@ -79,7 +79,7 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
    If the hook declares `Readiness: Incomplete`, report its missing setup and skip task queries; do not repair or validate it during awakening. If the entry cannot be read, the section is missing, or its scope or query is unspecified, report the problem and skip the hook rather than guessing or reporting zero tasks. Other workflow sections are documentation, not awakening actions. To configure or change the entry explicitly, use `/set-project-task-workflow`.
 
-5. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
+6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
    - **Project**: name the current project. List related projects in one line if they widened recall.
    - **Carry-forward**: summarize open items from the newest episode available for each project, home project first. If a project has no episode for this agent, say so; do not substitute another project's episode. An empty set of results means **no episodes for this agent in this project set**; do not automatically load other agents' episodes. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
 
@@ -88,7 +88,6 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
    - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
    - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
-   - **Fleet**: mention the fleet once, when present.
 
    Omit skipped checks, absent optional features, loaded-layer inventories and repeated setup suggestions. Do not prompt to create missing maps or context during awakening.
 
