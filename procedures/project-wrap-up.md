@@ -26,11 +26,9 @@ Run without progress messages or routine confirmation. If a memory write needs a
 
 Use the selected push mode for every push below.
 
-### Step 1: Push the Project's Work (silent) — MANDATORY
+### Step 1: Push the project work
 
-Push the agent's **project** work FIRST, so a merge request / PR can be opened immediately without waiting for the memory update that follows. Execute **`/push-project <mode>`** (working project repo + owned submodules only) — do NOT touch the agent-memory store yet (this session's memory isn't written until Step 2, so pushing it now would miss it). In the default `agent` mode this stages only agent-produced project paths (never `git add -A`), leaving the user's unrelated changes for the user; `all` mode pushes the full working tree.
-
-Tool calls visible (git commands); capture per-repo commit hashes + user-files-left counts for Step 5.
+Before updating memory, run `/push-project <mode>`. For the final summary, record each repository’s push result, any commit hashes, and how many files were left for the user.
 
 ### Step 2: Project Context Gate + Memory Update (silent)
 
