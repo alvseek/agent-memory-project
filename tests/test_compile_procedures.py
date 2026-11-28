@@ -137,18 +137,17 @@ def test_awakening_keeps_recursive_discovery_and_agent_scoped_absence(tmp_path: 
 def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
     report = next(r for r in _compile(ROOT, tmp_path) if r.name == "awaken-coder")
     text = report.out_path.read_text(encoding="utf-8")
-    task_step = text.split("**Task workflow**", 1)[1].split(
+    task_step = text.split("**Task workflow.**", 1)[1].split(
         "**Report the coding awakening**", 1
     )[0]
 
-    assert "shared context entry named `task-workflow`" in task_step
-    assert "A related project's entry or an agent-private entry does not opt" in task_step
-    assert "No entry → skip silently; never create one" in task_step
-    assert "Multiple matching entries → report the ambiguity" in task_step
-    assert "project-owned, read-only instructions" in task_step
-    assert "what “me” means" in task_step
-    assert "task creation, assignment, comments and status changes are not authorized" in task_step
-    assert "rather than guessing or reporting zero tasks" in task_step
+    assert "home project’s shared context" in task_step
+    assert "no entry, skip silently" in task_step
+    assert "report the ambiguity and skip" in task_step
+    assert "Follow only the entry’s **Awakening Hook**" in task_step
+    assert "connection, scope, and filters" in task_step
+    assert "don’t create or change tasks or the workflow" in task_step
+    assert "A skipped check is not a zero-task result" in task_step
     for forbidden in ("Todoist", "Jira", "Linear", "aquazone", "invintiry", "ocx-", "plko"):
         assert forbidden not in task_step
 
@@ -158,12 +157,12 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
     hooks = {}
     for backend in ("markdown", "db"):
         text = catalog.compose("awaken-coder", backend).text
-        hook = text.split("**Task workflow**", 1)[1].split("An **Awakening Hook**", 1)[0]
+        hook = text.split("**Task workflow.**", 1)[1].split("Follow only the entry’s", 1)[0]
         assert text.index("suggest `/awaken-coder-local` instead") < text.index("### Identify the project set")
         assert "/load-local-context" not in text
         assert ("HOME = { MAP_PATH" in text) == (backend == "markdown")
         assert ("CONTEXT_DIR/task-workflow.md" in hook) == (backend == "markdown")
-        assert "load failure" in hook
+        assert "single match" in hook
         hooks[backend] = hook
 
     for constraint in (
@@ -171,7 +170,6 @@ def test_task_workflow_storage_reads_match_each_backend() -> None:
         "`scope` is `shared`",
         "`theme` is exactly `task-workflow`",
         "get_memory(uuid)",
-        "Multiple matches",
     ):
         assert constraint in hooks["db"]
 
@@ -218,8 +216,7 @@ def test_task_workflow_authoring_keeps_incomplete_setup_read_only(tmp_path: Path
     ):
         assert required in authoring
     assert "`Readiness: Incomplete`" in awakening
-    assert "skip task queries; do not repair or validate it during awakening" in awakening
-    assert "use `/set-project-task-workflow`" in awakening
+    assert "report the missing setup without querying tasks" in awakening
 
 
 def test_component_is_inlined_at_its_reference_point(tmp_path: Path) -> None:

@@ -70,14 +70,14 @@ If the platform reports truncation or saves a result to a file, read the saved r
 @start storage id="check-fleet-roster" ref="procedures/memory/storage-backends/{backend}.md" target="check-fleet-roster"
 @end storage
 
-5. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow`. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
+5. **Task workflow.** Look for `task-workflow` in the home project’s shared context. If there’s no entry, skip silently. If more than one matches, report the ambiguity and skip.
 
 @start storage id="load-task-workflow" ref="procedures/memory/storage-backends/{backend}.md" target="load-task-workflow"
 @end storage
 
-   An **Awakening Hook** is the `Awakening Hook` section in that entry: project-owned, read-only instructions for checking assigned tasks and items waiting on a human. It declares the task system and required connection, the project/account scope, query filters (including what “me” means), the report format, and what to do when the connection is unavailable. Follow only this section during awakening; task creation, assignment, comments and status changes are not authorized by a hook. Report its results in the consolidated awakening report.
+   Follow only the entry’s **Awakening Hook**. Use its connection, scope, and filters to check assigned tasks and items waiting on a human. Report the results as the hook specifies. This is read-only: don’t create or change tasks or the workflow.
 
-   If the hook declares `Readiness: Incomplete`, report its missing setup and skip task queries; do not repair or validate it during awakening. If the entry cannot be read, the section is missing, or its scope or query is unspecified, report the problem and skip the hook rather than guessing or reporting zero tasks. Other workflow sections are documentation, not awakening actions. To configure or change the entry explicitly, use `/set-project-task-workflow`.
+   If `Readiness: Incomplete`, report the missing setup without querying tasks. If the entry can’t be read, the hook is missing, or its scope or query is unclear, report why the check was skipped. A skipped check is not a zero-task result.
 
 6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
    - **Project**: name the current project. List related projects in one line if they widened recall.
