@@ -45,15 +45,14 @@ Before updating memory, run `/push-project <mode>`. For the final summary, recor
 
 Skip this step if no orientation documents changed. Otherwise, pass the changed paths (such as READMEs, architecture docs, flow diagrams, or ADRs) to `/map-orientation --session-touched [paths]`. Update mode checks whether the project already has a map and skips if none exists; do not create one. For the final summary, record the refresh count or the reason for skipping. If the procedure is unavailable, report that and continue.
 
-### Step 4: Persist Everything Steps 2–3 Wrote (silent) — MANDATORY
+### Step 4: Save and verify the remaining work
 
-Execute **§ persist-store** — the active storage backend's persistence op, covering the agent-memory store and the working project together. Invoking `/project-wrap-up` IS the authorization to commit + push. Its memory half captures the episodic / emotional / reasoning / knowledge writes that the Step 1 project push ran too early to include; its project half captures the project memory, orientation, and context files Steps 2–3 just wrote. In the default `agent` mode both leaves stage only this agent's own work (never a blanket `git add -A`), leaving other agents' in-flight memory and the user's project changes untouched; `all` mode pushes both full trees.
+Save the changes made by Steps 2–3 using the selected push mode. Invoking `/project-wrap-up` authorizes these commits and pushes.
 
-> **Why the project is pushed twice, and why that is not redundant.** Step 1 exists so a merge request can open without waiting for the memory update. Step 4 exists because Steps 2–3 write more files after that. Collapsing them into a single push at either end breaks the completion gate: push only at the start and the memory written afterwards is never saved, so the gate reports INCOMPLETE every run; push only at the end and the early merge request Step 1 exists for never happens.
+@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="project-wrap-up"
+@end storage
 
-Tool calls visible (git commands); capture per-repo commit hashes + agent-work-pushed status for Step 5.
-
-**Then verify (drives the Step 5 completion gate)**: from the leaf pushers' `git status -sb [ahead N]` verification (Step 4 of `/push-project` + `/push-memory`, reached directly in Step 1 and through the persistence op in Step 4) across both pushes, record per repo whether **every agent-work path is committed AND pushed** (branch not ahead of remote) + a count of user files left. **Excluded repos are exempt** (report as `skipped (excluded)`). Do NOT attempt elaborate recovery — if an *agent-work* push fails or any agent-work path remains, that is carried to Step 5, where the wrap-up fails loudly.
+Use the push results from Steps 1 and 4 to verify that every in-scope agent change was committed and pushed. Record any failed push or remaining agent work for the final summary. Excluded repositories and unrelated files left in `agent` mode do not block completion.
 
 ### Step 5: Final Summary (only visible output)
 
@@ -113,10 +112,3 @@ Push — FAILED / INCOMPLETE (agent work not fully saved):
 
 Retry the push (or resolve the blocker) before leaving — the wrap-up is only complete when every agent-work path is committed AND pushed.
 ```
-
----
-
-@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
-@end storage
-@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="project-wrap-up"
-@end storage

@@ -181,7 +181,5 @@ Append the completed pattern as a level-3 (`###`) block to `[AGENT-MEMORY-PATH]/
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-### § persist-store
-
-Execute `/push-all <mode>` — one call covering the agent-memory store and the working project together. Its memory half captures the writes the Step 1 project push ran too early to include; its project half captures what Steps 2–3 wrote.
+Run `/push-all <mode>` to push both the agent-memory store and the working project.
 @end region

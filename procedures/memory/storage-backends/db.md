@@ -176,7 +176,5 @@ Call the memory layer's `insert_memory(scope="shared", record_type="coding_reaso
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-### § persist-store
-
-Execute **`/push-project <mode>`** on the project repository. Every op above writes its row as it runs, on the memory database, so the store is durable the moment it is written and there is nothing left for a memory push to persist at wrap-up — that half of the op dissolves. The project push is the half that still has work: the commits Steps 2-3 produced. In the default `agent` mode it stages only this agent's own work; `all` pushes the full tree.
+Run `/push-project <mode>` for the working project. Memory writes are already saved in the database.
 @end region
