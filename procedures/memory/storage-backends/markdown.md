@@ -17,17 +17,19 @@ Use `context-index.md` in the selected directory to shortlist by name and descri
 @end region
 
 @start region id="create-context-entry"
+Read the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md).
+
 Write the filled template block to a new `[theme].md` in the selected directory (`CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent). Do not include the template version line or overwrite an existing file.
+@end region
+
+@start region id="edit-context-entry"
+Save the changes to the same file. Its modification time records the edit; do not maintain an `updated` frontmatter field. If an older entry has that field, remove it when editing the file.
 @end region
 
 @start region id="update-project-context"
 ### § list-context-entries
 
 For a move, list the entry files in the relevant scope (exclude `context-index.md`). Check the target directory for a filename collision before copying.
-
-### § update-context-entry
-
-Write the updated content back to `[scope-dir]/[theme].md`.
 
 ### § move-context-entry
 

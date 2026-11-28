@@ -21,7 +21,9 @@ def test_real_catalog_renders_both_backends_and_tool_instructions() -> None:
     assert "create_shared_context_entry(project" in db
     assert "create_agent_context_entry(project" in db
     assert "create_shared_context_entry(project" not in markdown
-    assert "[path-to-agent-memory-project]/templates/project-context-template.md" in db
+    assert 'read_resource("project-context-template")' in db
+    path = "[path-to-agent-memory-project]/templates/project-context-template.md"
+    assert path in markdown and path not in db
 
 
 def test_only_db_awakening_requests_the_coding_payload() -> None:

@@ -31,24 +31,21 @@ Use `list_shared_context(project)` for shared entries or `list_agent_context(pro
 @end region
 
 @start region id="create-context-entry"
+Read the template with Hermod’s `read_resource("project-context-template")`.
+
 Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass the filled document, including frontmatter, as `content` (at most 1000 lines). Pass the template stamp separately as `template_version`; never include it in the body. Use the frontmatter description and tags for the listing. The call creates the record and listing and returns the UUID.
+@end region
+
+@start region id="edit-context-entry"
+Keep the UUID. Read Munnin’s `get_memory(uuid, include_edit_context=true)` and edit the affected text with `edit_memory_body`, `append_memory_body`, `prepend_memory_body`, or `multi_edit_memory_body`. Valaskjalf sets `modified_date` on write; do not supply an edit date.
+
+If the description or tags changed, update the body and then the listing with `edit_memory_metadata`. Change only the affected fields; use the current tenant and revision guards for each write. On conflict, reread before retrying. If the body was saved but the listing was not, report the partial write.
 @end region
 
 @start region id="update-project-context"
 ### § list-context-entries
 
 For a move, list the relevant scope with `list_shared_context(project)` or `list_agent_context(project, agent)`. Check the target for a theme collision and identify the source by UUID.
-
-### § update-context-entry
-
-Two calls, in this order:
-
-1. Change the body with the memory layer's `edit_memory_body(uuid, old_string, new_string, replace_all?)`, or with `append_memory_body` / `prepend_memory_body` / `multi_edit_memory_body` for the shapes those take. The body is edited surgically and never restated wholesale.
-2. Change the line a listing shows with `edit_memory_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
-
-**The summary and the tags live in two places**: inside the document's own frontmatter, and in the row's columns, which is what a listing reads. A change belongs in both, so the `edit_memory_body` above carries the frontmatter line while `edit_memory_metadata` carries the column. A caller that changes only one leaves the index describing a document it no longer matches.
-
-**The two calls are not atomic**: a failure between them leaves the summary describing the old body, so a caller that needs both should do the body first and the summary after. The template stamp is not required here, because it gates creation, and a surgical edit's own precondition is a body the caller has already read.
 
 ### § move-context-entry
 

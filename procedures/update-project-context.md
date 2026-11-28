@@ -62,7 +62,7 @@ If several entries still fit, use an explicitly identified target. Otherwise ask
 
 ### Step 4A: Create the entry
 
-Fill the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) with the resolved project, the fact, and its sources. Give the entry a one-line description that helps another agent decide when to read it. Use today’s date for both dates. Save it in the selected scope.
+Fill the project context template with the resolved project, the fact, and its sources. Give the entry a one-line description that helps another agent decide when to read it. Save it in the selected scope.
 
 @start storage id="prepare-write-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
 @end storage
@@ -72,13 +72,14 @@ Fill the [Project Context Template]([path-to-agent-memory-project]/templates/pro
 
 Continue to Step 5.
 
-### Step 4B: Update Existing Context Entry
+### Step 4B: Update the entry
 
-1. Use the entry read in Step 3.
-2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
-3. Update the `updated:` date in YAML frontmatter to today's date
-4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them (a store keeps the first as the row's `content_summary`)
-5. Proceed to Step 5
+Update the entry selected in Step 3. Correct or add the relevant facts and preserve unrelated content. Change the description or tags only if they no longer describe the entry accurately.
+
+@start storage id="edit-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="edit-context-entry"
+@end storage
+
+Continue to Step 5.
 
 ### Step 5: Check the Entry Size
 
