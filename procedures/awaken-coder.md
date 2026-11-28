@@ -9,7 +9,7 @@ argument_description = "the agent domain to awaken; asks if omitted"
 +++
 # Awaken Coder — Coding-Agent Awakening Overlay
 
-Orchestrating overlay for **coding agents** (working in a repo). It composes the memory-core awakening with repo/environment context: the core loads central memory; this overlay adds coding-scoped reasoning, localization, orientation map, fleet, and task-system.
+Orchestrating overlay for **coding agents** (working in a repo). This overlay adds coding-scoped memories.
 
 **Delivery**: as a local skill/command (Claude Code CLI) or an MCP prompt (`agent-memory-project` server). Either way, the composition is agent-side — this overlay *invokes* the core; it never reaches into the core repo/server directly.
 
