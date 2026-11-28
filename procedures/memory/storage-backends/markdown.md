@@ -130,14 +130,14 @@ Write `MAP_PATH` **with the structure the template shows** — the fenced block 
 ## awaken-coder
 
 @start region id="load-awakening"
-Reuse the memory and episodic index that Munnin loaded. Read the coding reasoning file, the shared and agent project context indexes, the newest indexed episode for each project, and each available orientation map. The file locations and rules for missing entries are given below in **§ load-coding-reasoning**, **§ load-context-indexes**, **§ select-project-episode** and **§ load-maps**.
+Reuse the memory and episodic index that Munnin loaded. Read the coding reasoning file, the shared and agent project context indexes, the newest indexed episode for each project, and each available orientation map as directed below.
+@end region
+
+@start region id="load-coding-reasoning"
+   Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context. If the file is missing, skip this step.
 @end region
 
 @start region id="awaken-coder"
-
-### § load-coding-reasoning
-
-Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context (silently skip if missing).
 
 ### § load-context-indexes
 

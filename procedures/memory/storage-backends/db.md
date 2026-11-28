@@ -125,14 +125,14 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load, without waiting for its result. If Munnin uses MCP, the two calls are `awaken(domain)` and `awaken_coder(domain, projects)`. Pass the home project first, followed by its related projects. The read-only response covers the whole set.
 @end region
 
+@start region id="load-coding-reasoning"
+   Read `coding_lane` from the awakening response. If it is empty, skip this step.
+@end region
+
 @start region id="awaken-coder"
 The coding response contains `coding_lane`, `episode_index`, `episodes`, `context_index` and `maps`. An opted-in task workflow needs a separate body read using the UUID from `context_index`.
 
 Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
-
-### § load-coding-reasoning
-
-Read `coding_lane` from the payload; an empty lane is the silent skip, because a store that has not adopted the lane yet is a valid store. The lane is the memory layer's own record type, and the payload crosses that boundary once so no client has to.
 
 ### § load-context-indexes
 

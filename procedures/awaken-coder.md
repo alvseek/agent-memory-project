@@ -50,7 +50,10 @@ Read each tool response in full in the step that requests it. Do not select fiel
 
 If the platform reports truncation or saves a result to a file, read the saved result in full before using the awakening data. If that read is also clipped, recover all missing content, including long lines. If required context remains unavailable, name the source and failure and stop the work that depends on it. An episode’s `next_cursor` is pagination, not truncation; follow the episode instructions before requesting older entries.
 
-1. **Coding reasoning** — it arrived with the payload: read the lane from it (**§ load-coding-reasoning**); an empty lane is the silent skip. These are the reasoning patterns that only fire for a coding agent: they name repo artifacts, plan logs, foreign code, and fleet teammates, so the project-blind core does not carry them. Process them alongside the core reasoning patterns the core awakening already loaded — same lean shape, same weight.
+1. **Coding reasoning** — apply the coding reasoning patterns alongside the core reasoning patterns.
+
+@start storage id="load-coding-reasoning" ref="procedures/memory/storage-backends/{backend}.md" target="load-coding-reasoning"
+@end storage
 
 2. **Project context** — it arrived with the payload too: the merged index for the whole set, both scopes included (**§ load-context-indexes**), so a related repository's index is in hand when the task moves into it. The HOME contract component still names the home that this session's own writes and its load-on-relevance reads use.
 
