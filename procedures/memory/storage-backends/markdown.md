@@ -181,5 +181,5 @@ Append the completed pattern as a level-3 (`###`) block to `[AGENT-MEMORY-PATH]/
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-Run `/push-all <mode>` to push both the agent-memory store and the working project.
+Run `/push-all <mode>` to capture files written after Step 1. Include the agent-memory repository in the push report and use the results from both pushes.
 @end region

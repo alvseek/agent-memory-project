@@ -24,7 +24,7 @@ Run without progress messages or routine confirmation. If a memory write needs a
 
 ## Procedure
 
-Use the selected push mode for every push below.
+Invoking `/project-wrap-up` authorizes the commits and pushes below in the selected mode.
 
 ### Step 1: Push the project work
 
@@ -47,36 +47,28 @@ Skip this step if no orientation documents changed. Otherwise, pass the changed 
 
 ### Step 4: Save and verify the remaining work
 
-Save the changes made by Steps 2–3 using the selected push mode. Invoking `/project-wrap-up` authorizes these commits and pushes.
-
 @start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="project-wrap-up"
 @end storage
 
-Use the push results from Steps 1 and 4 to verify that every in-scope agent change was committed and pushed. Record any failed push or remaining agent work for the final summary. Excluded repositories and unrelated files left in `agent` mode do not block completion.
+Verify that required writes succeeded and all in-scope Git changes were committed and pushed. Excluded repositories and unrelated files left in `agent` mode do not block completion.
 
-### Step 5: Final Summary (only visible output)
+### Step 5: Final summary
 
-In either outcome, add **Needs review** only for deferred writes. Name the proposed change and the decision needed; do not count it as saved.
-
-**Completion gate (per NO TODOS LEFT BEHIND, UUID a1b2c3d4)**: using the Step 4 verification (covering both the Step 1 project push and the Step 4 memory push), the wrap-up is **complete ONLY if every agent-work path is committed AND pushed** in every in-scope repo. A project repo that still holds the **user's own** uncommitted changes is still complete — leftover user files are expected and exempt (so are push-excluded repos). The wrap-up is **NOT complete** only if an **agent-work** path is uncommitted, a branch carrying agent commits is ahead of its remote, or an agent-work push failed → print the *WRAP-UP INCOMPLETE* block (at the bottom of this step) instead, and never claim completion.
-
-**On success (every agent-work path committed + pushed)**, print this block:
+Use the report below for either outcome. Start with **Wrap-up complete** only if Step 4 passed. Otherwise start with **WRAP-UP INCOMPLETE** and name each unsaved path or record, its repository or store, and why it remains unsaved. Report only the pushes that applied to this backend.
 
 ```
 Wrap-up complete (memory update: [mode reported by /update-memory]):
 
 Memory update:
 - Phase 1 — Promoted artifacts: project context: [updated/created — file / skipped] / reasoning: [added — pattern name / skipped] / knowledge: [added — entry name / skipped]
-- Phase 2 — Session captured: [appended to / created] [filename] ([H3 timestamp]) — [brief theme]; carry-forward: [N items / N/A]; promotions: [N markers / none]
+- Phase 2 — Session captured: [appended to / created] [episode] ([entry timestamp]) — [brief theme]; carry-forward: [N items / N/A]; promotions: [N markers / none]
 - Phase 3 — Feeling captured: emotional [captured — polarity + clearest criterion / skipped — brief reason]
 
 Orientation map: [refreshed N entries / no-op: reason]
 
-Push — agent work only (every agent-work path must be ✅):
-- [project/submodule]: ✅ [commit-hash] pushed (project work) — [N user file(s) left for user / no user files left]
-- agent-memory: ✅ [commit-hash] pushed (memory) / no changes
-- [project memory files]: ✅ pushed with memory   ← only if Steps 2–3 wrote project files
-- [excluded repo]: ⏭️ skipped (excluded — vendored/read-only)   ← only if the project has exclusions
+Push — [agent / all]:
+- [repository]: [✅ pushed at commit / no changes / ⚠️ incomplete: path and reason] — [user files left, if any]
+- [excluded repo]: ⏭️ skipped (excluded)   ← only if applicable
 
 📋 Open items going forward:
 
@@ -91,24 +83,4 @@ Next steps:
 (or "None declared")
 ```
 
-If both Tech Debts and Next Steps are empty → replace both lists with *"No open items declared from this session."*
-
----
-
-**On failure (ANY agent-work path not committed + pushed)** — do NOT print "Wrap-up complete". Print this block instead:
-
-```
-🚨 WRAP-UP INCOMPLETE — UNPUSHED AGENT WORK. NEED CONFIRMATION.
-
-[Memory update / Orientation map / Open items sections — same as above]
-
-Push — FAILED / INCOMPLETE (agent work not fully saved):
-- [repo]: ⚠️ agent-work [uncommitted N files / branch ahead by N / push error: <reason>]
-- [repo]: ✅ [commit-hash] pushed
-
-⚠️ The agent's work is NOT fully saved to the remote. What remains, and where:
-- [repo → which agent-work path is uncommitted/unpushed]
-(User's own uncommitted files are expected and NOT listed here — only agent work blocks completion.)
-
-Retry the push (or resolve the blocker) before leaving — the wrap-up is only complete when every agent-work path is committed AND pushed.
-```
+Use the episode’s Tech Debts and Next Steps. If both lists are empty, write “No open items declared from this session.” Add **Needs review** only for deferred writes: name the proposed change and the decision needed. Do not count it as saved.

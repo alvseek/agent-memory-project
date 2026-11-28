@@ -176,5 +176,5 @@ Call the memory layer's `insert_memory(scope="shared", record_type="coding_reaso
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-Run `/push-project <mode>` for the working project. Memory writes are already saved in the database.
+Steps 2–3 write directly to the database. Check their write results and use the project push result from Step 1. No second push or agent-memory Git report is needed.
 @end region
