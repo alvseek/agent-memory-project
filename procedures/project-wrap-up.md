@@ -5,7 +5,7 @@ kind = "procedure"
 title = "Project Wrap Up Session"
 description = "End-of-session full orchestrator (coding/environment add-on): push the project's work → update memory → refresh the orientation map → push everything those steps wrote → final summary with a push-completion gate."
 argument_name = "mode"
-argument_description = "`all` or `agent` push mode, plus `fresh` to re-evaluate the whole session"
+argument_description = "Push mode: `agent` (default) or `all`"
 +++
 # Project Wrap Up Session
 
@@ -15,11 +15,10 @@ Run without progress messages or routine confirmation. If a memory write needs a
 
 ## Arguments
 
-`$ARGUMENTS` = `[all|agent] [fresh]`
+`$ARGUMENTS` = `[agent|all]`
 
 - `agent` (default) — push only this agent’s work.
 - `all` — push the full in-scope working trees, including unrelated changes.
-- `fresh` — review the whole session for memory updates. Otherwise, let `/update-memory` determine what’s new.
 
 ---
 
@@ -48,7 +47,7 @@ Pass the resolved project (or explicitly no project and the repository tags) to 
 
 **Save project context first.** For each reusable project fact, pass its project, content, and scope to `/update-project-context`. Use the user’s explicit scope when given; otherwise use `shared` for project-wide facts and `agent` for role-specific facts. Default to `shared` when in doubt. Save access instructions, not credential values. Skip this step if there is nothing to save. Saving before `/update-memory` lets it record completed writes as promotions.
 
-**Then — the memory update**: Execute **`/update-memory`**, passing `fresh` through if present. Capture its results (mode, gate decisions, episodic entry, carry-forward count, promotions, emotional status) as data for Step 5, together with the **`Tech Debts` + `Next Steps`** it hands up from the sub-episode just written (the return contract `/update-episodic` declares). Print nothing here — it all folds into Step 5.
+**Then — the memory update**: Run `/update-memory` and let it determine how much of the session to review. Capture its results (mode, gate decisions, episodic entry, carry-forward count, promotions, emotional status) as data for Step 5, together with the **`Tech Debts` + `Next Steps`** it hands up from the sub-episode just written (the return contract `/update-episodic` declares). Print nothing here — it all folds into Step 5.
 
 > **Why this borrows one step rather than running the core `/wrap-up` whole.** That procedure also *persists* the memory store immediately after updating it, which here would fire too early: Step 3 refreshes the orientation map and Step 4 has to capture those writes too. So take the memory update and its returned open items, and leave the persistence to Step 4, where one call covers both repos at once.
 
@@ -79,7 +78,7 @@ In either outcome, add **Needs review** only for deferred writes. Name the propo
 **On success (every agent-work path committed + pushed)**, print this block:
 
 ```
-Wrap-up complete (mode: [fresh / delta from CUTOFF]):
+Wrap-up complete (memory update: [mode reported by /update-memory]):
 
 Memory update:
 - Phase 1 — Promoted artifacts: project context: [updated/created — file / skipped] / reasoning: [added — pattern name / skipped] / knowledge: [added — entry name / skipped]
