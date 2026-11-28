@@ -41,7 +41,10 @@ A move changes an existing entry from `agent` to `shared`, or from `shared` to `
 @end storage
 
 3. Move the entry verbatim (**§ move-context-entry**). Verify the source entry is gone; remove it only if the move left it there (**§ delete-context-entry**).
-4. Ensure the source and target indexes reflect the move (**§ update-context-index**), then finish. Do not run the create/update steps.
+@start storage id="index-move" ref="procedures/memory/storage-backends/{backend}.md" target="index-move" applies_to="markdown"
+@end storage
+
+4. Verify the entry is listed only in the target scope. Report its name and destination scope, then finish. Do not run the create/update steps.
 
 ### Step 2: Determine Scope (Shared vs Agent)
 
@@ -54,7 +57,7 @@ Use names and summaries to find likely matches in the selected project and scope
 @start storage id="find-project-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="find-project-context-entry"
 @end storage
 
-- **Skip** if an entry already covers the fact accurately. Name it and finish without writing.
+- **Skip** if an entry already covers the fact accurately. Report `skipped` with its name and finish without writing.
 - **Update** if one entry answers the question but needs a correction or addition. Use that entry in Step 4B.
 - **Create** if no entry answers the question. Choose a descriptive theme and continue to Step 4A.
 
@@ -84,7 +87,10 @@ Update the entry selected in Step 3. Correct or add the relevant facts and prese
 @start storage id="check-entry-size" ref="procedures/memory/storage-backends/{backend}.md" target="check-entry-size" applies_to="markdown"
 @end storage
 
-Update the scope-aware context index (**§ update-context-index**) for the resulting entries.
+@start storage id="finish-index" ref="procedures/memory/storage-backends/{backend}.md" target="finish-index" applies_to="markdown"
+@end storage
+
+Report `created` or `updated` with the resulting entry names. If a required write failed, report what was saved and what remains incomplete.
 
 ---
 

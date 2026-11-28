@@ -61,10 +61,6 @@ Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather
 
 **Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
 
-### § update-context-index
-
-No action. The index is not a file here: `§ list-context-entries` renders it from the rows, so there is nothing to edit and nothing to keep in step.
-
 ---
 @end region
 

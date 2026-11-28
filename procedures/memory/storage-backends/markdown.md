@@ -27,7 +27,19 @@ Save the changes to the same file. Its modification time records the edit; do no
 @end region
 
 @start region id="check-entry-size"
-Count the lines in the saved file. At 1,000 lines or fewer, keep it as one entry. Above 1,000 lines, split it by topic into files within the limit, each with its own header and tags. Verify the new files before removing the original; replace its index entry with the new entries.
+Count the lines in the saved file. At 1,000 lines or fewer, keep it as one entry. Above 1,000 lines, split it by topic into files within the limit, each with its own header and tags. Verify the new files before removing the original.
+@end region
+
+@start region id="finish-index"
+In the selected scope’s `context-index.md`, add or update one line per saved file. If you split an entry, replace its old line with the new ones. Create a missing index with the heading `# [project-name] Project Context`. Use the description and tags from each file:
+
+```
+- [theme.md](theme.md) — description (tags: tag1, tag2, tag3)
+```
+@end region
+
+@start region id="index-move"
+   Remove the entry’s line from the source `context-index.md` and add it to the target `context-index.md`, preserving the link, description, and tags. If the target index does not exist, create it with the heading `# [project-name] Project Context`.
 @end region
 
 @start region id="update-project-context"
@@ -42,7 +54,7 @@ Copy the entry **verbatim** (same template) from the source scope to the target 
 - **Promote**: `cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
 - **Demote**: `cp [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
 
-> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the source delete (**§ delete-context-entry**), then both index updates (**§ update-context-index**). If a step fails partway:
+> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the source delete (**§ delete-context-entry**), then both index updates. If a step fails partway:
 > - **After the copy, before the delete**: both files exist. Delete the duplicate (the source one).
 > - **After the delete, before the index updates**: the file is moved but the indexes are inconsistent. Finish the index updates.
 >
@@ -54,21 +66,6 @@ Remove the entry from its scope:
 
 - Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
 - Agent: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-### § update-context-index
-
-Edit the scope-aware `context-index.md`:
-
-- Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/context-index.md`
-- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/context-index.md`
-
-If it does not exist, create it with the header `# [project-name] Project Context`. Add or update the entry —
-
-```
-- [theme.md](theme.md) — description (tags: tag1, tag2, tag3)
-```
-
-— and for a move, delete the line from the agent index and add it to the shared index.
 
 ---
 @end region
