@@ -33,6 +33,12 @@ Start in the current working directory. Identify the home project first, then th
 @start component id="ref-1" ref="procedures/components/project-identity.md"
 @end component
 
+Put the home project first. Outside Git, it is the only project. Otherwise, add related projects once each to widen recall; the home project is still where this session’s memory is filed.
+
+Traverse submodules recursively. From each repository root, match Git’s recorded submodule paths (`git ls-files --stage`, mode `160000`) to their paths and URLs in `.gitmodules`. Resolve each path relative to that root, skip vendored or read-only submodules, and use the repository name from each included URL. If a child is not checked out, its recorded commit can supply its Git tree and `.gitmodules` without initialization.
+
+Before using the set, verify that every included repository was checked for nested submodules. If a recorded submodule has no mapping, or a child cannot be inspected, name the path and report that discovery is incomplete. A repository with no recorded submodules needs no `.gitmodules` file.
+
 ### Load the awakening data
 
 Run Munnin’s `awaken-agent` procedure for the selected domain, using Munnin’s access setting. Load Hermod’s coding context for the project set as described below.
