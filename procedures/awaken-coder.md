@@ -11,28 +11,12 @@ argument_description = "the agent domain to awaken; asks if omitted"
 
 Awaken the selected agent for work in this repository by loading its core memory together with the project context.
 
-## Core access
+## Access
 
-Every handoff to the core in these instructions exists in two forms, and `[CORE-ACCESS]` fixes which one this machine uses:
+When a step calls another procedure, use the access setting for the layer that owns it: `[CORE-ACCESS]` for Munnin, `[PROJECT-ACCESS]` for Hermod, or `[FLEET-ACCESS]` for the fleet.
 
-- **`markdown`** — invoke the installed command, exactly as written.
-- **`mcp`** — do not invoke the installed command. Fetch the procedure by name from the served core and follow what it returns, passing the argument the command would have taken (a domain, a mode). The installed commands are the file form, and they would write files where the store keeps records.
-
-`[CORE-ACCESS]` decides even when the installed commands are also present, which under `mcp` they are.
-
-Applies to every core procedure these instructions name: `awaken-agent`, `update-memory`, `wrap-up`, `push-memory`, `pull-memory`, `wait-options`.
-
-## Layer access
-
-A handoff to another layer resolves through that layer's **access declaration**, which the caller reads:
-
-- `[CORE-ACCESS]` / `[CORE-MCP-URL]`: how the memory core (`munnin`) is reached.
-- `[PROJECT-ACCESS]` / `[PROJECT-MCP-URL]`: how this coding overlay (`hermod-project`) is reached.
-- `[FLEET-ACCESS]` / `[FLEET-MCP-URL]`: how the fleet (`hermod-fleet`) is reached.
-
-Each value is `markdown` (the layer is installed as local commands/skills) or `mcp` (the layer is served as procedures over a connected server). An **absent** declaration means `markdown`. Name the target layer's capability, then resolve the invocation form from its declaration: invoke the installed command under `markdown`, or fetch the served procedure under `mcp`.
-
-The `## Core access` rule above is this same rule applied to the core, kept separate because the core is the layer every handoff falls back to.
+- **`markdown`** (or no setting): run the installed command with the specified arguments.
+- **`mcp`**: fetch the named procedure from that layer’s configured server and follow its instructions, passing the same arguments. Use the server even if the command is also installed.
 
 ## Arguments
 
@@ -60,7 +44,7 @@ If the platform explicitly reports truncation or says the result was saved to a 
 
    **Localized detection + handoff** — if `.agents/` exists at cwd, the project is localized and its home (episodic, knowledge, map) is owned by `agent-memory-local`: run **`/load-local-context`** to load it. That read supersedes the central load above. If `.agents/` is absent, the central load stands. For a project already known to be localized, skip the detection entirely by running `agent-memory-local`'s `/awaken-local`, which runs this procedure with that check replaced by the same call.
 
-4. **Orientation map + fleet pointer** — the maps arrived with the payload: one per project in the set that has one, with its dates (**§ load-maps**) — never auto-create. (The bare `/map-orientation` load is for a project you are working in outside an awakening.) Then, when a roster appears in the payload's context index (**§ check-fleet-roster**), the overlay's whole fleet statement is one pointer: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Resolve how to reach it from `[FLEET-ACCESS]` (see [Layer access](#layer-access)). The roster itself is loaded by the fleet repo's `/load-fleet`, not here.
+4. **Orientation map + fleet pointer** — the maps arrived with the payload: one per project in the set that has one, with its dates (**§ load-maps**) — never auto-create. (The bare `/map-orientation` load is for a project you are working in outside an awakening.) Then, when a roster appears in the payload's context index (**§ check-fleet-roster**), the overlay's whole fleet statement is one pointer: **this project has a fleet; fleet operation is available using `hermod-fleet`.** Resolve how to reach it from `[FLEET-ACCESS]` (see [Access](#access)). The roster itself is loaded by the fleet repo's `/load-fleet`, not here.
 
 5. **Task workflow** — load only the resolved current project's shared context entry named `task-workflow` (**§ load-task-workflow**), using the active home after any local-memory handoff. A related project's entry or an agent-private entry does not opt this project in. No entry → skip silently; never create one during awakening. Multiple matching entries → report the ambiguity and do not choose one.
 
