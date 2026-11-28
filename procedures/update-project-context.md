@@ -3,15 +3,13 @@ format_version = 2
 id = "update-project-context"
 kind = "procedure"
 title = "Update Project Context Protocol"
-description = "Create or update project-specific context files."
+description = "Create or update project-specific context entries."
 argument_name = "context"
 argument_description = "the project context to capture; asks if omitted"
 +++
 # Update Project Context Protocol
 
-Create or update project-specific context in the shared or agent layer. Use the scope supplied by the caller; if none was supplied, suggest a scope for confirmation. An explicit request can also move an existing entry between scopes.
-
-*How* the entries are physically stored is delegated to the active **storage backend**.
+Save project-specific knowledge for future sessions. Create or update an entry shared by the project’s agents or private to one agent. Move an existing entry between those scopes only when explicitly requested.
 
 ## Arguments
 
