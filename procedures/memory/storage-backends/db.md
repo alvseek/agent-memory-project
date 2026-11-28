@@ -30,16 +30,14 @@ Every operation below is a **tool call**, reading and writing `shared_record` an
 Use `list_shared_context(project)` for shared entries or `list_agent_context(project, agent)` for this agent’s entries. Shortlist by `theme` and `content_summary`, then read candidate bodies with Munnin’s `get_memory(uuid)`. Keep the selected UUID for the update; a theme is not a unique address.
 @end region
 
+@start region id="create-context-entry"
+Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass the filled document, including frontmatter, as `content` (at most 1000 lines). Pass the template stamp separately as `template_version`; never include it in the body. Use the frontmatter description and tags for the listing. The call creates the record and listing and returns the UUID.
+@end region
+
 @start region id="update-project-context"
 ### § list-context-entries
 
 For a move, list the relevant scope with `list_shared_context(project)` or `list_agent_context(project, agent)`. Check the target for a theme collision and identify the source by UUID.
-
-### § create-context-entry
-
-Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)`, whichever layer the flow confirmed. `content` is the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. `content_summary` is required: it is the line a listing shows beside the theme, taken from the document's frontmatter `description`, and `tags` comes from the same frontmatter. The row's `uuid` is assigned here and returned. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it.
-
-Refused when `template_version` is missing or does not match the served template, when `content` is over the 1000-line cap, when `content_summary` is blank, and when an agent-layer create names no `agent` or one this account has no row for. The store permits duplicate themes; creating a row does not revive a retired one.
 
 ### § update-context-entry
 
@@ -66,7 +64,7 @@ Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather
 
 ### § check-entry-size
 
-No action. The cap is a **creation** gate: `§ create-context-entry` refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.
+No action. The cap is a **creation** gate: the create operation refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.
 
 ### § update-context-index
 

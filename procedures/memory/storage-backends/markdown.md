@@ -16,19 +16,14 @@ Use `CONTEXT_DIR` for shared entries and `KNOWLEDGE_DIR` for agent entries. Crea
 Use `context-index.md` in the selected directory to shortlist by name and description. Check the entry files as well if the index is missing or incomplete; exclude the index itself. Read each plausible file and keep its path for an update. For a new entry, use an unused filename; never overwrite a different entry with the same name.
 @end region
 
+@start region id="create-context-entry"
+Write the filled template block to a new `[theme].md` in the selected directory (`CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent). Do not include the template version line or overwrite an existing file.
+@end region
+
 @start region id="update-project-context"
 ### § list-context-entries
 
 For a move, list the entry files in the relevant scope (exclude `context-index.md`). Check the target directory for a filename collision before copying.
-
-### § create-context-entry
-
-Create the entry at the scope path **with the structure the template shows** — the fenced block below the template's `template_version` line — filling the frontmatter and every placeholder:
-
-- Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-> **The template's `template_version` line sits outside that block.** That makes the stamp template metadata rather than entry content, so a file built from the block never carries it and there is nothing to strip afterwards.
 
 ### § update-context-entry
 

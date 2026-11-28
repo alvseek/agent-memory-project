@@ -60,20 +60,17 @@ Use names and summaries to find likely matches in the selected project and scope
 
 If several entries still fit, use an explicitly identified target. Otherwise ask which to update on a direct request, or defer just that fact to **Needs review** during wrap-up. An unreadable candidate is not evidence that no entry exists.
 
-### Step 4A: Create New Context Entry
+### Step 4A: Create the entry
+
+Fill the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) with the resolved project, the fact, and its sources. Give the entry a one-line description that helps another agent decide when to read it. Use today’s date for both dates. Save it in the selected scope.
 
 @start storage id="prepare-write-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
 @end storage
 
-1. Create the new entry from the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) (**§ create-context-entry**).
-2. Fill the YAML frontmatter:
-   - `project`: the project name from Step 1
-   - `tags`: relevant feature/module tags for selective loading (e.g., `[environment, setup, vm, gcloud]`)
-   - `description`: one-line summary
-   - `created`: today's date
-   - `updated`: today's date
-3. Fill the markdown sections (Purpose, Quick Reference, Details, Sources)
-4. Proceed to Step 5
+@start storage id="create-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="create-context-entry"
+@end storage
+
+Continue to Step 5.
 
 ### Step 4B: Update Existing Context Entry
 
