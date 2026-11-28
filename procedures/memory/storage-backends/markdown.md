@@ -129,10 +129,11 @@ Write `MAP_PATH` **with the structure the template shows** — the fenced block 
 
 ## awaken-coder
 
-@start region id="awaken-coder"
-### § awaken-coder-payload
+@start region id="load-awakening"
+Reuse the memory and episodic index that Munnin loaded. Read the coding reasoning file, the shared and agent project context indexes, the newest indexed episode for each project, and each available orientation map. The file locations and rules for missing entries are given below in **§ load-coding-reasoning**, **§ load-context-indexes**, **§ select-project-episode** and **§ load-maps**.
+@end region
 
-No call, and nothing fetched: this backend's awakening set is the files the core awakening already read, and each op below names the file that answers its part. The one thing that is *not* the core's is the map, which `§ load-maps` reads. A markdown awakening therefore costs no tool call at all — the ops under this heading are file reads.
+@start region id="awaken-coder"
 
 ### § load-coding-reasoning
 

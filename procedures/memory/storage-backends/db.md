@@ -121,15 +121,12 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 
 ## awaken-coder
 
+@start region id="load-awakening"
+Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load, without waiting for its result. If Munnin uses MCP, the two calls are `awaken(domain)` and `awaken_coder(domain, projects)`. Pass the home project first, followed by its related projects. The read-only response covers the whole set ([ADR-029](https://github.com/alvseek/agent-memory-project/blob/6fb676dd545dd74686663bc9905f8eaae3538395/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
+@end region
+
 @start region id="awaken-coder"
-> **The base payload is one call.** `awaken_coder(domain, projects)` returns the coding half of an
-> awakening in a single read-only payload. Its indexes drive the optional task-workflow body read below. It is issued **together
-> with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
-> and the two of them are the whole awakening ([ADR-029](https://github.com/alvseek/agent-memory-project/blob/6fb676dd545dd74686663bc9905f8eaae3538395/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
-
-### § awaken-coder-payload
-
-Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload supplies `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps`; an opted-in task workflow needs a separate body read by the uuid in that index. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+The coding response contains `coding_lane`, `episode_index`, `episodes`, `context_index` and `maps`. An opted-in task workflow needs a separate body read using the UUID from `context_index`.
 
 Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
 
