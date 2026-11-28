@@ -21,8 +21,6 @@ Save project-specific knowledge for future sessions. Create or update an entry s
 
 ## Procedure
 
-*IMPORTANT: Use TodoWrite tool with FULL VERBATIM copy of each step below (including all commands, examples, and sub-points) to prevent context loss and ensure complete execution*
-
 ### Step 1: Determine Project Name
 
 If the project was supplied, use it. Otherwise, run `git rev-parse --show-toplevel` to find the current repository. Use the repository name from `git remote get-url origin`, dropping a trailing `.git`. If there is no `origin`, use the repository root’s folder name.
@@ -31,28 +29,7 @@ If no project was supplied and the current directory is outside Git, ask “Whic
 
 ### Step 2: Determine Scope (Shared vs Agent)
 
-If the caller supplies `shared` or `agent`, use it without asking again. Otherwise, decide which layer to suggest:
-
-**Heuristic:**
-- **Shared** (default when in doubt): Universal facts that are true for every agent on this project. Examples: GitButler usage, deployment process, env vars, repo conventions, infrastructure URLs.
-- **Agent**: Domain-specialized facts only one agent's role cares about. Examples: backend's DB schemas, frontend's component patterns, PM's stakeholder map.
-
-> **Why this matters**: Under-sharing causes drift (agent A learns a fact, agent B doesn't know it). Over-sharing is just slightly noisier loads. When the call is genuinely ambiguous, default to **shared**.
-
-Only when the caller did not supply a scope, present the suggestion and wait for confirmation:
-
-```
-**Scope determination for "[context summary]":**
-
-- [Brief reason for the suggestion — e.g., "This describes the project's deployment workflow, which applies to every agent."]
-
-  > A) Shared — every agent of the project sees it `✓✓`
-  > B) Agent — one agent's own entries
-
-  ([Reason: why this scope is suggested.])
-
-Reply with "shared", "agent", or your preferred scope.
-```
+Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
 
 Based on the confirmed scope, the markdown backend reads and writes the matching path:
 - **Shared scope**: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/`
