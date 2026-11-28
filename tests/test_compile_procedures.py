@@ -130,51 +130,49 @@ def test_awakening_keeps_recursive_discovery_and_agent_scoped_absence(tmp_path: 
     assert "Traverse submodules recursively" in text
     assert "verify that every included repository was checked for nested submodules" in text
     assert "report that discovery is incomplete" in text
-    assert "no episodes for this agent in this project set" in text
-    assert "do not automatically load other agents' episodes" in text
+    assert "If this agent has no episode for a project, say so" in text
+    assert "don’t substitute another project’s or agent’s episode" in text
 
 
 def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
     report = next(r for r in _compile(ROOT, tmp_path) if r.name == "awaken-coder")
     text = report.out_path.read_text(encoding="utf-8")
-    task_step = text.split("5. **Task workflow**", 1)[1].split(
-        "6. **Report the coding awakening**", 1
+    task_step = text.split("**Task workflow.**", 1)[1].split(
+        "**Report the coding awakening.**", 1
     )[0]
 
-    assert "shared context entry named `task-workflow`" in task_step
-    assert "active home after any local-memory handoff" in task_step
-    assert "A related project's entry or an agent-private entry does not opt" in task_step
-    assert "No entry → skip silently; never create one" in task_step
-    assert "Multiple matching entries → report the ambiguity" in task_step
-    assert "project-owned, read-only instructions" in task_step
-    assert "what “me” means" in task_step
-    assert "task creation, assignment, comments and status changes are not authorized" in task_step
-    assert "rather than guessing or reporting zero tasks" in task_step
+    assert "home project’s shared context" in task_step
+    assert "no entry, skip silently" in task_step
+    assert "report the ambiguity and skip" in task_step
+    assert "Follow only the entry’s **Awakening Hook**" in task_step
+    assert "connection, scope, and filters" in task_step
+    assert "don’t create or change tasks or the workflow" in task_step
+    assert "A skipped check is not a zero-task result" in task_step
     for forbidden in ("Todoist", "Jira", "Linear", "aquazone", "invintiry", "ocx-", "plko"):
         assert forbidden not in task_step
 
 
 def test_task_workflow_storage_reads_match_each_backend() -> None:
-    markdown = (ROOT / "procedures/memory/storage-backends/markdown.md").read_text(encoding="utf-8")
-    db = (ROOT / "procedures/memory/storage-backends/db.md").read_text(encoding="utf-8")
-    for backend in (markdown, db):
-        composed = cc._seam.compose_backend_section(backend, "awaken-coder", [])
-        hook = composed.split("### § load-task-workflow\n", 1)[1].split("\n### ", 1)[0]
-        assert "CONTEXT_DIR/task-workflow.md" in hook
-        assert "local" in hook
-        assert "load failure" in hook
+    catalog = validate_catalog(FileSource(ROOT))
+    hooks = {}
+    for backend in ("markdown", "db"):
+        text = catalog.compose("awaken-coder", backend).text
+        hook = text.split("**Task workflow.**", 1)[1].split("Follow only the entry’s", 1)[0]
+        local_hint = text.index("suggest `/awaken-coder-local` instead")
+        assert local_hint < text.index("### Identify the project set")
+        assert "/load-local-context" not in text
+        assert ("HOME = { MAP_PATH" in text) == (backend == "markdown")
+        assert ("CONTEXT_DIR/task-workflow.md" in hook) == (backend == "markdown")
+        assert "single match" in hook
+        hooks[backend] = hook
 
-    db_hook = db.split("### § load-task-workflow\n", 1)[1].split("\n---", 1)[0]
     for constraint in (
         "`project` is `projects[0]`",
         "`scope` is `shared`",
         "`theme` is exactly `task-workflow`",
         "get_memory(uuid)",
-        "Multiple matches",
-        "do not fall back to a central workflow",
     ):
-        assert constraint in db_hook
-    assert "so nothing below costs a second call" not in db
+        assert constraint in hooks["db"]
 
 
 def test_task_workflow_authoring_compiles_with_identity_and_home(tmp_path: Path) -> None:
@@ -193,7 +191,7 @@ def test_task_workflow_authoring_compiles_with_identity_and_home(tmp_path: Path)
     assert "Multiple matches: report the ambiguity" in text
     assert "cannot be read is a load failure" in text
     assert 'read_procedure("update-project-context")' in text
-    assert "Follow `/update-project-context` Steps 3–7" in text
+    assert "Start at Step 3 of `/update-project-context`" in text
     assert "Do not restart its project/scope selection" in text
     assert "Re-list before creating" in text
     assert "Read back the saved entry and its shared index row" in text
@@ -219,8 +217,7 @@ def test_task_workflow_authoring_keeps_incomplete_setup_read_only(tmp_path: Path
     ):
         assert required in authoring
     assert "`Readiness: Incomplete`" in awakening
-    assert "skip task queries; do not repair or validate it during awakening" in awakening
-    assert "use `/set-project-task-workflow`" in awakening
+    assert "report the missing setup without querying tasks" in awakening
 
 
 def test_component_is_inlined_at_its_reference_point(tmp_path: Path) -> None:
@@ -452,7 +449,11 @@ def test_db_op_must_be_defined_in_a_selected_region() -> None:
     before, region, remaining = files[db_path].partition(marker)
     body, closing, after = remaining.partition(b"@end region")
     heading = "### § list-context-entries\n".encode()
-    assert heading in before and heading in body
+    assert heading in body
+    # Leave a definition in another procedure's region, outside the selected one.
+    other = b'@start region id="find-project-context-entry"\n'
+    assert other in before
+    before = before.replace(other, other + heading, 1)
     files[db_path] = before + region + body.replace(heading, b"", 1) + closing + after
 
     catalog = validate_catalog(MemorySource(files))

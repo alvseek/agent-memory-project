@@ -8,78 +8,34 @@ Concrete storage mechanics for the **native markdown-over-git** world. Each `## 
 
 ## update-project-context
 
-@start region id="update-project-context"
-### § ensure-context-dir
+@start region id="ensure-project-context-directory"
+Use `CONTEXT_DIR` for shared entries and `KNOWLEDGE_DIR` for agent entries. Create the destination directory if it does not exist.
+@end region
 
-Create the scope dir if it is missing (resolve `CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent):
+@start region id="find-project-context-entry"
+Use `context-index.md` in the selected directory to shortlist by name and description. Check the entry files as well if the index is missing or incomplete; exclude the index itself. Read each plausible file and keep its path for an update. For a new entry, use an unused filename; never overwrite a different entry with the same name.
+@end region
 
-- Shared: `mkdir -p [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context`
-- Agent: `mkdir -p [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]`
+@start region id="create-context-entry"
+Read the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md).
 
-### § list-context-entries
+Write the filled Markdown file header followed by the entry body to a new `[theme].md` in the selected directory (`CONTEXT_DIR` for shared, `KNOWLEDGE_DIR` for agent). Do not include the template version line or overwrite an existing file.
+@end region
 
-List the `*.md` files in the scope dir (exclude `context-index.md`). A file whose name matches the theme is an existing entry to update; no match means a new entry. The same listing answers the collision check in the Move sub-flow.
+@start region id="edit-context-entry"
+Save the changes to the same file. Its modification time records the edit; do not maintain an `updated` frontmatter field. If an older entry has that field, remove it when editing the file.
+@end region
 
-### § read-context-entry
+@start region id="check-entry-size"
+Count the lines in the saved file. At 1,000 lines or fewer, keep it as one entry. Above 1,000 lines, split it by topic into files within the limit, each with its own header and tags. Verify the new files before removing the original.
+@end region
 
-Read `[scope-dir]/[theme].md` with the Read tool.
-
-### § create-context-entry
-
-Create the entry at the scope path **with the structure the template shows** — the fenced block below the template's `template_version` line — filling the frontmatter and every placeholder:
-
-- Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-> **The template's `template_version` line sits outside that block.** That makes the stamp template metadata rather than entry content, so a file built from the block never carries it and there is nothing to strip afterwards.
-
-### § update-context-entry
-
-Write the updated content back to `[scope-dir]/[theme].md`.
-
-### § move-context-entry
-
-Copy the entry **verbatim** (same template) from the source scope to the target one. A **promote** goes agent → shared; a **demote** goes shared → agent:
-
-- **Promote**: `cp [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- **Demote**: `cp [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-> **Partial-failure cleanup.** A move is not atomic at the filesystem level: it is this copy, then the source delete (**§ delete-context-entry**), then both index updates (**§ update-context-index**). If a step fails partway:
-> - **After the copy, before the delete**: both files exist. Delete the duplicate (the source one).
-> - **After the delete, before the index updates**: the file is moved but the indexes are inconsistent. Finish the index updates.
->
-> If any step fails, report the partial state to the user and ask before retrying.
-
-### § delete-context-entry
-
-Remove the entry from its scope:
-
-- Shared: `rm [AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/[theme].md`
-- Agent: `rm [AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/[theme].md`
-
-### § check-entry-size
-
-Count the lines in the written file.
-
-- **Under 1000** → done.
-- **Over 1000** → split: create one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, then index every new file (**§ update-context-index**).
-
-### § update-context-index
-
-Edit the scope-aware `context-index.md`:
-
-- Shared: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/context-index.md`
-- Agent: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/context-index.md`
-
-If it does not exist, create it with the header `# [project-name] Project Context`. Add or update the entry —
+@start region id="finish-index"
+In the selected scope’s `context-index.md`, add or update one line per saved file. If you split an entry, replace its old line with the new ones. Create a missing index with the heading `# [project-name] Project Context`. Use the description and tags from each file:
 
 ```
 - [theme.md](theme.md) — description (tags: tag1, tag2, tag3)
 ```
-
-— and for a move, delete the line from the agent index and add it to the shared index.
-
----
 @end region
 
 ## load-project-context
@@ -129,36 +85,32 @@ Write `MAP_PATH` **with the structure the template shows** — the fenced block 
 
 ## awaken-coder
 
-@start region id="awaken-coder"
-### § awaken-coder-payload
+@start region id="load-awakening"
+Reuse the memory and episodic index that Munnin loaded. Read the coding reasoning file, the shared and agent project context indexes, the newest indexed episode for each project, and each available orientation map as directed below.
+@end region
 
-No call, and nothing fetched: this backend's awakening set is the files the core awakening already read, and each op below names the file that answers its part. The one thing that is *not* the core's is the map, which `§ load-maps` reads. A markdown awakening therefore costs no tool call at all — the ops under this heading are file reads.
+@start region id="load-coding-reasoning"
+   Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context. If the file is missing, skip this step.
+@end region
 
-### § load-coding-reasoning
+@start region id="load-context-indexes"
+   Read the shared index (`CONTEXT_DIR/context-index.md`) and the agent index (`KNOWLEDGE_DIR/context-index.md`) at their resolved HOME paths. Skip missing indexes.
+@end region
 
-Read `[AGENT-MEMORY-PATH]/shared-memory/coding-reasoning-memory.md` into your own context (silently skip if missing).
+@start region id="load-maps"
+   Read `MAP_PATH` for the home project and `[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md` for each related project. Skip missing files.
+@end region
 
-### § load-context-indexes
+@start region id="check-fleet-roster"
+   Check whether `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md` exists.
+@end region
 
-Read the shared context index (`CONTEXT_DIR/context-index.md`) and the agent context index (`KNOWLEDGE_DIR/context-index.md`) — the resolved HOME values — silently skipping whichever is missing.
+@start region id="load-task-workflow"
+   Find `task-workflow` in `CONTEXT_DIR/context-index.md`. For a single match, read `CONTEXT_DIR/task-workflow.md`.
+@end region
 
-### § check-fleet-roster
-
-Test for `[AGENT-MEMORY-PATH]/shared-memory/[project]/fleet-agents.md`. Present → the project has a fleet; absent → skip the fleet pointer.
-
-### § select-project-episode
-
-From the episodic index the core returned, take the newest entry **per project** in the set — the session's own repository first — then read each body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]` with the Read tool. A project in the set with no entry is left out rather than filled with the newest overall's, so the report carries one carry-forward per repository.
-
-### § load-maps
-
-Read each project's `MAP_PATH` with the Read tool, silently skipping a project that has none. The resolved project's is the HOME value; a related repository's is the same path under its own project name (`[AGENT-MEMORY-PATH]/shared-memory/[project]/context/orientation-map.md`). Never create one here — that is `/map-orientation create`'s job.
-
-### § load-task-workflow
-
-Use the current project's shared context index in the active HOME (`CONTEXT_DIR/context-index.md`), including a local-memory override when one is active. Find the `task-workflow` entry and read its file from that shared home (`CONTEXT_DIR/task-workflow.md`). An absent index entry is the silent skip; an indexed file that cannot be read is a load failure, not an absent workflow. Do not search related projects or the agent layer, and do not write a file or index entry.
-
----
+@start region id="select-project-episode"
+     Use the episodic index Munnin loaded to select the newest entry for each project. Read each selected body from `[AGENT-MEMORY-PATH]/agent-[domain]/episodes/[filename]`.
 @end region
 
 ## add-coding-reasoning
@@ -185,7 +137,5 @@ Append the completed pattern as a level-3 (`###`) block to `[AGENT-MEMORY-PATH]/
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-### § persist-store
-
-Execute `/push-all <mode>` — one call covering the agent-memory store and the working project together. Its memory half captures the writes the Step 1 project push ran too early to include; its project half captures what Steps 2–3 wrote.
+Run `/push-all <mode>` to capture files written after Step 1. Include the agent-memory repository in the push report and use the results from both pushes.
 @end region

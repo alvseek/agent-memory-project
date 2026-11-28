@@ -3,154 +3,75 @@ format_version = 2
 id = "update-project-context"
 kind = "procedure"
 title = "Update Project Context Protocol"
-description = "Create or update project-specific context files."
-argument_name = "context"
-argument_description = "the project context to capture; asks if omitted"
+description = "Create or update project-specific context entries."
+argument_name = "project"
+argument_description = "The project to update. If not supplied, resolve it from Git or ask."
 +++
 # Update Project Context Protocol
 
-Create or update project-specific context files. Routes new entries to **shared** (`shared-memory/[project-name]/context/`, for cross-agent universal facts) or **agent** (`agent-[domain]/knowledge-base/[project-name]/`, for domain-specialized facts) based on a heuristic + user confirmation. Also supports moving an existing agent entry to shared.
-
-*How* the entries are physically stored is delegated to the active **storage backend**.
+Save project-specific knowledge for future sessions. Create or update an entry shared by the project’s agents or private to one agent.
 
 ## Arguments
 
 `$ARGUMENTS`
 
-- `/update-project-context [context]` → Create or update project context described in context
-- `/update-project-context` → Will ask for context
-
-If no arguments provided, ask: "What project context should I capture? (e.g., environment setup, deployment procedure, feature conventions)"
+**`project`** — the project to update. Use the name supplied by the user or caller; otherwise resolve it in Step 1. Record the fact identified by the caller or in the conversation. If a direct request doesn’t identify a fact, ask what to save.
 
 ---
 
 ## Procedure
 
-*IMPORTANT: Use TodoWrite tool with FULL VERBATIM copy of each step below (including all commands, examples, and sub-points) to prevent context loss and ensure complete execution*
-
 ### Step 1: Determine Project Name
 
-Identify the project this context belongs to:
-- **From working directory**: Infer project name from the current repository/folder name
-- **From user input**: Ask if unclear: "Which project is this context for?"
-- **Naming convention**: Use lowercase-hyphenated format (e.g., `ocx-platform`, `my-saas-app`, `data-pipeline`)
+If the project was supplied, use it. Otherwise, run `git rev-parse --show-toplevel` to find the current repository. Use the repository name from `git remote get-url origin`, dropping a trailing `.git`. If there is no `origin`, use the repository root’s folder name.
+
+If no project was supplied and the current directory is outside Git, ask “Which project should I update?” before writing.
+
+@start component id="ref-1" ref="procedures/components/home-contract.md" applies_to="markdown"
+@end component
 
 ### Step 2: Determine Scope (Shared vs Agent)
 
-Decide whether this context belongs in the **shared** layer (cross-agent universal facts) or the **agent** layer (domain-specialized facts for this agent only).
+Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
 
-**Heuristic:**
-- **Shared** (default when in doubt): Universal facts that are true for every agent on this project. Examples: GitButler usage, deployment process, env vars, repo conventions, infrastructure URLs.
-- **Agent**: Domain-specialized facts only one agent's role cares about. Examples: backend's DB schemas, frontend's component patterns, PM's stakeholder map.
+### Step 3: Find the entry
 
-> **Why this matters**: Under-sharing causes drift (agent A learns a fact, agent B doesn't know it). Over-sharing is just slightly noisier loads. When the call is genuinely ambiguous, default to **shared**.
+Use names and summaries to find likely matches in the selected project and scope. If the caller requires a particular entry or exact theme, stay within that target. Read the candidates to see whether they answer the same question as the fact being saved.
 
-Present the suggestion and wait for confirmation (show the reason, the suggested scope, and the alternative so [USER-NAME] can confirm or switch):
-
-```
-**Scope determination for "[context summary]":**
-
-- [Brief reason for the suggestion — e.g., "This describes the project's deployment workflow, which applies to every agent."]
-
-  > A) Shared — every agent of the project sees it `✓✓`
-  > B) Agent — one agent's own entries
-
-  ([Reason: why this scope is suggested.])
-
-Reply with "shared", "agent", or your preferred scope.
-```
-
-Based on the confirmed scope, the markdown backend reads and writes the matching path:
-- **Shared scope**: `[AGENT-MEMORY-PATH]/shared-memory/[project-name]/context/`
-- **Agent scope**: `[AGENT-MEMORY-PATH]/agent-[domain]/knowledge-base/[project-name]/`
-
-A store keeps no path: its mechanics say which layer a row lands in.
-
-> **Storage location**: use the HOME contract component's `CONTEXT_DIR` (shared) and `KNOWLEDGE_DIR` (agent). Use those dirs for every scope-aware step below (folder check, create, index).
-
-@start component id="ref-1" ref="procedures/components/home-contract.md"
-@end component
-
-> **Move operation**: If the user has asked to **move** an existing entry between scopes — a **promote** (agent → shared, e.g. "move X to shared") or a **demote** (shared → agent) — skip the rest of this procedure and follow the [Move Between Scopes Sub-Flow](#move-between-scopes-sub-flow) section below.
-
-### Step 3: Ensure the Project Folder
-
-Ensure the scope-aware project folder exists (**§ ensure-context-dir**), creating it if missing. Proceed to Step 4.
-
-### Step 4: Determine Theme and Check Existing Entries
-
-Identify the theme of the context being captured (e.g., `environment-setup`, `deployment`, `auth-module`, `database-conventions`).
-
-List the layer's existing entries (**§ list-context-entries**) to check whether one already covers this theme:
-- **If an existing entry matches**: Proceed to Step 5B (Update)
-- **If no match**: Proceed to Step 5A (Create New)
-
-> **A theme is a name, not an address.** This comparison is the only thing the theme decides, and it decides exactly one question: create, or update. How an entry is then read, changed or retired is the storage backend's business, and a store's answer may be more than one call.
-
-### Step 5A: Create New Context Entry
-
-1. Create the new entry from the [Project Context Template]([path-to-agent-memory-project]/templates/project-context-template.md) (**§ create-context-entry**).
-2. Fill the YAML frontmatter:
-   - `project`: the project name from Step 1
-   - `tags`: relevant feature/module tags for selective loading (e.g., `[environment, setup, vm, gcloud]`)
-   - `description`: one-line summary
-   - `created`: today's date
-   - `updated`: today's date
-3. Fill the markdown sections (Purpose, Quick Reference, Details, Sources)
-4. Proceed to Step 6
-
-### Step 5B: Update Existing Context Entry
-
-1. Read the existing entry (**§ read-context-entry**)
-2. Change its body (**§ update-context-entry**): edit the part that changed, append the new content, or rewrite the document, whichever the backend supports
-3. Update the `updated:` date in YAML frontmatter to today's date
-4. Update `description:` and `tags:` where they changed, in the frontmatter **and** wherever the backend's index keeps them (a store keeps the first as the row's `content_summary`)
-5. Proceed to Step 6
-
-### Step 6: Check the Entry Size
-
-Housekeeping after writing (**§ check-entry-size**): under the size cap, proceed to Step 7. Over it, split the entry into one file per distinct sub-theme (each with its own frontmatter and tags), remove the original, and index every new file in Step 7.
-
-### Step 7: Update the Context Index
-
-Update the scope-aware context index (**§ update-context-index**) with this entry.
-
----
-
-## Move Between Scopes Sub-Flow
-
-When the user explicitly asks to move an existing entry between scopes, follow this sub-flow instead of the normal procedure. A **promote** is agent → shared; a **demote** is shared → agent.
-
-> **Direction**: `[from]` is the source scope and `[to]` the target scope. Everything below is direction-neutral, and the collision check is always in the **target** scope.
-
-### M.1: Identify Source Entry
-
-Locate the source entry to move (**§ list-context-entries**).
-
-If unclear which theme the user means, ask: "Which entry should I move? Available entries in [from]: [list]"
-
-### M.2: Check Collision in the Target Scope
-
-List the target scope's entries (**§ list-context-entries**) to check whether one with the same theme already exists.
-
-- **If no collision**: Proceed to M.3
-- **If collision**: **STOP**. Present the conflict to user: "A [to] entry with this name already exists. Options: A) merge the content manually first, B) give the source entry a different theme first, C) cancel." Wait for user direction.
-
-### M.3: Move to the Target Location
-
-Ensure the target scope exists (**§ ensure-context-dir**), then move the entry's content verbatim to the target scope (**§ move-context-entry**).
-
-### M.4: Ensure the Source Entry Is Gone
-
-Check the source layer for the entry (**§ list-context-entries**) and remove it if it is still there (**§ delete-context-entry**). A backend whose move already removes the source leaves nothing to do here, and its own mechanics say so.
-
-### M.5: Update Both Indexes
-
-Remove the entry from the source index and add it to the target index (**§ update-context-index**).
-
----
-
-@start storage id="db-preamble" ref="procedures/memory/storage-backends/{backend}.md" target="all-procedures" applies_to="db"
+@start storage id="find-project-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="find-project-context-entry"
 @end storage
-@start storage id="mechanics" ref="procedures/memory/storage-backends/{backend}.md" target="update-project-context"
+
+- **Skip** if an entry already covers the fact accurately. Report `skipped` with its name and finish without writing.
+- **Update** if one entry answers the question but needs a correction or addition. Use that entry in Step 4B.
+- **Create** if no entry answers the question. Choose a descriptive theme and continue to Step 4A.
+
+If several entries still fit, use an explicitly identified target. Otherwise ask which to update on a direct request, or defer just that fact to **Needs review** during wrap-up. An unreadable candidate is not evidence that no entry exists.
+
+### Step 4A: Create the entry
+
+Fill the project context template with the resolved project, the fact, and its sources. Give the entry a one-line description that helps another agent decide when to read it. Save it in the selected scope.
+
+@start storage id="prepare-write-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
 @end storage
+
+@start storage id="create-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="create-context-entry"
+@end storage
+
+Continue to Step 5.
+
+### Step 4B: Update the entry
+
+Update the entry selected in Step 3. Correct or add the relevant facts and preserve unrelated content. Change the description or tags only if they no longer describe the entry accurately.
+
+@start storage id="edit-context-entry" ref="procedures/memory/storage-backends/{backend}.md" target="edit-context-entry"
+@end storage
+
+### Step 5: Finish the write
+
+@start storage id="check-entry-size" ref="procedures/memory/storage-backends/{backend}.md" target="check-entry-size" applies_to="markdown"
+@end storage
+
+@start storage id="finish-index" ref="procedures/memory/storage-backends/{backend}.md" target="finish-index" applies_to="markdown"
+@end storage
+
+Report `created` or `updated` with the resulting entry names. If a required write failed, report what was saved and what remains incomplete.

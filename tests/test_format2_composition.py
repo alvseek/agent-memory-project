@@ -1,6 +1,5 @@
 """Format 2 sources use the shared composer and retain backend-specific mechanics."""
 
-import re
 from pathlib import Path
 
 import pytest
@@ -22,16 +21,16 @@ def test_real_catalog_renders_both_backends_and_tool_instructions() -> None:
     assert "create_shared_context_entry(project" in db
     assert "create_agent_context_entry(project" in db
     assert "create_shared_context_entry(project" not in markdown
-    assert "[path-to-agent-memory-project]/templates/project-context-template.md" in db
+    assert 'read_resource("project-context-template")' in db
+    path = "[path-to-agent-memory-project]/templates/project-context-template.md"
+    assert path in markdown and path not in db
 
 
-def test_awakening_db_links_to_a_public_pinned_adr() -> None:
-    result = compose("awaken-coder", "db", FileSource(ROOT))
-    assert re.search(
-        r"\[ADR-029\]\(https://github\.com/alvseek/agent-memory-project/blob/"
-        r"[0-9a-f]{40}/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening\.md\)",
-        result.text,
-    )
+def test_only_db_awakening_requests_the_coding_payload() -> None:
+    source = FileSource(ROOT)
+    call = "awaken_coder(domain, projects)"
+    assert call in compose("awaken-coder", "db", source).text
+    assert call not in compose("awaken-coder", "markdown", source).text
 
 
 def test_unknown_component_and_storage_region_fail() -> None:
@@ -40,7 +39,7 @@ def test_unknown_component_and_storage_region_fail() -> None:
     path = "procedures/awaken-coder.md"
     for old, new in (
         (b"procedures/components/project-identity.md", b"procedures/components/missing.md"),
-        (b'target="awaken-coder"', b'target="missing-region"'),
+        (b'target="load-context-indexes"', b'target="missing-region"'),
     ):
         altered = dict(files)
         assert old in altered[path]

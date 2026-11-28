@@ -8,7 +8,7 @@ Concrete storage mechanics for the **Hermod project store**, which holds project
 
 > **Discovery and creation are this store's; everything addressed by an existing uuid is the memory layer's.** Reading a body is `get_memory(uuid)`, changing one is `edit_memory_body` / `multi_edit_memory_body` / `append_memory_body` / `prepend_memory_body`, changing its summary or tags is `edit_memory_metadata`, and retiring it is `soft_delete_memory`. Those ops already act on these rows, so nothing below reimplements one ([ADR-030](../../../docs/adr/2026-10-15-hermod-store-is-a-uuid-addressed-lens.md)).
 
-> **Three ops resolve to no action**, and that is not an omission. The markdown backend needs a directory before it can write a file, an index file beside it, and a line count after a write; a store has none of the three, so `§ ensure-context-dir`, `§ update-context-index` and `§ check-entry-size` do nothing. This is the same resolution the memory core's db backend gives its own directory and derived-index steps.
+> DB context entries need no directory, separate index file, or post-write line count. The size limit applies when creating a record.
 
 ---
 
@@ -26,57 +26,22 @@ Every operation below is a **tool call**, reading and writing `shared_record` an
 
 ## update-project-context
 
-@start region id="update-project-context"
-### § ensure-context-dir
+@start region id="find-project-context-entry"
+Use `list_shared_context(project)` for shared entries or `list_agent_context(project, agent)` for this agent’s entries. Shortlist by `theme` and `content_summary`, then read candidate bodies with Munnin’s `get_memory(uuid)`. Keep the selected UUID for the update; a theme is not a unique address.
+@end region
 
-No action. A store has no directories; the project, the layer and the owner are columns on the row.
+@start region id="create-context-entry"
+Read the template with Hermod’s `read_resource("project-context-template")`.
 
-### § list-context-entries
+Before creating a record, check the length of the filled entry body. Up to 1,000 lines is valid. If it is longer, split it by topic first and create a separate entry within the limit for each topic.
 
-Call `list_shared_context(project)` and/or `list_agent_context(project, agent)`, one call per layer the step is about. Each row carries `uuid`, `scope`, `theme`, `content_summary` and `tags` — that list **is** the context index. A row whose `theme` matches is the entry the step means, and the `uuid` it carries is how every later call addresses it. The same call answers the move sub-flow's collision check. An agent-layer call requires its owner rather than defaulting, because those rows are owned.
+Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` for shared scope or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)` for agent scope. Pass only the body as `content`. Supply the description as `content_summary`, the tags as `tags`, and the template stamp as `template_version`. Valaskjalf timestamps the record and returns its UUID.
+@end region
 
-### § read-context-entry
+@start region id="edit-context-entry"
+Keep the UUID. Read Munnin’s `get_memory(uuid, include_edit_context=true)`. For body changes, edit only the affected text with `edit_memory_body`, `append_memory_body`, `prepend_memory_body`, or `multi_edit_memory_body`.
 
-Call the memory layer's `get_memory(uuid)` with the uuid a listing returned. It answers `None` for a row that is absent or tombstoned. Reading by theme is not a thing here: a theme is a name a listing shows, and two rows may carry one.
-
-### § create-context-entry
-
-Call `create_shared_context_entry(project, theme, content, template_version, content_summary, tags?)` or `create_agent_context_entry(project, agent, theme, content, template_version, content_summary, tags?)`, whichever layer the flow confirmed. `content` is the whole entry document built from [project-context-template.md]([path-to-agent-memory-project]/templates/project-context-template.md) — frontmatter included — and `template_version` the stamp that template carries below its title. `content_summary` is required: it is the line a listing shows beside the theme, taken from the document's frontmatter `description`, and `tags` comes from the same frontmatter. The row's `uuid` is assigned here and returned. **The stamp is declared, never stored**: it sits outside the template's fenced block, so the entry cannot carry it.
-
-Refused when `template_version` is missing or does not match the served template, when `content` is over the 1000-line cap, when `content_summary` is blank, and when an agent-layer create names no `agent` or one this account has no row for. **No theme is checked**: two rows may carry one theme, so this op neither refuses a create over an existing theme nor revives a retired row. Deciding between creating and updating is the step's own comparison of themes against the listing.
-
-### § update-context-entry
-
-Two calls, in this order:
-
-1. Change the body with the memory layer's `edit_memory_body(uuid, old_string, new_string, replace_all?)`, or with `append_memory_body` / `prepend_memory_body` / `multi_edit_memory_body` for the shapes those take. The body is edited surgically and never restated wholesale.
-2. Change the line a listing shows with `edit_memory_metadata(uuid, content_summary=..., tags=...)`, which is the only writer of those two fields. A field left out keeps its stored value, and `clearing` is the only route to empty.
-
-**The summary and the tags live in two places**: inside the document's own frontmatter, and in the row's columns, which is what a listing reads. A change belongs in both, so the `edit_memory_body` above carries the frontmatter line while `edit_memory_metadata` carries the column. A caller that changes only one leaves the index describing a document it no longer matches.
-
-**The two calls are not atomic**: a failure between them leaves the summary describing the old body, so a caller that needs both should do the body first and the summary after. The template stamp is not required here, because it gates creation, and a surgical edit's own precondition is a body the caller has already read.
-
-### § move-context-entry
-
-Call `promote_context_entry(uuid)` to move an entry into the shared layer, or `demote_context_entry(uuid, agent)` to move it into an agent's. The uuid is kept, so a handle held before the move still resolves after it. One call does both halves — the target row is written and the source row tombstoned — because the layer *is* which table the row lives in, which is why the sub-flow's next step has nothing left to do. Refused when no live entry holds the uuid, and when the entry already lives in the target layer. **It checks no theme**: two rows may carry one, so the sub-flow's own collision step is what decides whether a move should happen at all.
-
-**A theme cannot be renamed in place here.** Giving an entry a different theme means creating it under the new one and retiring the old row with `soft_delete_memory`, because the theme is what `title` holds.
-
-### § delete-context-entry
-
-Call the memory layer's `soft_delete_memory(uuid)`. The row is tombstoned rather than removed: gone from every read, and the same theme can be created again afterwards, which adds a new row rather than reviving the old one.
-
-**Inside the move sub-flow this op has nothing to do**, because `§ move-context-entry` already tombstoned the source. The uuid now names the row that moved, so calling it there would retire the entry the caller just moved, which is why the sub-flow's step is "ensure the source is gone" rather than "call delete".
-
-### § check-entry-size
-
-No action. The cap is a **creation** gate: `§ create-context-entry` refuses a document over 1000 lines and names the count and the cap in its refusal, and a later body edit belongs to the memory layer, which knows no cap. The markdown backend splits an overgrown file into one file per sub-theme; a store row has no second file, so its remedy is the same one applied at creation: write one entry per sub-theme.
-
-### § update-context-index
-
-No action. The index is not a file here: `§ list-context-entries` renders it from the rows, so there is nothing to edit and nothing to keep in step.
-
----
+For a description or tag change alone, call only `edit_memory_metadata`. The record fields are authoritative even if an older body contains YAML. If both body and metadata changed, save the body first and use the returned revision for the metadata write. Use the tenant and revision guards, reread on conflict, and report a partial write if the second operation fails. Valaskjalf maintains `modified_date`.
 @end region
 
 ## load-project-context
@@ -121,47 +86,36 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 
 ## awaken-coder
 
-@start region id="awaken-coder"
-> **The base payload is one call.** `awaken_coder(domain, projects)` returns the coding half of an
-> awakening in a single read-only payload. Its indexes drive the optional task-workflow body read below. It is issued **together
-> with** the memory layer's `awaken(domain)`, in one step, because neither needs the other's answer
-> and the two of them are the whole awakening ([ADR-029](https://github.com/alvseek/agent-memory-project/blob/6fb676dd545dd74686663bc9905f8eaae3538395/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
+@start region id="load-awakening"
+Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load, without waiting for its result. If Munnin uses MCP, the two calls are `awaken(domain)` and `awaken_coder(domain, projects)`. Pass the home project first, followed by its related projects. The read-only response covers the whole set.
+@end region
 
-### § awaken-coder-payload
+@start region id="load-coding-reasoning"
+   Read `coding_lane` from the awakening response. If it is empty, skip this step.
+@end region
 
-Call `awaken_coder(domain, projects)`: `projects` is the resolved project **first**, then the related repositories that widen the recall. That first element is the session's home and never a filter: every key in the payload spans the whole set. One payload supplies `coding_lane`, `episode_index`, `episodes`, `context_index`, `maps`; an opted-in task workflow needs a separate body read by the uuid in that index. It is read-only, and it takes no `scope` or `agent` beyond the domain: the token names the person and the domain names the agent whose episodes and agent-layer context these are. Refused when `projects` is empty, because a coding awakening without a repository has nothing to answer about. A client with no store attached reads its files instead — see `markdown.md`.
+@start region id="load-context-indexes"
+   Read `context_index` for the whole project set. Each entry carries its project, scope (shared or agent), and the UUID to use for later reads.
+@end region
 
-Each row of `episodes` is a **page** of that project's newest episode, not the whole rolling body: up to three timestamp groups, with `blocks_returned`/`blocks_total` and a `next_cursor` when the record continues. That is what keeps the awakening two calls on a record that grows without bound. Context entries and maps are whole and are not paged.
+@start region id="load-maps"
+   Read `maps` from the awakening response. Each entry contains the whole map and its dates. A project without an entry has no map.
+@end region
 
-### § load-coding-reasoning
+@start region id="check-fleet-roster"
+   Look for a `fleet-agents` entry in the project context index.
+@end region
 
-Read `coding_lane` from the payload; an empty lane is the silent skip, because a store that has not adopted the lane yet is a valid store. The lane is the memory layer's own record type, and the payload crosses that boundary once so no client has to.
+@start region id="load-task-workflow"
+   Select rows from `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. For a single match, call Munnin’s `get_memory(uuid)` with the row’s UUID and read its `content`.
+@end region
 
-### § load-context-indexes
+@start region id="select-project-episode"
+     ### § select-project-episode
 
-Read `context_index` from the payload. Each row carries its own `scope`, which is what the `[shared]` / `[agent]` display reads, and its `uuid`, which is what every later read, edit or retirement of that entry is addressed by. The rows span the whole set, so a related repository's index is already in hand when the task moves into it.
+     Use the pages already in `episodes`, one per project that has an episode. Each page contains up to three timestamp groups. If `next_cursor` is non-null, report the row's UUID and cursor so the reader knows the episode continues. A null cursor marks the final page even if `blocks_returned` is less than `blocks_total`.
 
-### § check-fleet-roster
-
-Look for a roster in the payload's `context_index`: a project whose index carries a `fleet-agents` entry has a fleet, and the pointer fires. Everything else skips silently. The roster's own **read** belongs to the fleet layer's `/load-fleet`, which already replaced the roster read that used to live here, so nothing is re-added.
-
-### § select-project-episode
-
-Take it from `episodes` in the payload: one newest **page** per project in the set, in the set's order, so the first is the session's own repository. Nothing to fetch to reach it and no `get_memory` to make — but a page is not a whole body. Each row carries `uuid`, `blocks_returned`, `blocks_total` and `next_cursor`, and its `content` holds up to three timestamp groups.
-
-Read what arrived, and say a cursor remains when one does: **`next_cursor` non-null is the only signal that more exists**. A count below `blocks_total` with a null cursor is a complete final page, not a partial one. To continue, use the memory layer's `get_memory(uuid, cursor=…)` with that row's own `uuid` — Hermod does not page further and holds no continuation of its own — and only when this session's carry-forward actually needs the older sub-episodes. Never report a page as "the episode", and never treat a snippet from a memory search as one.
-
-A project in the set with no episode is simply absent from `episodes`, so its carry-forward is empty rather than the newest overall's, and a caller that wants a *different* episode of a project reads it from `episode_index` by `uuid` (the index is metadata only and does not carry `blocks_total`; that count rides on the `episodes` row when the record itself is read).
-
-### § load-maps
-
-Read `maps` from the payload: one entry per project in the set that has a map, each carrying `content` and its dates. A project absent from `maps` has none — never auto-create one here. The dates are what the bare `/map-orientation` load's mtime check reads.
-
-### § load-task-workflow
-
-If a local-memory handoff superseded central context, use its active shared HOME and read `CONTEXT_DIR/task-workflow.md` from the local index instead; do not fall back to a central workflow. Otherwise, select rows from the already-loaded `context_index` whose `project` is `projects[0]`, `scope` is `shared`, and `theme` is exactly `task-workflow`. No match → silent skip. Multiple matches → report ambiguity and skip. One match → call the memory layer's `get_memory(uuid)` with that row's uuid and read its `content`. A missing or unreadable body is a load failure. Never read by theme, infer a vendor from the project name, or create an entry here.
-
----
+     Only if older entries are needed, call the memory layer's `get_memory(uuid, cursor=…)` with that row's values. To read a different episode, use its UUID from `episode_index`. Index entries and search snippets are not episode bodies.
 @end region
 
 ## add-coding-reasoning
@@ -187,7 +141,5 @@ Call the memory layer's `insert_memory(scope="shared", record_type="coding_reaso
 ## project-wrap-up
 
 @start region id="project-wrap-up"
-### § persist-store
-
-Execute **`/push-project <mode>`** on the project repository. Every op above writes its row as it runs, on the memory database, so the store is durable the moment it is written and there is nothing left for a memory push to persist at wrap-up — that half of the op dissolves. The project push is the half that still has work: the commits Steps 2-3 produced. In the default `agent` mode it stages only this agent's own work; `all` pushes the full tree.
+Steps 2–3 write directly to the database. Check their write results and use the project push result from Step 1. No second push or agent-memory Git report is needed.
 @end region
