@@ -4,8 +4,8 @@ id = "update-project-context"
 kind = "procedure"
 title = "Update Project Context Protocol"
 description = "Create or update project-specific context entries."
-argument_name = "context"
-argument_description = "the project context to capture; asks if omitted"
+argument_name = "project"
+argument_description = "The project to update. If not supplied, resolve it from Git or ask."
 +++
 # Update Project Context Protocol
 
@@ -15,10 +15,7 @@ Save project-specific knowledge for future sessions. Create or update an entry s
 
 `$ARGUMENTS`
 
-- `/update-project-context [context]` → Create or update project context described in context
-- `/update-project-context` → Will ask for context
-
-If no arguments provided, ask: "What project context should I capture? (e.g., environment setup, deployment procedure, feature conventions)"
+**`project`** — the project to update. Use the name supplied by the user or caller; otherwise resolve it in Step 1. Record the fact identified by the caller or in the conversation. If a direct request doesn’t identify a fact, ask what to save.
 
 ---
 
@@ -28,10 +25,9 @@ If no arguments provided, ask: "What project context should I capture? (e.g., en
 
 ### Step 1: Determine Project Name
 
-Use the caller’s resolved project if supplied. Otherwise identify the project this context belongs to:
-- **From working directory**: Infer project name from the current repository/folder name
-- **From user input**: Ask if unclear: "Which project is this context for?"
-- **Naming convention**: Use lowercase-hyphenated format (e.g., `ocx-platform`, `my-saas-app`, `data-pipeline`)
+If the project was supplied, use it. Otherwise, run `git rev-parse --show-toplevel` to find the current repository. Use the repository name from `git remote get-url origin`, dropping a trailing `.git`. If there is no `origin`, use the repository root’s folder name.
+
+If no project was supplied and the current directory is outside Git, ask “Which project should I update?” before writing.
 
 ### Step 2: Determine Scope (Shared vs Agent)
 
