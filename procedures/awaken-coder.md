@@ -79,16 +79,14 @@ If the platform reports truncation or saves a result to a file, read the saved r
 
    If `Readiness: Incomplete`, report the missing setup without querying tasks. If the entry can’t be read, the hook is missing, or its scope or query is unclear, report why the check was skipped. A skipped check is not a zero-task result.
 
-6. **Report the coding awakening** — fold the coding results into the core report; do not produce a second report.
-   - **Project**: name the current project. List related projects in one line if they widened recall.
-   - **Carry-forward**: summarize open items from the newest episode available for each project, home project first. If a project has no episode for this agent, say so; do not substitute another project's episode. An empty set of results means **no episodes for this agent in this project set**; do not automatically load other agents' episodes. Include related-project items when they affect the current work. Present remembered status as the previous session's record, not newly verified state.
+6. **Report the coding awakening.** Add the following to Munnin’s report:
+   - **Project:** Name the home project first. List related projects on one line if they widened recall.
+   - **Carry-forward:** Summarize the previous session’s open items, home project first. Include related-project items only when they affect this work. If this agent has no episode for a project, say so; don’t substitute another project’s or agent’s episode.
 
 @start storage id="select-project-episode" ref="procedures/memory/storage-backends/{backend}.md" target="select-project-episode"
 @end storage
 
-   - **Project context**: when available, say it will load on relevance. Show the full index only when asked.
-   - **Attention needed**: report unresolved load problems, an absent coding-reasoning lane, and task counts or items from hooks that ran.
+   - **Project context:** If available, say entries will load when relevant. Show the index only on request.
+   - **Attention needed:** Report unresolved load problems, missing coding reasoning, and task-hook results. Include the fleet notice if applicable.
 
-   Omit skipped checks, absent optional features, loaded-layer inventories and repeated setup suggestions. Do not prompt to create missing maps or context during awakening.
-
-   Keep additions brief. If nothing needs attention, confirming the current project is enough.
+   Omit empty sections and setup suggestions.

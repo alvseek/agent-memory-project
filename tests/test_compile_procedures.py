@@ -130,15 +130,15 @@ def test_awakening_keeps_recursive_discovery_and_agent_scoped_absence(tmp_path: 
     assert "Traverse submodules recursively" in text
     assert "verify that every included repository was checked for nested submodules" in text
     assert "report that discovery is incomplete" in text
-    assert "no episodes for this agent in this project set" in text
-    assert "do not automatically load other agents' episodes" in text
+    assert "If this agent has no episode for a project, say so" in text
+    assert "don’t substitute another project’s or agent’s episode" in text
 
 
 def test_awakening_task_hook_contract_is_project_owned(tmp_path: Path) -> None:
     report = next(r for r in _compile(ROOT, tmp_path) if r.name == "awaken-coder")
     text = report.out_path.read_text(encoding="utf-8")
     task_step = text.split("**Task workflow.**", 1)[1].split(
-        "**Report the coding awakening**", 1
+        "**Report the coding awakening.**", 1
     )[0]
 
     assert "home project’s shared context" in task_step
