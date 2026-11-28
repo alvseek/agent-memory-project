@@ -122,7 +122,7 @@ Call `update_map(project, content, template_version, content_summary?)` with the
 ## awaken-coder
 
 @start region id="load-awakening"
-Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load, without waiting for its result. If Munnin uses MCP, the two calls are `awaken(domain)` and `awaken_coder(domain, projects)`. Pass the home project first, followed by its related projects. The read-only response covers the whole set ([ADR-029](https://github.com/alvseek/agent-memory-project/blob/6fb676dd545dd74686663bc9905f8eaae3538395/docs/adr/2026-10-14-hermod-reads-memory-rows-for-the-coding-awakening.md)).
+Call `awaken_coder(domain, projects)` in the same step as Munnin’s memory load, without waiting for its result. If Munnin uses MCP, the two calls are `awaken(domain)` and `awaken_coder(domain, projects)`. Pass the home project first, followed by its related projects. The read-only response covers the whole set.
 @end region
 
 @start region id="awaken-coder"
