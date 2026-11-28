@@ -27,14 +27,25 @@ If the project was supplied, use it. Otherwise, run `git rev-parse --show-toplev
 
 If no project was supplied and the current directory is outside Git, ask “Which project should I update?” before writing.
 
-### Step 2: Determine Scope (Shared vs Agent)
-
-Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
-
 @start component id="ref-1" ref="procedures/components/home-contract.md" applies_to="markdown"
 @end component
 
-> **Move operation**: If the user has asked to **move** an existing entry between scopes — a **promote** (agent → shared, e.g. "move X to shared") or a **demote** (shared → agent) — skip the rest of this procedure and follow the [Move Between Scopes Sub-Flow](#move-between-scopes-sub-flow) section below.
+### If the user asks to move an entry
+
+A move changes an existing entry from `agent` to `shared`, or from `shared` to `agent`, without changing its content. For a create or update, skip to Step 2.
+
+1. Identify the entry in the source scope. If the request could refer to several entries, ask which one to move.
+2. Check the target scope for the same theme (**§ list-context-entries**). If it already exists there, stop and ask whether to merge, use a different theme, or cancel. Do not overwrite it.
+
+@start storage id="prepare-move-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
+@end storage
+
+3. Move the entry verbatim (**§ move-context-entry**). Verify the source entry is gone; remove it only if the move left it there (**§ delete-context-entry**).
+4. Ensure the source and target indexes reflect the move (**§ update-context-index**), then finish. Do not run the create/update steps.
+
+### Step 2: Determine Scope (Shared vs Agent)
+
+Use the scope supplied by the user or caller without asking again. If none was supplied, suggest `shared` for project-wide facts or `agent` for role-specific facts, give a brief reason, and ask the user to confirm. When in doubt, suggest `shared`.
 
 ### Step 3: Determine Theme and Check Existing Entries
 
@@ -76,42 +87,6 @@ Housekeeping after writing (**§ check-entry-size**): under the size cap, procee
 ### Step 6: Update the Context Index
 
 Update the scope-aware context index (**§ update-context-index**) with this entry.
-
----
-
-## Move Between Scopes Sub-Flow
-
-When the user explicitly asks to move an existing entry between scopes, follow this sub-flow instead of the normal procedure. A **promote** is agent → shared; a **demote** is shared → agent.
-
-> **Direction**: `[from]` is the source scope and `[to]` the target scope. Everything below is direction-neutral, and the collision check is always in the **target** scope.
-
-### M.1: Identify Source Entry
-
-Locate the source entry to move (**§ list-context-entries**).
-
-If unclear which theme the user means, ask: "Which entry should I move? Available entries in [from]: [list]"
-
-### M.2: Check Collision in the Target Scope
-
-List the target scope's entries (**§ list-context-entries**) to check whether one with the same theme already exists.
-
-- **If no collision**: Proceed to M.3
-- **If collision**: **STOP**. Present the conflict to user: "A [to] entry with this name already exists. Options: A) merge the content manually first, B) give the source entry a different theme first, C) cancel." Wait for user direction.
-
-### M.3: Move to the Target Location
-
-@start storage id="prepare-move-directory" ref="procedures/memory/storage-backends/{backend}.md" target="ensure-project-context-directory" applies_to="markdown"
-@end storage
-
-Move the entry's content verbatim to the target scope (**§ move-context-entry**).
-
-### M.4: Ensure the Source Entry Is Gone
-
-Check the source layer for the entry (**§ list-context-entries**) and remove it if it is still there (**§ delete-context-entry**). A backend whose move already removes the source leaves nothing to do here, and its own mechanics say so.
-
-### M.5: Update Both Indexes
-
-Remove the entry from the source index and add it to the target index (**§ update-context-index**).
 
 ---
 
